@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Events } = require('discord.js');
+const { Client, GatewayIntentBits, Events, REST, Routes } = require('discord.js');
 const { config, validate } = require('./config');
 const db = require('./db');
 const { handleInteraction } = require('./commands');
@@ -7,6 +7,16 @@ const annihilateSystem = require('./annihilate');
 
 validate();
 
+async function registerApplicationCommands() {
+  const rest = new REST({ version: '10' }).setToken(config.token);
+  const route = config.guildId
+    ? Routes.applicationGuildCommands(config.clientId, config.guildId)
+    : Routes.applicationCommands(config.clientId);
+  const commandList = require('./commands').commands;
+  console.log(`Registering ${commandList.length} application commands...`);
+  await rest.put(route, { body: commandList.map(command => command.toJSON()) });
+  console.log('Application commands registered successfully.');
+}
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent],
 });
@@ -14,6 +24,7 @@ const client = new Client({
 client.once(Events.ClientReady, async readyClient => {
   console.log(`Logged in as ${readyClient.user.tag}`);
   try {
+    await registerApplicationCommands();
     await db.migrate();
     console.log('Database migrations ready.');
     setInterval(() => eventSystem.autoApprove(readyClient).catch(error => console.error('Event auto-approval failed:', error)), 30 * 1000);
