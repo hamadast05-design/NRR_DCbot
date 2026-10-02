@@ -5,6 +5,19 @@ const { config } = require('./config');
 const SUBMIT = 'event_submit:';
 const REVIEW = 'event_review:';
 
+function channelPermissionIssues(channel, includeManageMessages = false) {
+  const me = channel.guild.members.me;
+  if (!me) return ['Bot member is not available in this guild.'];
+  const perms = channel.permissionsFor(me);
+  const required = [
+    [PermissionFlagsBits.ViewChannel, 'View Channel'],
+    [PermissionFlagsBits.SendMessages, 'Send Messages'],
+    [PermissionFlagsBits.EmbedLinks, 'Embed Links'],
+  ];
+  if (includeManageMessages) required.push([PermissionFlagsBits.ManageMessages, 'Manage Messages']);
+  return required.filter(([flag]) => !perms?.has(flag)).map(([, name]) => name);
+}
+
 function isManager(i) {
   if (config.eventManagerRoleIds.length) return config.eventManagerRoleIds.some(id => i.member?.roles?.cache?.has(id));
   return i.memberPermissions?.has(PermissionFlagsBits.ManageGuild);
@@ -54,15 +67,28 @@ async function send(i) {
   const id = i.options.getString('channel_id', true).trim();
   const ch = await i.guild.channels.fetch(id).catch(() => null);
   if (!ch?.isTextBased()) return i.reply({ content: '❌ That channel could not be found or is not a text channel.', ephemeral: true });
+
+  const issues = channelPermissionIssues(ch);
+  if (issues.length) {
+    return i.reply({
+      content: `❌ I cannot send the submission interface there. Missing: **${issues.join(', ')}**.`,
+      ephemeral: true,
+    });
+  }
+
   const e = await db.getActiveEvent(i.guildId);
   if (!e) return i.reply({ content: '❌ There is no active event. Use /createevent first.', ephemeral: true });
+
   try {
     const m = await ch.send(interfacePayload(e.id));
     await db.recordEventInterface(e.id, ch.id, m.id);
     await i.reply({ content: `✅ Submission message sent in <#${ch.id}>.`, ephemeral: true });
   } catch (error) {
     console.error('Event interface send error:', error);
-    await i.reply({ content: '❌ I could not send the submission interface to that channel. Check my channel permissions.', ephemeral: true });
+    await i.reply({
+      content: `❌ I could not send the submission interface there. Discord returned **${error?.code || 'an unknown error'}**. Check that I can view and send messages in that channel.`,
+      ephemeral: true,
+    });
   }
 }
 
@@ -71,18 +97,37 @@ async function stick(i) {
   const id = i.options.getString('channel_id', true).trim();
   const ch = await i.guild.channels.fetch(id).catch(() => null);
   if (!ch?.isTextBased()) return i.reply({ content: '❌ That channel could not be found or is not a text channel.', ephemeral: true });
+
+  const issues = channelPermissionIssues(ch, true);
+  if (issues.length) {
+    return i.reply({
+      content: `❌ I cannot stick the submission interface there. Missing: **${issues.join(', ')}**.`,
+      ephemeral: true,
+    });
+  }
+
   const e = await db.getActiveEvent(i.guildId);
   if (!e) return i.reply({ content: '❌ There is no active event.', ephemeral: true });
-  await db.setStickChannel(e.id, ch.id);
-  const old = await db.getEventInterface(e.id);
-  if (old) {
-    const oc = await i.guild.channels.fetch(old.channel_id).catch(() => null);
-    const om = await oc?.messages.fetch(old.message_id).catch(() => null);
-    if (om) await om.delete().catch(() => {});
+
+  try {
+    const old = await db.getEventInterface(e.id);
+    if (old) {
+      const oc = await i.guild.channels.fetch(old.channel_id).catch(() => null);
+      const om = await oc?.messages.fetch(old.message_id).catch(() => null);
+      if (om) await om.delete().catch(() => {});
+    }
+
+    const m = await ch.send(interfacePayload(e.id));
+    await db.setStickChannel(e.id, ch.id);
+    await db.recordEventInterface(e.id, ch.id, m.id);
+    await i.reply({ content: `📌 Submission message is now stuck in <#${ch.id}>.`, ephemeral: true });
+  } catch (error) {
+    console.error('Event stick error:', error);
+    await i.reply({
+      content: `❌ I could not stick the submission interface there. Discord returned **${error?.code || 'an unknown error'}**.`,
+      ephemeral: true,
+    });
   }
-  const m = await ch.send(interfacePayload(e.id));
-  await db.recordEventInterface(e.id, ch.id, m.id);
-  await i.reply({ content: `📌 Submission message is now stuck in <#${ch.id}>.`, ephemeral: true });
 }
 
 async function showModal(i, eventId) {
@@ -226,12 +271,21 @@ async function onMessage(message) {
   if (!config.eventStickEnabled || message.author.bot || !message.guild) return;
   const e = await db.getActiveEvent(message.guild.id);
   if (!e || e.stick_channel_id !== message.channel.id) return;
+  const issues = channelPermissionIssues(message.channel, true);
+  if (issues.length) {
+    console.error(`Event stick unavailable in #${message.channel.id}: missing ${issues.join(', ')}`);
+    return;
+  }
   const old = await db.getEventInterface(e.id);
   if (!old || old.message_id === message.id) return;
   const om = await message.channel.messages.fetch(old.message_id).catch(() => null);
   if (om) await om.delete().catch(() => {});
-  const m = await message.channel.send(interfacePayload(e.id)).catch(() => null);
-  if (m) await db.recordEventInterface(e.id, message.channel.id, m.id);
+  try {
+    const m = await message.channel.send(interfacePayload(e.id));
+    await db.recordEventInterface(e.id, message.channel.id, m.id);
+  } catch (error) {
+    console.error('Event stick repost error:', error);
+  }
 }
 
 module.exports = { createEvent, send, stick, showModal, submit, review, autoApprove, end, onMessage };
