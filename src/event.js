@@ -134,9 +134,20 @@ async function showModal(i, eventId) {
   const e = await db.getEvent(eventId, i.guildId);
   if (!e || !e.active) return i.reply({ content: '❌ This event is no longer active.', ephemeral: true });
   const modal = new ModalBuilder().setCustomId(SUBMIT + 'modal:' + eventId).setTitle('Submit Contest Entry');
-  const upload = new FileUploadBuilder().setCustomId('submission_image').setMinValues(1).setMaxValues(1).setRequired(true).setFileTypes('image');
+  const upload = new FileUploadBuilder()
+    .setCustomId('submission_image')
+    .setMinValues(1)
+    .setMaxValues(1)
+    .setRequired(true);
   modal.addLabelComponents(new LabelBuilder().setLabel('Upload your contest image').setDescription('Submit one image. It will be reviewed before publication.').setFileUploadComponent(upload));
-  await i.showModal(modal);
+  try {
+    await i.showModal(modal);
+  } catch (error) {
+    console.error('Event modal show error:', error);
+    if (!i.replied && !i.deferred) {
+      await i.reply({ content: '❌ I could not open the submission form. Please try again.', ephemeral: true }).catch(() => {});
+    }
+  }
 }
 
 async function submit(i, eventId) {
