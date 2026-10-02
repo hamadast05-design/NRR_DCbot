@@ -79,11 +79,28 @@ function isClaimMessage(message) {
   return Boolean(message.guild && message.channelId === CHANNEL_ID && !message.author.bot);
 }
 
-function botCanManage(channel) {
+function botChannelPermissions(channel) {
   const me = channel.guild.members.me;
-  if (!me) return false;
-  const perms = channel.permissionsFor(me);
-  return Boolean(perms?.has(PermissionFlagsBits.ManageChannels) && perms?.has(PermissionFlagsBits.ManageRoles));
+  if (!me) return null;
+  return channel.permissionsFor(me);
+}
+
+function botCanManage(channel) {
+  const perms = botChannelPermissions(channel);
+  return Boolean(perms?.has(PermissionFlagsBits.ViewChannel) &&
+    perms?.has(PermissionFlagsBits.SendMessages) &&
+    perms?.has(PermissionFlagsBits.ManageChannels));
+}
+
+function missingBotPermissions(channel) {
+  const perms = botChannelPermissions(channel);
+  if (!perms) return ['Bot member is not available in this guild.'];
+  const required = [
+    [PermissionFlagsBits.ViewChannel, 'View Channel'],
+    [PermissionFlagsBits.SendMessages, 'Send Messages'],
+    [PermissionFlagsBits.ManageChannels, 'Manage Channels'],
+  ];
+  return required.filter(([flag]) => !perms.has(flag)).map(([, name]) => name);
 }
 
 const ownerAllow = {
@@ -96,7 +113,6 @@ const ownerAllow = {
 };
 
 const ownerDeny = {
-  Administrator: false,
   ManageRoles: false,
   ManageWebhooks: false,
   ManageGuildExpressions: false,
@@ -104,10 +120,20 @@ const ownerDeny = {
 };
 
 async function grantOwner(channel, userId) {
-  if (!botCanManage(channel)) throw new Error('Bot needs Manage Channels and Manage Roles in the claim channel.');
+  const missing = missingBotPermissions(channel);
+  if (missing.length) throw new Error(`Bot is missing channel permissions: ${missing.join(', ')}.`);
   const member = await channel.guild.members.fetch(userId);
-  if (member.permissions.has(PermissionFlagsBits.Administrator)) throw new Error('Administrator members cannot be restricted by channel overwrites.');
-  await channel.permissionOverwrites.edit(member, { ...ownerAllow, ...ownerDeny }, 'Temporary free-channel ownership');
+  if (member.permissions.has(PermissionFlagsBits.Administrator)) {
+    throw new Error('Administrator members cannot claim this channel because Administrator bypasses channel restrictions.');
+  }
+
+  // Editing a member overwrite is controlled by the bot's channel permissions,
+  // not by whether the claimant's role is above or below the bot.
+  await channel.permissionOverwrites.edit(
+    userId,
+    { ...ownerAllow, ...ownerDeny },
+    'Temporary free-channel ownership'
+  );
 }
 
 async function removeOwner(channel, userId) {
@@ -137,7 +163,12 @@ async function saveCooldown(userId) {
 async function claim(message) {
   if (!ready || !isClaimMessage(message) || working) return;
   const channel = message.channel;
-  if (!channel.isTextBased() || !channel.permissionOverwrites || !botCanManage(channel)) return;
+  if (!channel.isTextBased() || !channel.permissionOverwrites) return;
+  const missing = missingBotPermissions(channel);
+  if (missing.length) {
+    console.error(`Free-channel claim unavailable in #${channel.id}: missing ${missing.join(', ')}`);
+    return;
+  }
   const member = await message.guild.members.fetch(message.author.id).catch(() => null);
   if (!member) return;
   if (member.permissions.has(PermissionFlagsBits.Administrator)) {
