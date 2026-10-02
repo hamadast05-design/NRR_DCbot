@@ -5,19 +5,30 @@ function bool(value, fallback) {
   return ['true', '1', 'yes', 'on'].includes(String(value).toLowerCase());
 }
 
+function positiveNumber(value, fallback, minimum = 1) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= minimum ? number : fallback;
+}
+
 const config = {
   token: process.env.DISCORD_TOKEN,
   clientId: process.env.DISCORD_CLIENT_ID,
   guildId: process.env.DISCORD_GUILD_ID || null,
-  cooldownMs: Math.max(1, Number(process.env.REPUTATION_COOLDOWN_HOURS || 24)) * 60 * 60 * 1000,
+  cooldownMs: positiveNumber(process.env.REPUTATION_COOLDOWN_MINUTES, 5) * 60 * 1000,
   allowBotTargets: bool(process.env.ALLOW_BOT_TARGETS, false),
   showDeparted: bool(process.env.SHOW_DEPARTED_ON_LEADERBOARDS, false),
   publicEvents: bool(process.env.PUBLIC_REPUTATION_EVENTS, false),
   logChannelId: process.env.REPUTATION_LOG_CHANNEL_ID || null,
   adminPermission: process.env.ADMIN_PERMISSION || 'ManageGuild',
-  eventManagerRoleIds: (process.env.EVENT_MANAGER_ROLE_IDS || '').split(',').map(x=>x.trim()).filter(Boolean),
+  eventManagerRoleIds: (process.env.EVENT_MANAGER_ROLE_IDS || '').split(',').map(x => x.trim()).filter(Boolean),
   eventReviewChannelId: process.env.EVENT_REVIEW_CHANNEL_ID || null,
   eventStickEnabled: bool(process.env.EVENT_STICK_ENABLED, true),
+
+  // Fixed NRR free-channel system. These can be overridden for a test server if needed.
+  claimChannelId: process.env.CLAIM_CHANNEL_ID || '1555637182545395843',
+  claimGuildId: process.env.CLAIM_GUILD_ID || null,
+  claimDurationMs: positiveNumber(process.env.CLAIM_DURATION_MINUTES, 90) * 60 * 1000,
+  claimOwnerCooldownMs: positiveNumber(process.env.CLAIM_OWNER_COOLDOWN_HOURS, 24) * 60 * 60 * 1000,
 };
 
 function validate() {
