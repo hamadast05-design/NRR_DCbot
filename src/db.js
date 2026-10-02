@@ -15,6 +15,48 @@ async function query(text, params) {
 
 async function migrate() {
   await query(`
+    CREATE TABLE IF NOT EXISTS event_configs (
+      id BIGSERIAL PRIMARY KEY,
+      guild_id TEXT NOT NULL,
+      destination_channel_id TEXT NOT NULL,
+      creator_id TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      active BOOLEAN NOT NULL DEFAULT TRUE,
+      ended_at TIMESTAMPTZ,
+      interface_channel_id TEXT,
+      interface_message_id TEXT,
+      stick_channel_id TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_event_configs_active ON event_configs(guild_id,active);
+
+    CREATE TABLE IF NOT EXISTS event_submissions (
+      id BIGSERIAL PRIMARY KEY,
+      event_id BIGINT NOT NULL REFERENCES event_configs(id) ON DELETE CASCADE,
+      guild_id TEXT NOT NULL,
+      submitter_id TEXT NOT NULL,
+      image_url TEXT NOT NULL,
+      image_name TEXT,
+      submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      auto_approve_at TIMESTAMPTZ NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected','auto-approved')),
+      reviewed_at TIMESTAMPTZ,
+      reviewer_id TEXT,
+      review_channel_id TEXT,
+      review_message_id TEXT,
+      published_channel_id TEXT,
+      published_message_id TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_event_submissions_due ON event_submissions(status,auto_approve_at);
+    CREATE INDEX IF NOT EXISTS idx_event_submissions_event ON event_submissions(event_id,status);
+
+    CREATE TABLE IF NOT EXISTS event_bot_messages (
+      event_id BIGINT NOT NULL REFERENCES event_configs(id) ON DELETE CASCADE,
+      channel_id TEXT NOT NULL,
+      message_id TEXT NOT NULL,
+      message_type TEXT NOT NULL,
+      PRIMARY KEY(event_id,message_id)
+    );
+
     CREATE TABLE IF NOT EXISTS reputation_members (
       guild_id TEXT NOT NULL,
       user_id TEXT NOT NULL,
@@ -271,4 +313,19 @@ module.exports = {
   getRanks,
   adminAdjust,
   resetMember,
+  createEvent,
+  getActiveEvent,
+  getEvent,
+  recordEventInterface,
+  getEventInterface,
+  setStickChannel,
+  createSubmission,
+  getSubmission,
+  setReviewMessage,
+  rejectSubmission,
+  claimSubmission,
+  setPublishedMessage,
+  getDueSubmissions,
+  getEventBotMessages,
+  endEvent,
 };
