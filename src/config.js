@@ -15,6 +15,9 @@ const config = {
   publicEvents: bool(process.env.PUBLIC_REPUTATION_EVENTS, false),
   logChannelId: process.env.REPUTATION_LOG_CHANNEL_ID || null,
   adminPermission: process.env.ADMIN_PERMISSION || 'ManageGuild',
+  eventManagerRoleIds: (process.env.EVENT_MANAGER_ROLE_IDS || '').split(',').map(x=>x.trim()).filter(Boolean),
+  eventReviewChannelId: process.env.EVENT_REVIEW_CHANNEL_ID || null,
+  eventStickEnabled: bool(process.env.EVENT_STICK_ENABLED, true),
 };
 
 function validate() {
