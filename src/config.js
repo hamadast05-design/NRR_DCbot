@@ -21,7 +21,7 @@ const config = {
   logChannelId: process.env.REPUTATION_LOG_CHANNEL_ID || null,
   adminPermission: process.env.ADMIN_PERMISSION || 'ManageGuild',
   eventManagerRoleIds: (process.env.EVENT_MANAGER_ROLE_IDS || '').split(',').map(x => x.trim()).filter(Boolean),
-  eventReviewChannelId: process.env.EVENT_REVIEW_CHANNEL_ID || null,
+  eventReviewChannelId: process.env.EVENT_REVIEW_CHANNEL_ID || '1555568788492259359',
   eventStickEnabled: bool(process.env.EVENT_STICK_ENABLED, true),
 
   // Fixed NRR free-channel system. These can be overridden for a test server if needed.
