@@ -3,6 +3,7 @@ const { config, validate } = require('./config');
 const db = require('./db');
 const { handleInteraction } = require('./commands');
 const eventSystem = require('./event');
+const claimSystem = require('./claim');
 const annihilateSystem = require('./annihilate');
 
 validate();
@@ -17,6 +18,7 @@ async function registerApplicationCommands() {
   await rest.put(route, { body: commandList.map(command => command.toJSON()) });
   console.log('Application commands registered successfully.');
 }
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent],
 });
@@ -26,8 +28,11 @@ client.once(Events.ClientReady, async readyClient => {
   try {
     await registerApplicationCommands();
     await db.migrate();
+    await claimSystem.ensureSchema();
     console.log('Database migrations ready.');
+
     setInterval(() => eventSystem.autoApprove(readyClient).catch(error => console.error('Event auto-approval failed:', error)), 30 * 1000);
+    setInterval(() => claimSystem.tick(readyClient).catch(error => console.error('Free-channel scheduler failed:', error)), 1000);
 
     for (const guild of readyClient.guilds.cache.values()) {
       const members = await guild.members.fetch();
@@ -55,6 +60,7 @@ client.on(Events.GuildMemberRemove, async member => {
 
 client.on(Events.MessageCreate, async message => {
   try { await eventSystem.onMessage(message); } catch (error) { console.error('Event stick error:', error); }
+  try { await claimSystem.onMessage(message); } catch (error) { console.error('Free-channel claim error:', error); }
   try { await annihilateSystem.onMessage(message); } catch (error) { console.error('Annihilate message error:', error); }
 });
 
