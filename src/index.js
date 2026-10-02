@@ -2,6 +2,7 @@ const { Client, GatewayIntentBits, Events } = require('discord.js');
 const { config, validate } = require('./config');
 const db = require('./db');
 const { handleInteraction } = require('./commands');
+const eventSystem = require('./event');
 
 validate();
 
@@ -14,6 +15,7 @@ client.once(Events.ClientReady, async readyClient => {
   try {
     await db.migrate();
     console.log('Database migrations ready.');
+    setInterval(() => eventSystem.autoApprove(readyClient).catch(error => console.error('Event auto-approval failed:', error)), 30 * 1000);
 
     for (const guild of readyClient.guilds.cache.values()) {
       const members = await guild.members.fetch();
@@ -37,6 +39,10 @@ client.on(Events.GuildMemberAdd, async member => {
 
 client.on(Events.GuildMemberRemove, async member => {
   await db.setMemberActive(member.guild.id, member.id, false).catch(error => console.error('Member remove sync failed:', error));
+});
+
+client.on(Events.MessageCreate, async message => {
+  try { await eventSystem.onMessage(message); } catch (error) { console.error('Event stick error:', error); }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
