@@ -3,11 +3,12 @@ const { config, validate } = require('./config');
 const db = require('./db');
 const { handleInteraction } = require('./commands');
 const eventSystem = require('./event');
+const annihilateSystem = require('./annihilate');
 
 validate();
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent],
 });
 
 client.once(Events.ClientReady, async readyClient => {
@@ -43,6 +44,7 @@ client.on(Events.GuildMemberRemove, async member => {
 
 client.on(Events.MessageCreate, async message => {
   try { await eventSystem.onMessage(message); } catch (error) { console.error('Event stick error:', error); }
+  try { await annihilateSystem.onMessage(message); } catch (error) { console.error('Annihilate message error:', error); }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
