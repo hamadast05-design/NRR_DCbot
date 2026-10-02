@@ -215,6 +215,11 @@ async function handleAdmin(interaction) {
 }
 
 async function handleInteraction(interaction) {
+  if (interaction.isModalSubmit() && interaction.customId.startsWith('event_submit:modal:')) {
+    const eventId = interaction.customId.slice('event_submit:modal:'.length);
+    return eventSystem.submit(interaction, eventId);
+  }
+
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === 'createevent') return eventSystem.createEvent(interaction);
     if (interaction.commandName === 'send') return eventSystem.send(interaction);
