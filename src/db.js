@@ -363,6 +363,197 @@ async function endAnnihilateSession(id) {
   `, [id]);
 }
 
+
+async function createEvent({ guildId, destinationChannelId, creatorId }) {
+  const result = await query(`
+    UPDATE event_configs SET active = FALSE, ended_at = NOW()
+    WHERE guild_id = $1 AND active = TRUE
+    RETURNING id
+  `, [guildId]);
+  const created = await query(`
+    INSERT INTO event_configs (guild_id, destination_channel_id, creator_id)
+    VALUES ($1, $2, $3)
+    RETURNING *
+  `, [guildId, destinationChannelId, creatorId]);
+  return created.rows[0];
+}
+
+async function getActiveEvent(guildId) {
+  const result = await query(`
+    SELECT * FROM event_configs
+    WHERE guild_id = $1 AND active = TRUE
+    ORDER BY created_at DESC, id DESC
+    LIMIT 1
+  `, [guildId]);
+  return result.rows[0] || null;
+}
+
+async function getEvent(eventId, guildId) {
+  const result = await query(`
+    SELECT * FROM event_configs
+    WHERE id = $1 AND guild_id = $2
+    LIMIT 1
+  `, [eventId, guildId]);
+  return result.rows[0] || null;
+}
+
+async function recordEventInterface(eventId, channelId, messageId) {
+  await query(`
+    UPDATE event_configs
+    SET interface_channel_id = $2, interface_message_id = $3
+    WHERE id = $1
+  `, [eventId, channelId, messageId]);
+  await query(`
+    INSERT INTO event_bot_messages (event_id, channel_id, message_id, message_type)
+    VALUES ($1, $2, $3, 'interface')
+    ON CONFLICT (event_id, message_id)
+    DO UPDATE SET channel_id = EXCLUDED.channel_id, message_type = EXCLUDED.message_type
+  `, [eventId, channelId, messageId]);
+}
+
+async function getEventInterface(eventId) {
+  const result = await query(`
+    SELECT interface_channel_id AS channel_id, interface_message_id AS message_id
+    FROM event_configs
+    WHERE id = $1
+    LIMIT 1
+  `, [eventId]);
+  return result.rows[0] || null;
+}
+
+async function setStickChannel(eventId, channelId) {
+  await query(`
+    UPDATE event_configs SET stick_channel_id = $2 WHERE id = $1
+  `, [eventId, channelId]);
+}
+
+async function createSubmission({ eventId, guildId, submitterId, imageUrl, imageName, submittedAt }) {
+  const submitted = submittedAt || new Date();
+  const result = await query(`
+    INSERT INTO event_submissions
+      (event_id, guild_id, submitter_id, image_url, image_name, submitted_at, auto_approve_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $6 + INTERVAL '3 hours')
+    RETURNING *
+  `, [eventId, guildId, submitterId, imageUrl, imageName || null, submitted]);
+  return result.rows[0];
+}
+
+async function getSubmission(id) {
+  const result = await query(`
+    SELECT * FROM event_submissions WHERE id = $1 LIMIT 1
+  `, [id]);
+  return result.rows[0] || null;
+}
+
+async function setReviewMessage(id, channelId, messageId) {
+  await query(`
+    UPDATE event_submissions
+    SET review_channel_id = $2, review_message_id = $3
+    WHERE id = $1
+  `, [id, channelId, messageId]);
+}
+
+async function rejectSubmission(id, reviewerId) {
+  const result = await query(`
+    UPDATE event_submissions
+    SET status = 'rejected', reviewed_at = NOW(), reviewer_id = $2
+    WHERE id = $1 AND status = 'pending'
+    RETURNING *
+  `, [id, reviewerId]);
+  return result.rowCount > 0;
+}
+
+async function claimSubmission(id, status, reviewerId) {
+  const result = await query(`
+    UPDATE event_submissions
+    SET status = $2, reviewed_at = NOW(), reviewer_id = $3
+    WHERE id = $1 AND status = 'pending'
+    RETURNING *
+  `, [id, status, reviewerId]);
+  return result.rowCount > 0;
+}
+
+async function setPublishedMessage(id, messageId, channelId) {
+  await query(`
+    UPDATE event_submissions
+    SET published_channel_id = $3, published_message_id = $2
+    WHERE id = $1
+  `, [id, messageId, channelId]);
+}
+
+async function getDueSubmissions() {
+  const result = await query(`
+    SELECT * FROM event_submissions
+    WHERE status = 'pending' AND auto_approve_at <= NOW()
+    ORDER BY auto_approve_at ASC, id ASC
+    LIMIT 100
+  `);
+  return result.rows;
+}
+
+async function getEventBotMessages(eventId) {
+  const result = await query(`
+    SELECT channel_id, message_id, message_type
+    FROM event_bot_messages
+    WHERE event_id = $1
+    ORDER BY message_id
+  `, [eventId]);
+  return result.rows;
+}
+
+async function endEvent(eventId) {
+  await query(`
+    UPDATE event_configs
+    SET active = FALSE, ended_at = NOW()
+    WHERE id = $1 AND active = TRUE
+  `, [eventId]);
+}
+
+async function createAnnihilateSession({ guildId, targetId, runnerId, channelId, webhookId, webhookToken }) {
+  const result = await query(`
+    INSERT INTO annihilate_sessions (guild_id, target_id, runner_id, channel_id, webhook_id, webhook_token)
+    VALUES ($1,$2,$3,$4,$5,$6)
+    RETURNING *
+  `, [guildId, targetId, runnerId, channelId, webhookId, webhookToken]);
+  return result.rows[0];
+}
+
+async function getAnnihilateByTarget(guildId, targetId) {
+  const result = await query(`
+    SELECT * FROM annihilate_sessions
+    WHERE guild_id = $1 AND target_id = $2 AND active = TRUE
+    LIMIT 1
+  `, [guildId, targetId]);
+  return result.rows[0] || null;
+}
+
+async function getAnnihilateByRunner(guildId, runnerId) {
+  const result = await query(`
+    SELECT * FROM annihilate_sessions
+    WHERE guild_id = $1 AND runner_id = $2 AND active = TRUE
+    LIMIT 1
+  `, [guildId, runnerId]);
+  return result.rows[0] || null;
+}
+
+async function getAnnihilateByRunnerGlobal(runnerId) {
+  const result = await query(`
+    SELECT * FROM annihilate_sessions
+    WHERE runner_id = $1 AND active = TRUE
+    ORDER BY created_at DESC
+    LIMIT 1
+  `, [runnerId]);
+  return result.rows;
+}
+
+async function endAnnihilateSession(id) {
+  await query(`
+    UPDATE annihilate_sessions
+    SET active = FALSE, ended_at = NOW()
+    WHERE id = $1 AND active = TRUE
+  `, [id]);
+}
+
 module.exports = {
   pool,
   query,
