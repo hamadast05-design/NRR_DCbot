@@ -33,6 +33,9 @@ function parseDuration(input) {
 }
 
 async function ensureSchema() {
+  // PostgreSQL prepared statements accept one SQL command at a time.
+  // Keep schema creation sequential so node-postgres does not try to prepare
+  // the entire migration block as a single multi-command statement.
   await db.query(`
     CREATE TABLE IF NOT EXISTS channel_claim_state (
       channel_id TEXT PRIMARY KEY,
@@ -46,19 +49,29 @@ async function ensureSchema() {
       countdown_started BOOLEAN NOT NULL DEFAULT FALSE,
       countdown_value INTEGER,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
+    )
+  `);
+
+  await db.query(`
     CREATE TABLE IF NOT EXISTS channel_claim_cooldowns (
       channel_id TEXT NOT NULL,
       user_id TEXT NOT NULL,
       blocked_until TIMESTAMPTZ NOT NULL,
       PRIMARY KEY (channel_id, user_id)
-    );
+    )
+  `);
+
+  await db.query(`
     CREATE INDEX IF NOT EXISTS idx_channel_claim_cooldowns_until
-      ON channel_claim_cooldowns(channel_id, blocked_until);
+      ON channel_claim_cooldowns(channel_id, blocked_until)
+  `);
+
+  await db.query(`
     INSERT INTO channel_claim_state (channel_id, guild_id)
     VALUES ($1, $2)
-    ON CONFLICT (channel_id) DO NOTHING;
+    ON CONFLICT (channel_id) DO NOTHING
   `, [CHANNEL_ID, config.claimGuildId || 'unknown']);
+
   ready = true;
 }
 
