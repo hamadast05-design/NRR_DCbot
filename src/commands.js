@@ -23,6 +23,28 @@ const commands = [
   new SlashCommandBuilder().setName('end').setDescription('End the active event and remove its bot messages.'),
 
   new SlashCommandBuilder()
+    .setName('mute')
+    .setDescription('Timeout a member.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers.toString())
+    .addUserOption(o => o.setName('user').setDescription('Member to mute.').setRequired(true))
+    .addStringOption(o => o.setName('time').setDescription('Duration, e.g. 10m, 2h, 1d, 1w.').setRequired(true))
+    .addStringOption(o => o.setName('reason').setDescription('Reason for the mute.').setRequired(false)),
+
+  new SlashCommandBuilder()
+    .setName('kick')
+    .setDescription('Kick a member from the server.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers.toString())
+    .addUserOption(o => o.setName('user').setDescription('Member to kick.').setRequired(true))
+    .addStringOption(o => o.setName('reason').setDescription('Reason for the kick.').setRequired(false)),
+
+  new SlashCommandBuilder()
+    .setName('ban')
+    .setDescription('Ban a member from the server.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers.toString())
+    .addUserOption(o => o.setName('user').setDescription('Member to ban.').setRequired(true))
+    .addStringOption(o => o.setName('reason').setDescription('Reason for the ban.').setRequired(false)),
+
+  new SlashCommandBuilder()
     .setName('fame')
     .setDescription('Give another member +1 Fame.')
     .addUserOption(o => o.setName('member').setDescription('The member receiving Fame.').setRequired(true)),
@@ -214,6 +236,75 @@ async function handleAdmin(interaction) {
   }
 }
 
+function parseMuteDuration(input) {
+  const match = String(input).trim().toLowerCase().match(/^(\\d+)\\s*(m|h|d|w)$/);
+  if (!match) return null;
+  const amount = Number(match[1]);
+  const unit = match[2];
+  const multipliers = { m: 60 * 1000, h: 60 * 60 * 1000, d: 24 * 60 * 60 * 1000, w: 7 * 24 * 60 * 60 * 1000 };
+  const duration = amount * multipliers[unit];
+  if (!Number.isSafeInteger(duration) || duration < 1000 || duration > 28 * 24 * 60 * 60 * 1000) return null;
+  return duration;
+}
+
+async function getModerationTarget(interaction, optionName) {
+  const user = interaction.options.getUser(optionName, true);
+  if (user.id === interaction.user.id) return { error: '❌ You cannot moderate yourself.' };
+  if (user.id === interaction.client.user.id) return { error: '❌ I cannot moderate myself.' };
+  const member = await interaction.guild.members.fetch(user.id).catch(() => null);
+  if (!member) return { error: '❌ That user is not currently in this server.' };
+  if (member.id === interaction.guild.ownerId) return { error: '❌ The server owner cannot be moderated by the bot.' };
+  return { user, member };
+}
+
+async function handleMute(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ModerateMembers)) return interaction.reply({ content: '❌ You do not have permission to mute members.', ephemeral: true });
+  const target = await getModerationTarget(interaction, 'user');
+  if (target.error) return interaction.reply({ content: target.error, ephemeral: true });
+  const durationInput = interaction.options.getString('time', true);
+  const duration = parseMuteDuration(durationInput);
+  if (!duration) return interaction.reply({ content: '❌ Invalid mute time. Use 10m, 2h, 1d, or 1w (maximum 28 days).', ephemeral: true });
+  if (!target.member.moderatable) return interaction.reply({ content: '❌ I cannot mute that member. Check my role position and Moderate Members permission.', ephemeral: true });
+  const reason = interaction.options.getString('reason') || 'No reason provided';
+  try {
+    await target.member.timeout(duration, reason);
+    return interaction.reply({ content: 'lmaooo <@' + target.user.id + '> has been muted for ' + durationInput.trim() + ', couldn\'t be me 😂' });
+  } catch (error) {
+    console.error('Mute error:', error);
+    return interaction.reply({ content: '❌ I could not mute that member. Check my permissions and role hierarchy.', ephemeral: true });
+  }
+}
+
+async function handleKick(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.KickMembers)) return interaction.reply({ content: '❌ You do not have permission to kick members.', ephemeral: true });
+  const target = await getModerationTarget(interaction, 'user');
+  if (target.error) return interaction.reply({ content: target.error, ephemeral: true });
+  if (!target.member.kickable) return interaction.reply({ content: '❌ I cannot kick that member. Check my role position and Kick Members permission.', ephemeral: true });
+  const reason = interaction.options.getString('reason') || 'No reason provided';
+  try {
+    await target.member.kick(reason);
+    return interaction.reply({ content: '<@' + target.user.id + '> has been successfully kicked 😨.' });
+  } catch (error) {
+    console.error('Kick error:', error);
+    return interaction.reply({ content: '❌ I could not kick that member. Check my permissions and role hierarchy.', ephemeral: true });
+  }
+}
+
+async function handleBan(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.BanMembers)) return interaction.reply({ content: '❌ You do not have permission to ban members.', ephemeral: true });
+  const target = await getModerationTarget(interaction, 'user');
+  if (target.error) return interaction.reply({ content: target.error, ephemeral: true });
+  if (!target.member.bannable) return interaction.reply({ content: '❌ I cannot ban that member. Check my role position and Ban Members permission.', ephemeral: true });
+  const reason = interaction.options.getString('reason') || 'No reason provided';
+  try {
+    await target.member.ban({ reason });
+    return interaction.reply({ content: '<@' + target.user.id + '> has been successfully banned.' });
+  } catch (error) {
+    console.error('Ban error:', error);
+    return interaction.reply({ content: '❌ I could not ban that member. Check my permissions and role hierarchy.', ephemeral: true });
+  }
+}
+
 async function handleInteraction(interaction) {
   if (interaction.isModalSubmit() && interaction.customId.startsWith('event_submit:modal:')) {
     const eventId = interaction.customId.slice('event_submit:modal:'.length);
@@ -225,6 +316,9 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'send') return eventSystem.send(interaction);
     if (interaction.commandName === 'stick') return eventSystem.stick(interaction);
     if (interaction.commandName === 'end') return eventSystem.end(interaction);
+    if (interaction.commandName === 'mute') return handleMute(interaction);
+    if (interaction.commandName === 'kick') return handleKick(interaction);
+    if (interaction.commandName === 'ban') return handleBan(interaction);
 
     if (interaction.commandName === 'fame') return handleVote(interaction, 'fame');
     if (interaction.commandName === 'humiliate') return handleVote(interaction, 'humiliation');
