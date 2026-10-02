@@ -8,6 +8,7 @@ const {
 } = require('discord.js');
 const db = require('./db');
 const { config } = require('./config');
+const eventSystem = require('./event');
 
 const COLORS = {
   fame: 0xf1c40f,
@@ -16,6 +17,11 @@ const COLORS = {
 };
 
 const commands = [
+  new SlashCommandBuilder().setName('createevent').setDescription('Create an event submission configuration.').addStringOption(o=>o.setName('channel_id').setDescription('Destination channel ID.').setRequired(true)),
+  new SlashCommandBuilder().setName('send').setDescription('Send the event submission interface.').addStringOption(o=>o.setName('channel_id').setDescription('Channel for the submission interface.').setRequired(true)),
+  new SlashCommandBuilder().setName('stick').setDescription('Keep the submission interface at the top of a channel.').addStringOption(o=>o.setName('channel_id').setDescription('Channel to stick the interface in.').setRequired(true)),
+  new SlashCommandBuilder().setName('end').setDescription('End the active event and remove its bot messages.'),
+
   new SlashCommandBuilder()
     .setName('fame')
     .setDescription('Give another member +1 Fame.')
@@ -210,6 +216,11 @@ async function handleAdmin(interaction) {
 
 async function handleInteraction(interaction) {
   if (interaction.isChatInputCommand()) {
+    if (interaction.commandName === 'createevent') return eventSystem.createEvent(interaction);
+    if (interaction.commandName === 'send') return eventSystem.send(interaction);
+    if (interaction.commandName === 'stick') return eventSystem.stick(interaction);
+    if (interaction.commandName === 'end') return eventSystem.end(interaction);
+
     if (interaction.commandName === 'fame') return handleVote(interaction, 'fame');
     if (interaction.commandName === 'humiliate') return handleVote(interaction, 'humiliation');
     if (interaction.commandName === 'reputation') return handleReputation(interaction);
@@ -217,6 +228,15 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'reputation-admin') return handleAdmin(interaction);
   }
 
+  if (interaction.isButton() && interaction.customId.startsWith('event_submit:')) {
+    const value=interaction.customId.slice('event_submit:'.length);
+    if(value.startsWith('modal:')) return eventSystem.submit(interaction,value.slice(6));
+    return eventSystem.showModal(interaction,value);
+  }
+  if (interaction.isButton() && interaction.customId.startsWith('event_review:')) {
+    const value=interaction.customId.slice('event_review:'.length); const split=value.split(':');
+    return eventSystem.review(interaction,split[0],split[1]);
+  }
   if (interaction.isButton() && interaction.customId.startsWith('rep:')) {
     const [, type, pageText, ownerId] = interaction.customId.split(':');
     if (interaction.user.id !== ownerId) {
