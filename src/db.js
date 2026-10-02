@@ -57,6 +57,23 @@ async function migrate() {
       PRIMARY KEY(event_id,message_id)
     );
 
+    CREATE TABLE IF NOT EXISTS annihilate_sessions (
+      id BIGSERIAL PRIMARY KEY,
+      guild_id TEXT NOT NULL,
+      target_id TEXT NOT NULL,
+      runner_id TEXT NOT NULL,
+      channel_id TEXT NOT NULL,
+      webhook_id TEXT NOT NULL,
+      webhook_token TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      active BOOLEAN NOT NULL DEFAULT TRUE,
+      ended_at TIMESTAMPTZ
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_annihilate_active_target
+      ON annihilate_sessions(guild_id, target_id) WHERE active = TRUE;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_annihilate_active_runner
+      ON annihilate_sessions(guild_id, runner_id) WHERE active = TRUE;
+
     CREATE TABLE IF NOT EXISTS reputation_members (
       guild_id TEXT NOT NULL,
       user_id TEXT NOT NULL,
@@ -300,6 +317,52 @@ async function resetMember(guildId, adminId, targetId) {
   }
 }
 
+
+async function createAnnihilateSession({ guildId, targetId, runnerId, channelId, webhookId, webhookToken }) {
+  const result = await query(`
+    INSERT INTO annihilate_sessions (guild_id, target_id, runner_id, channel_id, webhook_id, webhook_token)
+    VALUES ($1,$2,$3,$4,$5,$6)
+    RETURNING *
+  `, [guildId, targetId, runnerId, channelId, webhookId, webhookToken]);
+  return result.rows[0];
+}
+
+async function getAnnihilateByTarget(guildId, targetId) {
+  const result = await query(`
+    SELECT * FROM annihilate_sessions
+    WHERE guild_id = $1 AND target_id = $2 AND active = TRUE
+    LIMIT 1
+  `, [guildId, targetId]);
+  return result.rows[0] || null;
+}
+
+async function getAnnihilateByRunner(guildId, runnerId) {
+  const result = await query(`
+    SELECT * FROM annihilate_sessions
+    WHERE guild_id = $1 AND runner_id = $2 AND active = TRUE
+    LIMIT 1
+  `, [guildId, runnerId]);
+  return result.rows[0] || null;
+}
+
+async function getAnnihilateByRunnerGlobal(runnerId) {
+  const result = await query(`
+    SELECT * FROM annihilate_sessions
+    WHERE runner_id = $1 AND active = TRUE
+    ORDER BY created_at DESC
+    LIMIT 1
+  `, [runnerId]);
+  return result.rows;
+}
+
+async function endAnnihilateSession(id) {
+  await query(`
+    UPDATE annihilate_sessions
+    SET active = FALSE, ended_at = NOW()
+    WHERE id = $1 AND active = TRUE
+  `, [id]);
+}
+
 module.exports = {
   pool,
   query,
@@ -328,4 +391,9 @@ module.exports = {
   getDueSubmissions,
   getEventBotMessages,
   endEvent,
+  createAnnihilateSession,
+  getAnnihilateByTarget,
+  getAnnihilateByRunner,
+  getAnnihilateByRunnerGlobal,
+  endAnnihilateSession,
 };
