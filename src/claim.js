@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, PermissionsBitField } = require('discord.js');
+const { PermissionFlagsBits } = require('discord.js');
 const db = require('./db');
 const { config } = require('./config');
 
@@ -167,10 +167,7 @@ async function grantOwner(channel, userId) {
   const ownerPermissions = {
     ManageChannels: true,
     UseApplicationCommands: true,
-    ManageThreads: true,
     ManageMessages: true,
-    PinMessages: true,
-    UseEmbeddedActivities: true,
   };
 
   const allow = Object.entries(ownerPermissions)
