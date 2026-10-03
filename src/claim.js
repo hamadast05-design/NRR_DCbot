@@ -33,9 +33,6 @@ function parseDuration(input) {
 }
 
 async function ensureSchema() {
-  // PostgreSQL prepared statements accept one SQL command at a time.
-  // Keep schema creation sequential so node-postgres does not try to prepare
-  // the entire migration block as a single multi-command statement.
   await db.query(`
     CREATE TABLE IF NOT EXISTS channel_claim_state (
       channel_id TEXT PRIMARY KEY,
@@ -51,7 +48,6 @@ async function ensureSchema() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
-
   await db.query(`
     CREATE TABLE IF NOT EXISTS channel_claim_cooldowns (
       channel_id TEXT NOT NULL,
@@ -60,18 +56,15 @@ async function ensureSchema() {
       PRIMARY KEY (channel_id, user_id)
     )
   `);
-
   await db.query(`
     CREATE INDEX IF NOT EXISTS idx_channel_claim_cooldowns_until
       ON channel_claim_cooldowns(channel_id, blocked_until)
   `);
-
   await db.query(`
     INSERT INTO channel_claim_state (channel_id, guild_id)
     VALUES ($1, $2)
     ON CONFLICT (channel_id) DO NOTHING
   `, [CHANNEL_ID, config.claimGuildId || 'unknown']);
-
   ready = true;
 }
 
@@ -126,9 +119,6 @@ async function grantOwner(channel, userId) {
   if (member.permissions.has(PermissionFlagsBits.Administrator)) {
     throw new Error('Administrator members cannot claim this channel because Administrator bypasses channel restrictions.');
   }
-
-  // Editing a member overwrite is controlled by the bot's channel permissions,
-  // not by whether the claimant's role is above or below the bot.
   await channel.permissionOverwrites.edit(
     userId,
     { ...ownerAllow, ...ownerDeny },
@@ -161,22 +151,48 @@ async function saveCooldown(userId) {
 }
 
 async function claim(message) {
-  if (!ready || !isClaimMessage(message) || working) return;
-  const channel = message.channel;
-  if (!channel.isTextBased() || !channel.permissionOverwrites) return;
-  const missing = missingBotPermissions(channel);
-  if (missing.length) {
-    console.error(`Free-channel claim unavailable in #${channel.id}: missing ${missing.join(', ')}`);
+  console.log(`[CLAIM DEBUG] message received channel=${message.channelId} user=${message.author.id} ready=${ready} working=${working}`);
+  if (!ready) {
+    console.error(`[CLAIM DEBUG] ignored: schema is not ready (channel=${message.channelId})`);
     return;
   }
-  const member = await message.guild.members.fetch(message.author.id).catch(() => null);
+  if (!isClaimMessage(message)) {
+    console.log(`[CLAIM DEBUG] ignored: not a claim message channel=${message.channelId} expected=${CHANNEL_ID} bot=${message.author.bot}`);
+    return;
+  }
+  if (working) {
+    console.log(`[CLAIM DEBUG] ignored: another claim operation is currently running`);
+    return;
+  }
+
+  const channel = message.channel;
+  if (!channel.isTextBased() || !channel.permissionOverwrites) {
+    console.error(`[CLAIM DEBUG] ignored: channel is not a supported text channel or has no permission overwrites`);
+    return;
+  }
+  const missing = missingBotPermissions(channel);
+  if (missing.length) {
+    console.error(`[CLAIM DEBUG] ignored: missing bot permissions: ${missing.join(', ')}`);
+    return;
+  }
+
+  const member = await message.guild.members.fetch(message.author.id).catch((error) => {
+    console.error(`[CLAIM DEBUG] ignored: could not fetch member ${message.author.id}:`, error);
+    return null;
+  });
   if (!member) return;
+
+  console.log(`[CLAIM DEBUG] claimant fetched user=${member.id} roles=${member.roles.cache.map(r => `${r.id}:${r.name}`).join(',')} admin=${member.permissions.has(PermissionFlagsBits.Administrator)}`);
+
   if (member.permissions.has(PermissionFlagsBits.Administrator)) {
+    console.log(`[CLAIM DEBUG] rejected: claimant is Administrator user=${member.id}`);
     await message.reply('❌ Administrators cannot claim this channel because Administrator bypasses channel restrictions.').catch(() => {});
     return;
   }
+
   const blocked = await cooldownUntil(member.id);
   if (blocked) {
+    console.log(`[CLAIM DEBUG] rejected: claimant cooldown until=${blocked}`);
     await message.reply(`⏳ You cannot claim this channel again for **${formatDuration(new Date(blocked).getTime() - Date.now())}**.`).catch(() => {});
     return;
   }
@@ -191,13 +207,16 @@ async function claim(message) {
       const r = await client.query('SELECT * FROM channel_claim_state WHERE channel_id=$1 FOR UPDATE', [CHANNEL_ID]);
       const state = r.rows[0];
       if (!state) throw new Error('Claim state row missing.');
+      console.log(`[CLAIM DEBUG] state owner=${state.owner_id || 'none'} expires=${state.expires_at || 'none'}`);
       if (state.owner_id && state.expires_at && new Date(state.expires_at).getTime() > Date.now()) {
+        console.log(`[CLAIM DEBUG] ignored: channel already claimed by ${state.owner_id}`);
         await client.query('ROLLBACK');
         return;
       }
       previousOwner = state.owner_id || null;
       const blockedAgain = await client.query('SELECT blocked_until FROM channel_claim_cooldowns WHERE channel_id=$1 AND user_id=$2 AND blocked_until > NOW() FOR UPDATE', [CHANNEL_ID, member.id]);
       if (blockedAgain.rows[0]) {
+        console.log(`[CLAIM DEBUG] rejected inside transaction: cooldown until=${blockedAgain.rows[0].blocked_until}`);
         await client.query('ROLLBACK');
         await message.reply(`⏳ You cannot claim this channel again for **${formatDuration(new Date(blockedAgain.rows[0].blocked_until).getTime() - Date.now())}**.`).catch(() => {});
         return;
@@ -219,8 +238,10 @@ async function claim(message) {
       client.release();
     }
 
+    console.log(`[CLAIM DEBUG] database claim saved user=${member.id} expires=${expires.toISOString()}`);
     try {
       await grantOwner(channel, member.id);
+      console.log(`[CLAIM DEBUG] permission overwrite granted user=${member.id}`);
     } catch (error) {
       await db.query('UPDATE channel_claim_state SET owner_id=NULL, claimed_at=NULL, expires_at=NULL, updated_at=NOW() WHERE channel_id=$1 AND owner_id=$2', [CHANNEL_ID, member.id]);
       throw error;
@@ -234,9 +255,11 @@ async function claim(message) {
     await channel.send({
       content: `🏆 **Channel claimed!**\n\nCongratulations <@${member.id}>! You are now the temporary manager of this channel for **${formatDuration(DURATION_MS)}**.`,
       allowedMentions: { users: [member.id] },
-    }).catch(() => {});
+    }).catch((error) => console.error('[CLAIM DEBUG] claim succeeded but announcement failed:', error));
+    console.log(`[CLAIM DEBUG] SUCCESS user=${member.id}`);
   } catch (error) {
     console.error('Free-channel claim error:', error);
+    console.error(`[CLAIM DEBUG] FAILED user=${member.id} code=${error?.code || 'none'} message=${error?.message || 'unknown'}`);
   } finally {
     working = false;
   }
@@ -264,12 +287,11 @@ async function tick(client) {
   ticking = true;
   try {
     const state = await getState();
-    if (!state?.owner_id || !state.expires_at) return;
+    if (!state?.owner_id || !state?.expires_at) return;
     const remaining = new Date(state.expires_at).getTime() - Date.now();
     const channel = await client.channels.fetch(CHANNEL_ID).catch(() => null);
     if (!channel?.isTextBased()) return;
     if (remaining <= 0) return expire(client, state);
-
     if (remaining <= 45 * 60000 && !state.reminder_45_sent) {
       await channel.send({ content: `⏰ <@${state.owner_id}> **45 minutes remain.** Half of your ownership time has been spent.`, allowedMentions: { users: [state.owner_id] } }).catch(() => {});
       await db.query('UPDATE channel_claim_state SET reminder_45_sent=TRUE, updated_at=NOW() WHERE channel_id=$1 AND owner_id=$2', [CHANNEL_ID, state.owner_id]);
@@ -282,7 +304,6 @@ async function tick(client) {
       await channel.send({ content: `⚠️ <@${state.owner_id}> **1 minute remains** on your channel ownership.`, allowedMentions: { users: [state.owner_id] } }).catch(() => {});
       await db.query('UPDATE channel_claim_state SET reminder_1_sent=TRUE, updated_at=NOW() WHERE channel_id=$1 AND owner_id=$2', [CHANNEL_ID, state.owner_id]);
     }
-
     if (remaining <= 10000) {
       const current = Math.min(10, Math.max(1, Math.ceil(remaining / 1000)));
       const last = Number(state.countdown_value || 11);
@@ -335,7 +356,12 @@ async function editCountdown(interaction) {
 }
 
 async function onMessage(message) {
-  if (isClaimMessage(message)) await claim(message);
+  if (isClaimMessage(message)) {
+    console.log(`[CLAIM DEBUG] onMessage matched channel=${message.channelId} user=${message.author.id}`);
+    await claim(message);
+  } else if (message.guild && message.channelId === CHANNEL_ID) {
+    console.log(`[CLAIM DEBUG] onMessage ignored bot=${message.author.bot} channel=${message.channelId} expected=${CHANNEL_ID}`);
+  }
 }
 
 module.exports = { ensureSchema, onMessage, tick, revoke, editCountdown };
