@@ -112,7 +112,7 @@ async function sendLog(interaction, title, description, color) {
   if (!config.publicEvents || !config.logChannelId) return;
   const channel = await interaction.client.channels.fetch(config.logChannelId).catch(() => null);
   if (!channel?.isTextBased()) return;
-  await channel.send({ embeds: [new EmbedBuilder().setTitle(title).setDescription(description).setColor(color).setTimestamp()] }).catch(() => {});
+  await channel.send({ embeds: [new EmbedBuilder().setTitle(title).setDescription(description).setColor(color).setTimestamp()], allowedMentions: { parse: [] } }).catch(() => {});
 }
 
 async function handleVote(interaction, type) {
