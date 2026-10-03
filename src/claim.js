@@ -113,17 +113,65 @@ const ownerDeny = {
 };
 
 async function grantOwner(channel, userId) {
-  const missing = missingBotPermissions(channel);
+  const me = channel.guild.members.me;
+  const perms = botChannelPermissions(channel);
+  const diagnostics = {
+    channelId: channel.id,
+    channelType: channel.type,
+    parentId: channel.parentId || 'none',
+    viewable: channel.viewable,
+    manageable: channel.manageable,
+    botMember: me ? me.id : 'missing',
+    botTopRole: me?.roles?.highest ? `${me.roles.highest.id}:${me.roles.highest.name}:position=${me.roles.highest.position}` : 'missing',
+    effectivePermissions: perms ? perms.toArray().join(',') : 'missing',
+    manageChannels: perms?.has(PermissionFlagsBits.ManageChannels) || false,
+    viewChannel: perms?.has(PermissionFlagsBits.ViewChannel) || false,
+    sendMessages: perms?.has(PermissionFlagsBits.SendMessages) || false,
+  };
+  console.log('[CLAIM DEBUG] permission preflight', JSON.stringify(diagnostics));
+
+  if (!me) throw new Error('Bot member is not available in this guild.');
+  if (!perms) throw new Error("Could not resolve the bot's channel permissions.");
+  const missing = [
+    !perms.has(PermissionFlagsBits.ViewChannel) ? 'View Channel' : null,
+    !perms.has(PermissionFlagsBits.SendMessages) ? 'Send Messages' : null,
+    !perms.has(PermissionFlagsBits.ManageChannels) ? 'Manage Channels' : null,
+  ].filter(Boolean);
   if (missing.length) throw new Error(`Bot is missing channel permissions: ${missing.join(', ')}.`);
+
   const member = await channel.guild.members.fetch(userId);
   if (member.permissions.has(PermissionFlagsBits.Administrator)) {
     throw new Error('Administrator members cannot claim this channel because Administrator bypasses channel restrictions.');
   }
-  await channel.permissionOverwrites.edit(
+
+  const existing = channel.permissionOverwrites.cache.get(userId);
+  console.log('[CLAIM DEBUG] target overwrite before edit', JSON.stringify({
     userId,
-    { ...ownerAllow, ...ownerDeny },
-    'Temporary free-channel ownership'
-  );
+    exists: Boolean(existing),
+    type: existing?.type ?? null,
+    allow: existing?.allow?.toArray?.() || [],
+    deny: existing?.deny?.toArray?.() || [],
+  }));
+
+  try {
+    await channel.permissionOverwrites.edit(
+      userId,
+      { ...ownerAllow, ...ownerDeny },
+      { reason: 'Temporary free-channel ownership' }
+    );
+  } catch (error) {
+    console.error('[CLAIM DEBUG] permission overwrite failed', JSON.stringify({
+      ...diagnostics,
+      userId,
+      errorCode: error?.code || null,
+      httpStatus: error?.status || null,
+      errorName: error?.name || null,
+      errorMessage: error?.message || null,
+    }));
+    throw error;
+  }
+
+  console.log(`[CLAIM DEBUG] permission overwrite granted user=${userId}`);
 }
 
 async function removeOwner(channel, userId) {
