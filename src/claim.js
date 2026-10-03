@@ -209,7 +209,32 @@ async function grantOwner(channel, userId) {
   console.log(`[CLAIM DEBUG] permission overwrite granted user=${userId} allow=${allow}`);
 }
 async function removeOwner(channel, userId) {
-  if (userId) await channel.permissionOverwrites.delete(userId, 'Free-channel ownership ended').catch(() => {});
+  if (!userId) return;
+  // Keep the claimant able to see the channel after ownership ends, while
+  // removing the temporary management permissions. Deleting the overwrite
+  // would expose the channel's underlying No Access deny and lock them out.
+  try {
+    await channel.guild.client.rest.put(
+      `/channels/${channel.id}/permissions/${userId}`,
+      {
+        body: {
+          id: userId,
+          type: 1,
+          allow: PermissionFlagsBits.ViewChannel.toString(),
+          deny: '0',
+        },
+        reason: 'Free-channel ownership ended',
+      }
+    );
+  } catch (error) {
+    console.error('[CLAIM DEBUG] failed to remove owner permissions', JSON.stringify({
+      channelId: channel.id,
+      userId,
+      errorCode: error?.code || null,
+      httpStatus: error?.status || null,
+      errorMessage: error?.message || null,
+    }));
+  }
 }
 
 async function getState() {
