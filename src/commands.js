@@ -90,6 +90,14 @@ const commands = [
     .setName('revoke')
     .setDescription('Revoke the current free-channel ownership and open the channel again.')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild.toString()),
+  new SlashCommandBuilder()
+    .setName('stop_cl')
+    .setDescription('Stop the free-channel claiming system.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild.toString()),
+  new SlashCommandBuilder()
+    .setName('open_cl')
+    .setDescription('Open the free-channel claiming system again.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild.toString()),
 
   new SlashCommandBuilder()
     .setName('edit_cd')
@@ -303,6 +311,8 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'leaderboard') return showLeaderboard(interaction, interaction.options.getSubcommand());
     if (interaction.commandName === 'reputation-admin') return handleAdmin(interaction);
     if (interaction.commandName === 'revoke') return claimSystem.revoke(interaction);
+    if (interaction.commandName === 'stop_cl') return claimSystem.stop(interaction);
+    if (interaction.commandName === 'open_cl') return claimSystem.open(interaction);
     if (interaction.commandName === 'edit_cd') return claimSystem.editCountdown(interaction);
   }
 
