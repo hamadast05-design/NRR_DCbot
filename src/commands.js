@@ -9,7 +9,6 @@ const {
 const db = require('./db');
 const { config } = require('./config');
 const eventSystem = require('./event');
-const claimSystem = require('./claim');
 
 const COLORS = {
   fame: 0xf1c40f,
@@ -85,24 +84,6 @@ const commands = [
     .addSubcommand(s => s.setName('remove-humiliation').setDescription('Remove Humiliation from a member.')
       .addUserOption(o => o.setName('member').setDescription('Member.').setRequired(true))
       .addIntegerOption(o => o.setName('amount').setDescription('Positive amount to remove.').setMinValue(1).setMaxValue(100000).setRequired(true))),
-
-  new SlashCommandBuilder()
-    .setName('revoke')
-    .setDescription('Revoke the current free-channel ownership and open the channel again.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild.toString()),
-  new SlashCommandBuilder()
-    .setName('stop_cl')
-    .setDescription('Stop the free-channel claiming system.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild.toString()),
-  new SlashCommandBuilder()
-    .setName('open_cl')
-    .setDescription('Open the free-channel claiming system again.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild.toString()),
-
-  new SlashCommandBuilder()
-    .setName('edit_cd')
-    .setDescription('Change the remaining free-channel ownership countdown.')
-    .addStringOption(o => o.setName('time').setDescription('Remaining time, e.g. 30m, 1h, 90m.').setRequired(true)),
 ];
 
 function mention(id) { return `<@${id}>`; }
@@ -310,10 +291,6 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'reputation') return handleReputation(interaction);
     if (interaction.commandName === 'leaderboard') return showLeaderboard(interaction, interaction.options.getSubcommand());
     if (interaction.commandName === 'reputation-admin') return handleAdmin(interaction);
-    if (interaction.commandName === 'revoke') return claimSystem.revoke(interaction);
-    if (interaction.commandName === 'stop_cl') return claimSystem.stop(interaction);
-    if (interaction.commandName === 'open_cl') return claimSystem.open(interaction);
-    if (interaction.commandName === 'edit_cd') return claimSystem.editCountdown(interaction);
   }
 
   if (interaction.isButton() && interaction.customId.startsWith('event_submit:')) {
