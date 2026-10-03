@@ -271,7 +271,7 @@ async function getState() {
 }
 
 async function cooldownUntil(userId) {
-  const r = await db.query('SELECT blocked_until, notice_sent FROM channel_claim_cooldowns WHERE channel_id=$1 AND user_id=$2 AND blocked_until > NOW() LIMIT 1', [CHANNEL_ID, userId]);
+  const r = await db.query('SELECT blocked_until FROM channel_claim_cooldowns WHERE channel_id=$1 AND user_id=$2 AND blocked_until > NOW() LIMIT 1', [CHANNEL_ID, userId]);
   return r.rows[0] || null;
 }
 
@@ -281,11 +281,8 @@ async function saveCooldown(userId) {
     INSERT INTO channel_claim_cooldowns (channel_id,user_id,blocked_until,notice_sent)
     VALUES ($1,$2,$3,FALSE)
     ON CONFLICT (channel_id,user_id)
-    DO UPDATE SET blocked_until = GREATEST(channel_claim_cooldowns.blocked_until, EXCLUDED.blocked_until),
-                  notice_sent = CASE
-                    WHEN EXCLUDED.blocked_until > channel_claim_cooldowns.blocked_until THEN FALSE
-                    ELSE channel_claim_cooldowns.notice_sent
-                  END
+    DO UPDATE SET blocked_until = EXCLUDED.blocked_until,
+                  notice_sent = FALSE
   `, [CHANNEL_ID, userId, blocked]);
 }
 
@@ -338,11 +335,8 @@ async function claim(message) {
 
   const blocked = await cooldownUntil(member.id);
   if (blocked) {
-    console.log(`[CLAIM DEBUG] rejected: claimant cooldown until=${blocked.blocked_until} noticeSent=${blocked.notice_sent}`);
-    if (!blocked.notice_sent) {
-      await db.query('UPDATE channel_claim_cooldowns SET notice_sent=TRUE WHERE channel_id=$1 AND user_id=$2 AND blocked_until > NOW()', [CHANNEL_ID, member.id]);
-      await message.reply(`⏳ You cannot claim this channel again for **${formatDuration(new Date(blocked.blocked_until).getTime() - Date.now())}**.`).catch(() => {});
-    }
+    console.log(`[CLAIM DEBUG] rejected: claimant cooldown until=${blocked.blocked_until}`);
+    await message.reply(`⏳ You cannot claim this channel again for **${formatDuration(new Date(blocked.blocked_until).getTime() - Date.now())}**.`).catch(() => {});
     return;
   }
 
@@ -368,15 +362,12 @@ async function claim(message) {
         return;
       }
       previousOwner = state.owner_id || null;
-      const blockedAgain = await client.query('SELECT blocked_until, notice_sent FROM channel_claim_cooldowns WHERE channel_id=$1 AND user_id=$2 AND blocked_until > NOW() FOR UPDATE', [CHANNEL_ID, member.id]);
+      const blockedAgain = await client.query('SELECT blocked_until FROM channel_claim_cooldowns WHERE channel_id=$1 AND user_id=$2 AND blocked_until > NOW() FOR UPDATE', [CHANNEL_ID, member.id]);
       if (blockedAgain.rows[0]) {
         const blockedRow = blockedAgain.rows[0];
-        console.log(`[CLAIM DEBUG] rejected inside transaction: cooldown until=${blockedRow.blocked_until} noticeSent=${blockedRow.notice_sent}`);
+        console.log(`[CLAIM DEBUG] rejected inside transaction: cooldown until=${blockedRow.blocked_until}`);
         await client.query('ROLLBACK');
-        if (!blockedRow.notice_sent) {
-          await db.query('UPDATE channel_claim_cooldowns SET notice_sent=TRUE WHERE channel_id=$1 AND user_id=$2 AND blocked_until > NOW()', [CHANNEL_ID, member.id]);
-          await message.reply(`⏳ You cannot claim this channel again for **${formatDuration(new Date(blockedRow.blocked_until).getTime() - Date.now())}**.`).catch(() => {});
-        }
+        await message.reply(`⏳ You cannot claim this channel again for **${formatDuration(new Date(blockedRow.blocked_until).getTime() - Date.now())}**.`).catch(() => {});
         return;
       }
       const now = new Date();
