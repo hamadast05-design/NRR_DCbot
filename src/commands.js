@@ -67,6 +67,19 @@ const commands = [
     .addSubcommand(s => s.setName('reputation').setDescription('View the overall Reputation leaderboard.')),
 
   new SlashCommandBuilder()
+    .setName('whitelist')
+    .setDescription('Manage Fame and Humiliation immunity.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild.toString())
+    .addSubcommand(s => s.setName('add').setDescription('Make a member immune from Fame or Humiliation.')
+      .addUserOption(o => o.setName('member').setDescription('Member to whitelist.').setRequired(true))
+      .addStringOption(o => o.setName('type').setDescription('Reputation type to make immune.').setRequired(true)
+        .addChoices({ name: 'Fame', value: 'fame' }, { name: 'Humiliation', value: 'humiliation' })))
+    .addSubcommand(s => s.setName('remove').setDescription('Remove a member from Fame or Humiliation immunity.')
+      .addUserOption(o => o.setName('member').setDescription('Member to remove from the whitelist.').setRequired(true))
+      .addStringOption(o => o.setName('type').setDescription('Reputation type to remove immunity for.').setRequired(true)
+        .addChoices({ name: 'Fame', value: 'fame' }, { name: 'Humiliation', value: 'humiliation' }))),
+
+  new SlashCommandBuilder()
     .setName('reputation-admin')
     .setDescription('Manage Fame & Reputation. Staff only.')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild.toString())
@@ -112,15 +125,38 @@ async function handleVote(interaction, type) {
 
   try {
     const result = await db.castVote({ guildId: interaction.guildId, voterId: actor.id, targetId: target.id, type, cooldownMs: config.cooldownMs });
-    if (!result.ok) return interaction.reply({ content: `⏳ You already gave ${type === 'fame' ? 'Fame' : 'Humiliation'} to ${mention(target.id)} recently. You can vote for them again in about ${formatRemaining(result.remainingMs)}.`, ephemeral: true });
+    if (!result.ok) {
+      if (result.reason === 'whitelisted') {
+        const noun = type === 'fame' ? 'Fame' : 'Humiliation';
+        return interaction.reply({ content: `🛡️ ${mention(target.id)} is currently immune from receiving ${noun}.`, ephemeral: true, allowedMentions: { parse: [] } });
+      }
+      return interaction.reply({ content: `⏳ You already gave ${type === 'fame' ? 'Fame' : 'Humiliation'} to ${mention(target.id)} recently. You can vote for them again in about ${formatRemaining(result.remainingMs)}.`, ephemeral: true, allowedMentions: { parse: [] } });
+    }
     const stats = result.stats;
     const noun = type === 'fame' ? 'Fame' : 'Humiliation';
     const emoji = type === 'fame' ? '⭐' : '👎';
-    await interaction.reply({ content: `${emoji} **${noun} Given**\n${mention(actor.id)} gave +1 ${noun} to ${mention(target.id)}.\n\n${mention(target.id)} now has **${type === 'fame' ? stats.fame : stats.humiliation} ${noun}**.`, ephemeral: false });
-    await sendLog(interaction, `${emoji} ${noun} Awarded`, `${mention(actor.id)} gave ${noun} to ${mention(target.id)}.\n${mention(target.id)} now has **${type === 'fame' ? stats.fame : stats.humiliation} ${noun}**.`, COLORS[type]);
+    const message = `${emoji} **${noun} Given**\n${mention(actor.id)} gave +1 ${noun} to ${mention(target.id)}.\n\n${mention(target.id)} now has **${type === 'fame' ? stats.fame : stats.humiliation} ${noun}**.`;
+    await interaction.reply({ content: message, ephemeral: false, allowedMentions: { parse: [] } });
+    await sendLog(interaction, `${emoji} ${noun} Awarded`, message, COLORS[type]);
   } catch (error) {
     console.error('Vote error:', error);
     await interaction.reply({ content: '❌ Something went wrong while recording that vote. Please try again later.', ephemeral: true }).catch(() => {});
+  }
+}
+
+async function handleWhitelist(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: '❌ You do not have permission to manage the reputation whitelist.', ephemeral: true });
+  const sub = interaction.options.getSubcommand();
+  const target = interaction.options.getUser('member', true);
+  const type = interaction.options.getString('type', true);
+  const noun = type === 'fame' ? 'Fame' : 'Humiliation';
+  try {
+    await db.setWhitelist(interaction.guildId, target.id, type, sub === 'add');
+    const action = sub === 'add' ? `is now immune from receiving ${noun}` : `can now receive ${noun} again`;
+    return interaction.reply({ content: `✅ ${mention(target.id)} ${action}.`, ephemeral: true, allowedMentions: { parse: [] } });
+  } catch (error) {
+    console.error('Whitelist error:', error);
+    return interaction.reply({ content: '❌ I could not update the reputation whitelist.', ephemeral: true });
   }
 }
 
@@ -229,11 +265,10 @@ function formatMuteDuration(ms) {
 
 async function getModerationTarget(interaction, optionName) {
   const user = interaction.options.getUser(optionName, true);
-  if (user.id === interaction.user.id) return { error: '❌ You cannot moderate yourself.' };
-  if (user.id === interaction.client.user.id) return { error: '❌ I cannot moderate myself.' };
   const member = await interaction.guild.members.fetch(user.id).catch(() => null);
-  if (!member) return { error: '❌ That user is not currently in this server.' };
-  if (member.id === interaction.guild.ownerId) return { error: '❌ The server owner cannot be moderated by the bot.' };
+  if (!member) return { error: '❌ That member is not currently in this server.' };
+  if (member.id === interaction.user.id) return { error: '❌ You cannot use this action on yourself.' };
+  if (member.id === interaction.guild.ownerId) return { error: '❌ You cannot moderate the server owner.' };
   return { user, member };
 }
 
@@ -241,18 +276,12 @@ async function handleMute(interaction) {
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.ModerateMembers)) return interaction.reply({ content: '❌ You do not have permission to mute members.', ephemeral: true });
   const target = await getModerationTarget(interaction, 'user');
   if (target.error) return interaction.reply({ content: target.error, ephemeral: true });
-  const durationInput = interaction.options.getString('time', true);
-  const duration = parseMuteDuration(durationInput);
-  if (!duration) return interaction.reply({ content: '❌ Invalid mute time. Enter a duration such as `10 minutes`, `90m`, `2 hours`, or `1d` (maximum 28 days).', ephemeral: true });
+  const duration = parseMuteDuration(interaction.options.getString('time', true));
+  if (!duration) return interaction.reply({ content: '❌ Invalid mute duration. Use something like `10m`, `2 hours`, or `1d` (maximum 28 days).', ephemeral: true });
   if (!target.member.moderatable) return interaction.reply({ content: '❌ I cannot mute that member. Check my role position and Moderate Members permission.', ephemeral: true });
   const reason = interaction.options.getString('reason') || 'No reason provided';
-  try {
-    await target.member.timeout(duration, reason);
-    return interaction.reply({ content: `lmaooo <@${target.user.id}> has been muted for **${formatMuteDuration(duration)}**, couldn't be me 😂` });
-  } catch (error) {
-    console.error('Mute error:', error);
-    return interaction.reply({ content: '❌ I could not mute that member. Check my permissions and role hierarchy.', ephemeral: true });
-  }
+  try { await target.member.timeout(duration, reason); return interaction.reply({ content: `🔇 ${mention(target.user.id)} has been muted for **${formatMuteDuration(duration)}**.`, allowedMentions: { parse: [] } }); }
+  catch (error) { console.error('Mute error:', error); return interaction.reply({ content: '❌ I could not mute that member. Check my permissions and role hierarchy.', ephemeral: true }); }
 }
 
 async function handleKick(interaction) {
@@ -261,7 +290,7 @@ async function handleKick(interaction) {
   if (target.error) return interaction.reply({ content: target.error, ephemeral: true });
   if (!target.member.kickable) return interaction.reply({ content: '❌ I cannot kick that member. Check my role position and Kick Members permission.', ephemeral: true });
   const reason = interaction.options.getString('reason') || 'No reason provided';
-  try { await target.member.kick(reason); return interaction.reply({ content: `<@${target.user.id}> has been successfully kicked 😨.` }); }
+  try { await target.member.kick(reason); return interaction.reply({ content: `${mention(target.user.id)} has been successfully kicked 😨.`, allowedMentions: { parse: [] } }); }
   catch (error) { console.error('Kick error:', error); return interaction.reply({ content: '❌ I could not kick that member. Check my permissions and role hierarchy.', ephemeral: true }); }
 }
 
@@ -271,7 +300,7 @@ async function handleBan(interaction) {
   if (target.error) return interaction.reply({ content: target.error, ephemeral: true });
   if (!target.member.bannable) return interaction.reply({ content: '❌ I cannot ban that member. Check my role position and Ban Members permission.', ephemeral: true });
   const reason = interaction.options.getString('reason') || 'No reason provided';
-  try { await target.member.ban({ reason }); return interaction.reply({ content: `<@${target.user.id}> has been successfully banned.` }); }
+  try { await target.member.ban({ reason }); return interaction.reply({ content: `${mention(target.user.id)} has been successfully banned.`, allowedMentions: { parse: [] } }); }
   catch (error) { console.error('Ban error:', error); return interaction.reply({ content: '❌ I could not ban that member. Check my permissions and role hierarchy.', ephemeral: true }); }
 }
 
@@ -290,6 +319,7 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'humiliate') return handleVote(interaction, 'humiliation');
     if (interaction.commandName === 'reputation') return handleReputation(interaction);
     if (interaction.commandName === 'leaderboard') return showLeaderboard(interaction, interaction.options.getSubcommand());
+    if (interaction.commandName === 'whitelist') return handleWhitelist(interaction);
     if (interaction.commandName === 'reputation-admin') return handleAdmin(interaction);
   }
 
