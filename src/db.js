@@ -363,6 +363,56 @@ async function resetMember(guildId, adminId, targetId) {
   }
 }
 
+async function getAnnihilateByTarget(guildId, targetId) {
+  const result = await query(`
+    SELECT * FROM annihilate_sessions
+    WHERE guild_id = $1 AND target_id = $2 AND active = TRUE
+    ORDER BY created_at DESC
+    LIMIT 1
+  `, [guildId, targetId]);
+  return result.rows[0] || null;
+}
+
+async function getAnnihilateByRunner(guildId, runnerId) {
+  const result = await query(`
+    SELECT * FROM annihilate_sessions
+    WHERE guild_id = $1 AND runner_id = $2 AND active = TRUE
+    ORDER BY created_at DESC
+    LIMIT 1
+  `, [guildId, runnerId]);
+  return result.rows[0] || null;
+}
+
+async function getAnnihilateByRunnerGlobal(runnerId) {
+  const result = await query(`
+    SELECT * FROM annihilate_sessions
+    WHERE runner_id = $1 AND active = TRUE
+    ORDER BY created_at DESC
+    LIMIT 1
+  `, [runnerId]);
+  return result.rows;
+}
+
+async function createAnnihilateSession({ guildId, targetId, runnerId, channelId, webhookId, webhookToken }) {
+  const result = await query(`
+    INSERT INTO annihilate_sessions
+      (guild_id, target_id, runner_id, channel_id, webhook_id, webhook_token)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING *
+  `, [guildId, targetId, runnerId, channelId, webhookId, webhookToken]);
+  return result.rows[0];
+}
+
+async function endAnnihilateSession(id) {
+  const result = await query(`
+    UPDATE annihilate_sessions
+    SET active = FALSE, ended_at = NOW()
+    WHERE id = $1 AND active = TRUE
+    RETURNING *
+  `, [id]);
+  return result.rows[0] || null;
+}
+
 module.exports = {
   migrate,
   ensureMember,
@@ -377,4 +427,9 @@ module.exports = {
   getRanks,
   adminAdjust,
   resetMember,
+  getAnnihilateByTarget,
+  getAnnihilateByRunner,
+  getAnnihilateByRunnerGlobal,
+  createAnnihilateSession,
+  endAnnihilateSession,
 };
