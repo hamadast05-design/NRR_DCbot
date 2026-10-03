@@ -503,12 +503,23 @@ async function open(interaction) {
 async function editCountdown(interaction) {
   const state = await getState();
   if (!state?.owner_id) return interaction.reply({ content: '❌ There is no current channel owner.', ephemeral: true });
-  if (state.owner_id !== interaction.user.id) return interaction.reply({ content: '❌ Only the current channel owner can edit the countdown.', ephemeral: true });
+
+  const memberPermissions = interaction.memberPermissions;
+  const isAdministrator = Boolean(memberPermissions?.has(PermissionFlagsBits.Administrator));
+  const isManager = Boolean(
+    config.eventManagerRoleIds?.length &&
+    interaction.member?.roles?.cache?.some(role => config.eventManagerRoleIds.includes(role.id))
+  );
+
+  if (!isAdministrator && !isManager) {
+    return interaction.reply({ content: '❌ Only managers and administrators can edit the countdown.', ephemeral: true });
+  }
+
   const duration = parseDuration(interaction.options.getString('time', true));
   if (!duration) return interaction.reply({ content: '❌ Invalid time. Use `30s`, `5m`, `1h`, or `1d` (maximum 7 days).', ephemeral: true });
   const expires = new Date(Date.now() + duration);
-  await db.query('UPDATE channel_claim_state SET expires_at=$2, reminder_45_sent=FALSE, reminder_5_sent=FALSE, reminder_1_sent=FALSE, countdown_started=FALSE, countdown_value=NULL, updated_at=NOW() WHERE channel_id=$1 AND owner_id=$3', [CHANNEL_ID, expires, interaction.user.id]);
-  return interaction.reply({ content: `⏱️ Countdown updated. **${formatDuration(duration)}** remains.`, ephemeral: false });
+  await db.query('UPDATE channel_claim_state SET expires_at=$2, reminder_45_sent=FALSE, reminder_5_sent=FALSE, reminder_1_sent=FALSE, countdown_started=FALSE, countdown_value=NULL, updated_at=NOW() WHERE channel_id=$1 AND owner_id=$3', [CHANNEL_ID, expires, state.owner_id]);
+  return interaction.reply({ content: `⏱️ Countdown updated by <@${interaction.user.id}>. **${formatDuration(duration)}** remains.`, ephemeral: false });
 }
 
 async function onMessage(message) {
