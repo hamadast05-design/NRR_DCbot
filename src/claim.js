@@ -275,6 +275,21 @@ async function cooldownUntil(userId) {
   return r.rows[0] || null;
 }
 
+async function consumeCooldownNotice(userId) {
+  // Atomically mark the notice as sent. This guarantees that only the first
+  // claim attempt during a cooldown gets a reply; later messages are ignored.
+  const r = await db.query(`
+    UPDATE channel_claim_cooldowns
+    SET notice_sent=TRUE
+    WHERE channel_id=$1
+      AND user_id=$2
+      AND blocked_until > NOW()
+      AND notice_sent=FALSE
+    RETURNING blocked_until
+  `, [CHANNEL_ID, userId]);
+  return r.rows[0] || null;
+}
+
 async function saveCooldown(userId) {
   const blocked = new Date(Date.now() + OWNER_COOLDOWN_MS);
   await db.query(`
@@ -336,7 +351,12 @@ async function claim(message) {
   const blocked = await cooldownUntil(member.id);
   if (blocked) {
     console.log(`[CLAIM DEBUG] rejected: claimant cooldown until=${blocked.blocked_until}`);
-    await message.reply(`⏳ You cannot claim this channel again for **${formatDuration(new Date(blocked.blocked_until).getTime() - Date.now())}**.`).catch(() => {});
+    const notice = await consumeCooldownNotice(member.id);
+    if (notice) {
+      await message.reply(`⏳ You cannot claim this channel again for **${formatDuration(new Date(notice.blocked_until).getTime() - Date.now())}**.`).catch(() => {});
+    } else {
+      console.log('[CLAIM DEBUG] cooldown notice already sent; ignoring repeated claim attempt');
+    }
     return;
   }
 
@@ -367,7 +387,12 @@ async function claim(message) {
         const blockedRow = blockedAgain.rows[0];
         console.log(`[CLAIM DEBUG] rejected inside transaction: cooldown until=${blockedRow.blocked_until}`);
         await client.query('ROLLBACK');
-        await message.reply(`⏳ You cannot claim this channel again for **${formatDuration(new Date(blockedRow.blocked_until).getTime() - Date.now())}**.`).catch(() => {});
+        const notice = await consumeCooldownNotice(member.id);
+        if (notice) {
+          await message.reply(`⏳ You cannot claim this channel again for **${formatDuration(new Date(notice.blocked_until).getTime() - Date.now())}**.`).catch(() => {});
+        } else {
+          console.log('[CLAIM DEBUG] cooldown notice already sent; ignoring repeated claim attempt');
+        }
         return;
       }
       const now = new Date();
