@@ -45,8 +45,13 @@ async function ensureSchema() {
       reminder_1_sent BOOLEAN NOT NULL DEFAULT FALSE,
       countdown_started BOOLEAN NOT NULL DEFAULT FALSE,
       countdown_value INTEGER,
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      claim_enabled BOOLEAN NOT NULL DEFAULT TRUE
     )
+  `);
+  await db.query(`
+    ALTER TABLE channel_claim_state
+    ADD COLUMN IF NOT EXISTS claim_enabled BOOLEAN NOT NULL DEFAULT TRUE
   `);
   await db.query(`
     CREATE TABLE IF NOT EXISTS channel_claim_cooldowns (
@@ -297,10 +302,17 @@ async function claim(message) {
     return;
   }
 
+  const stateBeforeClaim = await getState();
+  if (stateBeforeClaim && stateBeforeClaim.claim_enabled === false) {
+    console.log('[CLAIM DEBUG] rejected: claiming system is stopped');
+    await message.reply('🛑 The free-channel claiming system is currently stopped.').catch(() => {});
+    return;
+  }
+
   const blocked = await cooldownUntil(member.id);
   if (blocked) {
     console.log(`[CLAIM DEBUG] rejected: claimant cooldown until=${blocked}`);
-    await message.reply(`⏳ You cannot claim this channel again for **${formatDuration(new Date(blocked).getTime() - Date.now())}**.`).catch(() => {});
+    await message.reply(`⏳ This channel is open, but you cannot claim it again for **${formatDuration(new Date(blocked).getTime() - Date.now())}**.`).catch(() => {});
     return;
   }
 
@@ -314,7 +326,12 @@ async function claim(message) {
       const r = await client.query('SELECT * FROM channel_claim_state WHERE channel_id=$1 FOR UPDATE', [CHANNEL_ID]);
       const state = r.rows[0];
       if (!state) throw new Error('Claim state row missing.');
-      console.log(`[CLAIM DEBUG] state owner=${state.owner_id || 'none'} expires=${state.expires_at || 'none'}`);
+      if (state.claim_enabled === false) {
+        await client.query('ROLLBACK');
+        await message.reply('🛑 The free-channel claiming system is currently stopped.').catch(() => {});
+        return;
+      }
+      console.log(`[CLAIM DEBUG] state owner=${state.owner_id || 'none'} expires=${state.expires_at || 'none'} enabled=${state.claim_enabled !== false}`);
       if (state.owner_id && state.expires_at && new Date(state.expires_at).getTime() > Date.now()) {
         console.log(`[CLAIM DEBUG] ignored: channel already claimed by ${state.owner_id}`);
         await client.query('ROLLBACK');
@@ -451,6 +468,22 @@ async function revoke(interaction) {
   }
 }
 
+async function stop(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+    return interaction.reply({ content: '❌ You do not have permission to stop the free-channel claiming system.', ephemeral: true });
+  }
+  await db.query('UPDATE channel_claim_state SET claim_enabled=FALSE, updated_at=NOW() WHERE channel_id=$1', [CHANNEL_ID]);
+  return interaction.reply({ content: '🛑 **Free-channel claiming system stopped.** Current ownership timers will continue, but no new claims can be made until `/open_cl` is used.', ephemeral: true });
+}
+
+async function open(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+    return interaction.reply({ content: '❌ You do not have permission to open the free-channel claiming system.', ephemeral: true });
+  }
+  await db.query('UPDATE channel_claim_state SET claim_enabled=TRUE, updated_at=NOW() WHERE channel_id=$1', [CHANNEL_ID]);
+  return interaction.reply({ content: '🟢 **Free-channel claiming system opened.** Members can claim the channel again when it is available.', ephemeral: true });
+}
+
 async function editCountdown(interaction) {
   const state = await getState();
   if (!state?.owner_id) return interaction.reply({ content: '❌ There is no current channel owner.', ephemeral: true });
@@ -471,4 +504,4 @@ async function onMessage(message) {
   }
 }
 
-module.exports = { ensureSchema, onMessage, tick, revoke, editCountdown };
+module.exports = { ensureSchema, onMessage, tick, revoke, editCountdown, stop, open };
