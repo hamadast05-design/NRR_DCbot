@@ -23,12 +23,6 @@ const config = {
   eventManagerRoleIds: (process.env.EVENT_MANAGER_ROLE_IDS || '').split(',').map(x => x.trim()).filter(Boolean),
   eventReviewChannelId: process.env.EVENT_REVIEW_CHANNEL_ID || '1555568788492259359',
   eventStickEnabled: bool(process.env.EVENT_STICK_ENABLED, true),
-
-  // Fixed NRR free-channel system. These can be overridden for a test server if needed.
-  claimChannelId: process.env.CLAIM_CHANNEL_ID || '1555637182545395843',
-  claimGuildId: process.env.CLAIM_GUILD_ID || null,
-  claimDurationMs: positiveNumber(process.env.CLAIM_DURATION_MINUTES, 10) * 60 * 1000,
-  claimOwnerCooldownMs: positiveNumber(process.env.CLAIM_OWNER_COOLDOWN_HOURS, 1) * 60 * 60 * 1000,
 };
 
 function validate() {
