@@ -1,4 +1,4 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { PermissionFlagsBits, PermissionsBitField } = require('discord.js');
 const db = require('./db');
 const { config } = require('./config');
 
@@ -115,6 +115,8 @@ const ownerDeny = {
 async function grantOwner(channel, userId) {
   const me = channel.guild.members.me;
   const perms = botChannelPermissions(channel);
+  const member = await channel.guild.members.fetch(userId);
+
   const diagnostics = {
     channelId: channel.id,
     channelType: channel.type,
@@ -123,8 +125,13 @@ async function grantOwner(channel, userId) {
     manageable: channel.manageable,
     botMember: me ? me.id : 'missing',
     botTopRole: me?.roles?.highest ? `${me.roles.highest.id}:${me.roles.highest.name}:position=${me.roles.highest.position}` : 'missing',
+    targetTopRole: member?.roles?.highest ? `${member.roles.highest.id}:${member.roles.highest.name}:position=${member.roles.highest.position}` : 'missing',
+    targetIsGuildOwner: member?.id === channel.guild.ownerId,
+    botGuildManageRoles: me?.permissions?.has(PermissionFlagsBits.ManageRoles) || false,
+    botGuildManageChannels: me?.permissions?.has(PermissionFlagsBits.ManageChannels) || false,
     effectivePermissions: perms ? perms.toArray().join(',') : 'missing',
     manageChannels: perms?.has(PermissionFlagsBits.ManageChannels) || false,
+    manageRoles: perms?.has(PermissionFlagsBits.ManageRoles) || false,
     viewChannel: perms?.has(PermissionFlagsBits.ViewChannel) || false,
     sendMessages: perms?.has(PermissionFlagsBits.SendMessages) || false,
   };
@@ -132,14 +139,15 @@ async function grantOwner(channel, userId) {
 
   if (!me) throw new Error('Bot member is not available in this guild.');
   if (!perms) throw new Error("Could not resolve the bot's channel permissions.");
+
   const missing = [
     !perms.has(PermissionFlagsBits.ViewChannel) ? 'View Channel' : null,
     !perms.has(PermissionFlagsBits.SendMessages) ? 'Send Messages' : null,
     !perms.has(PermissionFlagsBits.ManageChannels) ? 'Manage Channels' : null,
+    !perms.has(PermissionFlagsBits.ManageRoles) ? 'Manage Roles' : null,
   ].filter(Boolean);
   if (missing.length) throw new Error(`Bot is missing channel permissions: ${missing.join(', ')}.`);
 
-  const member = await channel.guild.members.fetch(userId);
   if (member.permissions.has(PermissionFlagsBits.Administrator)) {
     throw new Error('Administrator members cannot claim this channel because Administrator bypasses channel restrictions.');
   }
@@ -153,16 +161,42 @@ async function grantOwner(channel, userId) {
     deny: existing?.deny?.toArray?.() || [],
   }));
 
+  // Build only the permissions the claimant actually needs. In particular, do
+  // not send explicit false values for unrelated permissions; Discord treats
+  // the overwrite as a concrete allow/deny bitfield.
+  const ownerPermissions = {
+    ManageChannels: true,
+    UseApplicationCommands: true,
+    ManageThreads: true,
+    ManageMessages: true,
+    PinMessages: true,
+    UseEmbeddedActivities: true,
+  };
+
+  const allow = new PermissionsBitField(ownerPermissions).bitfield.toString();
+  const deny = '0';
+
   try {
-    await channel.permissionOverwrites.edit(
-      userId,
-      { ...ownerAllow, ...ownerDeny },
-      { reason: 'Temporary free-channel ownership' }
+    // Use the channel-permission endpoint explicitly with a MEMBER overwrite
+    // type. This removes any ambiguity around overwrite resolution in the
+    // manager while preserving the same Discord API endpoint.
+    await channel.guild.client.rest.put(
+      `/channels/${channel.id}/permissions/${userId}`,
+      {
+        body: {
+          id: userId,
+          type: 1,
+          allow,
+          deny,
+        },
+        reason: 'Temporary free-channel ownership',
+      }
     );
   } catch (error) {
     console.error('[CLAIM DEBUG] permission overwrite failed', JSON.stringify({
       ...diagnostics,
       userId,
+      overwritePayload: { id: userId, type: 1, allow, deny },
       errorCode: error?.code || null,
       httpStatus: error?.status || null,
       errorName: error?.name || null,
@@ -171,9 +205,8 @@ async function grantOwner(channel, userId) {
     throw error;
   }
 
-  console.log(`[CLAIM DEBUG] permission overwrite granted user=${userId}`);
+  console.log(`[CLAIM DEBUG] permission overwrite granted user=${userId} allow=${allow}`);
 }
-
 async function removeOwner(channel, userId) {
   if (userId) await channel.permissionOverwrites.delete(userId, 'Free-channel ownership ended').catch(() => {});
 }
