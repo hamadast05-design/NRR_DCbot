@@ -173,7 +173,10 @@ async function grantOwner(channel, userId) {
     UseEmbeddedActivities: true,
   };
 
-  const allow = new PermissionsBitField(ownerPermissions).bitfield.toString();
+  const allow = Object.entries(ownerPermissions)
+    .filter(([, enabled]) => enabled)
+    .reduce((bits, [name]) => bits | PermissionFlagsBits[name], 0n)
+    .toString();
   const deny = '0';
 
   try {
