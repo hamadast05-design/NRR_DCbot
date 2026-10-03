@@ -3,6 +3,7 @@ const db = require('./db');
 const { config } = require('./config');
 
 const CHANNEL_ID = config.claimChannelId;
+const BASE_CHANNEL_NAME = '🟢・free-channel';
 const DURATION_MS = config.claimDurationMs;
 const OWNER_COOLDOWN_MS = config.claimOwnerCooldownMs;
 let ready = false;
@@ -218,6 +219,23 @@ async function grantOwner(channel, userId) {
 
   console.log(`[CLAIM DEBUG] permission overwrite granted user=${userId} allow=${allow}`);
 }
+async function resetChannelName(channel) {
+  try {
+    if (channel?.name !== BASE_CHANNEL_NAME) {
+      await channel.setName(BASE_CHANNEL_NAME, 'Free-channel ownership ended');
+    }
+  } catch (error) {
+    console.error('[CLAIM DEBUG] failed to reset channel name', JSON.stringify({
+      channelId: channel?.id || CHANNEL_ID,
+      currentName: channel?.name || null,
+      targetName: BASE_CHANNEL_NAME,
+      errorCode: error?.code || null,
+      httpStatus: error?.status || null,
+      errorMessage: error?.message || null,
+    }));
+  }
+}
+
 async function removeOwner(channel, userId) {
   if (!userId) return;
   // Keep the claimant able to see the channel after ownership ends, while
@@ -387,6 +405,11 @@ async function claim(message) {
       throw error;
     }
 
+    // Every new ownership cycle starts from the base channel name. The owner can
+    // rename the channel afterward, and that custom name remains for the duration
+    // of their ownership.
+    await resetChannelName(channel);
+
     if (previousOwner && previousOwner !== member.id) {
       await removeOwner(channel, previousOwner);
       await saveCooldown(previousOwner);
@@ -411,6 +434,7 @@ async function expire(client, state) {
   if (!channel?.isTextBased()) return;
   const ownerId = state.owner_id;
   await removeOwner(channel, ownerId);
+  await resetChannelName(channel);
   await saveCooldown(ownerId);
   await db.query(`
     UPDATE channel_claim_state
@@ -472,6 +496,7 @@ async function revoke(interaction) {
   working = true;
   try {
     await removeOwner(channel, ownerId);
+    await resetChannelName(channel);
     await saveCooldown(ownerId);
     await db.query('UPDATE channel_claim_state SET owner_id=NULL, claimed_at=NULL, expires_at=NULL, reminder_45_sent=FALSE, reminder_5_sent=FALSE, reminder_1_sent=FALSE, countdown_started=FALSE, countdown_value=NULL, updated_at=NOW() WHERE channel_id=$1 AND owner_id=$2', [CHANNEL_ID, ownerId]);
     await channel.send({ content: `🔓 **Ownership revoked.** <@${ownerId}> no longer manages this channel. The spot is now open to claim.`, allowedMentions: { users: [ownerId] } }).catch(() => {});
