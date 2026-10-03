@@ -165,6 +165,7 @@ async function grantOwner(channel, userId) {
   // not send explicit false values for unrelated permissions; Discord treats
   // the overwrite as a concrete allow/deny bitfield.
   const ownerPermissions = {
+    ViewChannel: true,
     ManageChannels: true,
     UseApplicationCommands: true,
     ManageMessages: true,
