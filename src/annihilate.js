@@ -20,12 +20,33 @@ async function annihilate(message) {
   if (userId === message.author.id) { await message.delete().catch(() => {}); return true; }
 
   const target = await message.guild.members.fetch(userId).catch(() => null);
-  if (!target || target.user.bot) { await message.delete().catch(() => {}); return true; }
+  if (!target || target.user.bot) {
+    await message.author.send('❌ Annihilate failed: I could not find that member.').catch(() => {});
+    await message.delete().catch(() => {});
+    return true;
+  }
   const botMember = message.guild.members.me;
-  if (!botMember?.permissions.has(PermissionFlagsBits.ModerateMembers) || !target.moderatable) { await message.delete().catch(() => {}); return true; }
+  if (!botMember?.permissions.has(PermissionFlagsBits.ModerateMembers)) {
+    await message.author.send('❌ Annihilate failed: I do not have the **Moderate Members** permission.').catch(() => {});
+    await message.delete().catch(() => {});
+    return true;
+  }
+  if (!target.moderatable) {
+    await message.author.send('❌ Annihilate failed: I cannot timeout that member. Make sure my bot role is **above their highest role** and they are not the server owner.').catch(() => {});
+    await message.delete().catch(() => {});
+    return true;
+  }
   const channel = message.channel;
-  if (!channel.isTextBased() || !channel.permissionsFor(botMember)?.has(PermissionFlagsBits.ManageWebhooks)) { await message.delete().catch(() => {}); return true; }
-  if (await db.getAnnihilateByTarget(message.guild.id, target.id) || await db.getAnnihilateByRunner(message.guild.id, message.author.id)) { await message.delete().catch(() => {}); return true; }
+  if (!channel.isTextBased() || !channel.permissionsFor(botMember)?.has(PermissionFlagsBits.ManageWebhooks)) {
+    await message.author.send('❌ Annihilate failed: I do not have **Manage Webhooks** in this channel.').catch(() => {});
+    await message.delete().catch(() => {});
+    return true;
+  }
+  if (await db.getAnnihilateByTarget(message.guild.id, target.id) || await db.getAnnihilateByRunner(message.guild.id, message.author.id)) {
+    await message.author.send('❌ Annihilate failed: that member or runner already has an active session.').catch(() => {});
+    await message.delete().catch(() => {});
+    return true;
+  }
 
   let webhook;
   try {
@@ -41,6 +62,7 @@ async function annihilate(message) {
     console.error('Annihilate setup failed:', error);
     if (webhook) await webhook.delete().catch(() => {});
     await target.timeout(null, 'Annihilate setup failed').catch(() => {});
+    await message.author.send('❌ **Annihilate failed during setup.** Check the bot permissions and role hierarchy, then try again.').catch(() => {});
   }
   await message.delete().catch(() => {});
   return true;
