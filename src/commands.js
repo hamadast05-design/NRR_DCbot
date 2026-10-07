@@ -9,6 +9,7 @@ const {
 const db = require('./db');
 const { config } = require('./config');
 const eventSystem = require('./event');
+const wordkillSystem = require('./wordkill');
 
 const COLORS = {
   fame: 0xf1c40f,
@@ -17,6 +18,8 @@ const COLORS = {
 };
 
 const commands = [
+  new SlashCommandBuilder().setName('start_wordkill').setDescription('Start a WordKill game in this channel.'),
+  new SlashCommandBuilder().setName('end_wordkill').setDescription('End the active WordKill game in this channel.'),
   new SlashCommandBuilder().setName('createevent').setDescription('Create an event submission configuration.').addStringOption(o=>o.setName('channel_id').setDescription('Destination channel ID.').setRequired(true)),
   new SlashCommandBuilder().setName('send').setDescription('Send the event submission interface.').addStringOption(o=>o.setName('channel_id').setDescription('Channel for the submission interface.').setRequired(true)),
   new SlashCommandBuilder().setName('stick').setDescription('Keep the submission interface at the top of a channel.').addStringOption(o=>o.setName('channel_id').setDescription('Channel to stick the interface in.').setRequired(true)),
@@ -312,6 +315,8 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'send') return eventSystem.send(interaction);
     if (interaction.commandName === 'stick') return eventSystem.stick(interaction);
     if (interaction.commandName === 'end') return eventSystem.end(interaction);
+    if (interaction.commandName === 'start_wordkill') return wordkillSystem.startCommand(interaction);
+    if (interaction.commandName === 'end_wordkill') return wordkillSystem.endCommand(interaction);
     if (interaction.commandName === 'mute') return handleMute(interaction);
     if (interaction.commandName === 'kick') return handleKick(interaction);
     if (interaction.commandName === 'ban') return handleBan(interaction);
