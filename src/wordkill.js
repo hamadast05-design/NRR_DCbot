@@ -39,7 +39,7 @@ const PLAYABLE_WORDS = [...WORDS].filter(word => {
 
 const games = new Map();
 const ROUND_TIMEOUT_MS = 30_000;
-const NORMAL_COOLDOWN_MS = 4_000;
+const NORMAL_COOLDOWN_MS = 5_000;
 const MILESTONE_COOLDOWN_MS = 10_000;
 
 function clearTimers(game) {
