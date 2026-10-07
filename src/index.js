@@ -5,6 +5,7 @@ const { handleInteraction } = require('./commands');
 const eventSystem = require('./event');
 const annihilateSystem = require('./annihilate');
 const wordkillSystem = require('./wordkill');
+const newsSystem = require('./news');
 
 validate();
 
@@ -31,6 +32,7 @@ client.once(Events.ClientReady, async readyClient => {
     console.log('Database migrations ready.');
 
     setInterval(() => eventSystem.autoApprove(readyClient).catch(error => console.error('Event auto-approval failed:', error)), 30 * 1000);
+    newsSystem.start(readyClient);
 
     for (const guild of readyClient.guilds.cache.values()) {
       const members = await guild.members.fetch();
