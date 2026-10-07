@@ -4,6 +4,7 @@ const db = require('./db');
 const { handleInteraction } = require('./commands');
 const eventSystem = require('./event');
 const annihilateSystem = require('./annihilate');
+const wordkillSystem = require('./wordkill');
 
 validate();
 
@@ -56,6 +57,11 @@ client.on(Events.GuildMemberRemove, async member => {
 });
 
 client.on(Events.MessageCreate, async message => {
+  const command = message.content.trim().toLowerCase();
+  if (command === '!start_wordkill') return wordkillSystem.startCommand(message);
+  if (command === '!end_wordkill') return wordkillSystem.endCommand(message);
+
+  try { await wordkillSystem.onMessage(message); } catch (error) { console.error('WordKill message error:', error); }
   try { await eventSystem.onMessage(message); } catch (error) { console.error('Event stick error:', error); }
   try { await annihilateSystem.onMessage(message); } catch (error) { console.error('Annihilate message error:', error); }
 });
