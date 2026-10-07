@@ -3,6 +3,8 @@ const Parser = require('rss-parser');
 
 const NEWS_CHANNEL_ID = '1557292924113256489';
 const NEWS_FEED_URL = 'https://feeds.bbci.co.uk/news/rss.xml';
+const OPENAI_API_URL = 'https://api.openai.com/v1/responses';
+const OPENAI_MODEL = process.env.OPENAI_NEWS_MODEL || 'gpt-6-luna';
 const POLL_INTERVAL_MS = 5 * 60 * 1000;
 const MAX_POSTS_PER_CHECK = 3;
 
@@ -26,6 +28,81 @@ function normalizeText(value, maxLength = 500) {
 
 function storyId(item) {
   return String(item.guid || item.id || item.link || item.title || '').trim();
+}
+
+async function judgeNewsImportance(items) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not configured; AI news filtering is unavailable.');
+  }
+
+  const stories = items.map((item, index) => ({
+    index,
+    headline: normalizeText(item.title, 300),
+    summary: normalizeText(item.contentSnippet || item.content || item.description, 700),
+  }));
+
+  const response = await fetch(OPENAI_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      input: [
+        {
+          role: 'system',
+          content: `You are the editorial gatekeeper for an international Discord world-news channel.
+
+Judge whether each BBC Top Stories item is genuinely important enough to post as major world news.
+
+POST stories that have substantial public or international significance, such as:
+- major wars, conflicts, military escalations, terrorism, or major security developments
+- major elections, government decisions, diplomatic developments, or leadership changes
+- major international economic, financial, energy, or trade developments
+- major natural disasters, accidents, outbreaks, or humanitarian crises
+- major scientific, technological, space, or environmental developments with broad significance
+- major legal or institutional developments with national/international consequences
+- exceptionally significant human-interest events that are clearly major news
+
+REJECT routine, minor, local, entertainment, celebrity, lifestyle, sports, travel, consumer, quirky, or human-interest stories unless their significance is clearly major.
+
+Do not decide based on whether a story is political. Non-political stories can qualify when their real-world impact is substantial.
+
+Be selective. The goal is to cut low-value BBC Top Stories substantially while still catching genuinely major breaking news.
+
+Return ONLY valid JSON in this exact shape:
+{"selected_indices":[0,2]}
+
+The indices must refer to the supplied stories. Include only stories worth posting.`,
+        },
+        {
+          role: 'user',
+          content: JSON.stringify(stories),
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenAI news filter failed (${response.status}): ${errorText.slice(0, 500)}`);
+  }
+
+  const data = await response.json();
+  const output = String(data.output_text || '').trim();
+  const parsed = JSON.parse(output);
+
+  if (!Array.isArray(parsed.selected_indices)) {
+    throw new Error('OpenAI news filter returned an invalid selection.');
+  }
+
+  const validIndices = new Set(
+    parsed.selected_indices.filter(index => Number.isInteger(index) && index >= 0 && index < items.length)
+  );
+
+  return items.filter((_, index) => validIndices.has(index));
 }
 
 function buildEmbed(item) {
@@ -83,13 +160,24 @@ async function poll(client, { initial = false } = {}) {
 
     const fresh = items
       .filter(item => !seenIds.has(storyId(item)))
-      .reverse()
-      .slice(-MAX_POSTS_PER_CHECK);
+      .reverse();
+
+    if (!fresh.length) return;
+
+    const selected = await judgeNewsImportance(fresh);
+    const selectedIds = new Set(selected.map(storyId));
 
     for (const item of fresh) {
       seenIds.add(storyId(item));
+    }
+
+    const posts = selected.slice(-MAX_POSTS_PER_CHECK);
+
+    for (const item of posts) {
       await channel.send({ embeds: [buildEmbed(item)] });
     }
+
+    console.log(`AI news filter evaluated ${fresh.length} new stories and selected ${selected.length}; posted ${posts.length}.`);
 
     if (seenIds.size > 500) {
       const keep = new Set(items.map(storyId));
@@ -102,7 +190,7 @@ async function poll(client, { initial = false } = {}) {
       console.log(`Posted ${fresh.length} new world news stor${fresh.length === 1 ? 'y' : 'ies'}.`);
     }
   } catch (error) {
-    console.error('World news polling failed:', error);
+    console.error('World news polling/filtering failed:', error);
   } finally {
     polling = false;
   }
