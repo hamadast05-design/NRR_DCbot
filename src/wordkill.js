@@ -1,8 +1,41 @@
 const { EmbedBuilder } = require('discord.js');
 
-const WORDS = new Set(`
-about above accept across action active actual after again against age air all allow almost along already also always among amount animal another answer any appear apply area arm around arrive art ask away back bad bag ball bank base be beat become bed before begin behind believe best better between big bill bird bit black blood blue body book both box boy bring brother build business buy call camera can car care carry case cause center change check child choose city class clear close cold college color come common company complete concern consider contain continue control cost could country course cover create culture cut dark data day deal death decide deep develop did die different direction do dog door down draw dream drive during each early east easy eat education effect effort eight either else end enough enter entire especially even evening ever every example experience eye face fact fall family far fast father fear feel few field fight figure fill final find fine fire first five floor fly follow food foot for form four free friend from front full game garden gas general get girl give go good government great green ground group grow guess hair half hand happen happy hard have head health hear heart help her here high him his history hit home hope horse hot hour house how however idea if image important improve in include increase indeed information inside instead interest into island issue it job join just keep key kid kind know land language large last late later laugh law lead learn least leave left less let letter life light like line list listen little live local long look lose loss lot love low machine main make man many market matter may maybe me mean measure media medical meet member memory message middle might mile military million mind minute miss model modern moment money month more morning most mother move movie much music must my name near need never new news next night nine no north note nothing notice now number occur off offer office often oil old on once one only open opportunity order other our out outside over own page paper parent part party pass past pay peace people perhaps person phone picture place plan plant play point police policy poor popular position possible power practice prepare present pretty price probably problem process produce product program project prove provide public pull purpose put quality question quick quite race radio raise reach read ready real reason receive record red reduce remain remember report require research result return right road rock room rule run safe same save say school science sea second see seem sell send sense serve set seven several she short should show side simple since sing sister six size small social some someone something soon south space speak special spend sport spring stand start state stay step still story street strong student study subject success such summer sure system table take talk teacher team tell ten term test than thank that the their them then there these they thing think third this those though thought three through time to together too took top town trade train travel tree true try turn two under understand unit until up upon use usually value very video view visit voice wait walk want war watch water way we week weight well west what when where whether which while white who whole why wide wife will win window winter wish with woman word work world would write wrong year yes yet you young yourself zero zone
-`.trim().split(/\s+/));
+const englishWords = require('a-set-of-english-words');
+
+// WordKill uses a large English word list instead of a small hard-coded set.
+// Only plain alphabetic words with at least 3 letters are accepted.
+const WORDS = new Set(
+  [...englishWords]
+    .map(word => String(word).trim().toLowerCase())
+    .filter(word => /^[a-z]{3,}$/.test(word))
+);
+
+// Pre-index every consecutive 3-letter sequence once at startup. This keeps
+// round generation fast even with hundreds of thousands of dictionary words.
+const SEQUENCE_CANDIDATES = new Map();
+for (const word of WORDS) {
+  const seen = new Set();
+  for (let i = 0; i <= word.length - 3; i++) {
+    const sequence = word.slice(i, i + 3);
+    if (seen.has(sequence)) continue;
+    seen.add(sequence);
+
+    let candidates = SEQUENCE_CANDIDATES.get(sequence);
+    if (!candidates) {
+      candidates = [];
+      SEQUENCE_CANDIDATES.set(sequence, candidates);
+    }
+    candidates.push(word);
+  }
+}
+
+const PLAYABLE_WORDS = [...WORDS].filter(word => {
+  for (let i = 0; i <= word.length - 3; i++) {
+    const candidates = SEQUENCE_CANDIDATES.get(word.slice(i, i + 3));
+    if (candidates && candidates.length >= 2) return true;
+  }
+  return false;
+});
 
 const games = new Map();
 const ROUND_TIMEOUT_MS = 30_000;
@@ -36,23 +69,11 @@ function isValidWord(content) {
 }
 
 function candidatesForSequence(sequence) {
-  const result = [];
-  for (const word of WORDS) {
-    if (word.includes(sequence)) result.push(word);
-  }
-  return result;
+  return SEQUENCE_CANDIDATES.get(sequence) || [];
 }
 
 function chooseRound() {
-  const allWords = [...WORDS];
-  const playableWords = allWords.filter(word => {
-    for (let i = 0; i <= word.length - 3; i++) {
-      if (candidatesForSequence(word.slice(i, i + 3)).length >= 2) return true;
-    }
-    return false;
-  });
-
-  const pool = playableWords.length ? playableWords : allWords;
+  const pool = PLAYABLE_WORDS.length ? PLAYABLE_WORDS : [...WORDS];
   const fullWord = pool[Math.floor(Math.random() * pool.length)];
   const sequences = [];
 
@@ -61,8 +82,15 @@ function chooseRound() {
     if (candidatesForSequence(sequence).length >= 2) sequences.push(sequence);
   }
 
+  // PLAYABLE_WORDS guarantees this in normal operation, but keep a safe
+  // fallback so a future dictionary change cannot create an invalid round.
   if (!sequences.length) {
-    for (let i = 0; i <= fullWord.length - 3; i++) sequences.push(fullWord.slice(i, i + 3));
+    const fallback = [...SEQUENCE_CANDIDATES.entries()].find(([, candidates]) => candidates.length >= 2);
+    if (!fallback) throw new Error('WordKill dictionary contains no playable 3-letter sequence.');
+    return {
+      fullWord: fallback[1][Math.floor(Math.random() * fallback[1].length)],
+      target: fallback[0],
+    };
   }
 
   return {
