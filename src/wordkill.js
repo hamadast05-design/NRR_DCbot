@@ -124,6 +124,7 @@ async function sendQuestion(channel, game) {
     if (!game.active || games.get(channel.id) !== game) return;
 
     game.timeout = null;
+    game.current_target_letters = '';
     await channel.send(`⏰ Time's up! The correct answer was **${game.current_full_word}**.`).catch(() => {});
 
     game.cooldown = setTimeout(() => {
@@ -174,6 +175,7 @@ async function onMessage(message) {
   game.timeout = null;
 
   const correctAnswer = game.current_full_word;
+  game.current_target_letters = '';
   const userId = message.author.id;
   game.points.set(userId, (game.points.get(userId) || 0) + 1);
   game.question_counter += 1;
