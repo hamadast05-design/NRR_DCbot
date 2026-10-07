@@ -169,7 +169,7 @@ async function onMessage(message) {
   if (!game || !isValidWord(message.content)) return;
 
   const guess = message.content.trim().toLowerCase();
-  if (!guess.includes(game.current_target_letters)) return;
+  if (!game.current_target_letters || !guess.includes(game.current_target_letters)) return;
 
   if (game.timeout) clearTimeout(game.timeout);
   game.timeout = null;
