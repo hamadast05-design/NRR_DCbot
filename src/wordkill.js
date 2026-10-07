@@ -209,7 +209,7 @@ async function onMessage(message) {
   game.question_counter += 1;
 
   await message.channel.send(
-    `${message.author} Has guessed the right word! The correct answer was **${correctAnswer}**`
+    `${message.author} Has guessed the right word!`
   );
 
   const milestone = game.question_counter % 5 === 0;
