@@ -32,14 +32,14 @@ function buildEmbed(item) {
   const title = normalizeText(item.title, 256) || 'New World News';
   const summary = normalizeText(item.contentSnippet || item.content || item.description, 900);
   const embed = new EmbedBuilder()
-    .setTitle(\`🌍 \${title}\`)
+    .setTitle(`🌍 ${title}`)
     .setURL(item.link)
     .setColor(0x5865f2)
     .setFooter({ text: 'BBC News • NRR World News' })
     .setTimestamp(item.isoDate ? new Date(item.isoDate) : new Date());
 
   if (summary) embed.setDescription(summary);
-  embed.addFields({ name: '📰 Full Article', value: \`[Read the full article](\${item.link})\` });
+  embed.addFields({ name: '📰 Full Article', value: `[Read the full article](${item.link})` });
 
   return embed;
 }
@@ -62,7 +62,7 @@ async function poll(client, { initial = false } = {}) {
   try {
     const channel = await client.channels.fetch(NEWS_CHANNEL_ID).catch(() => null);
     if (!channel?.isTextBased()) {
-      console.error(\`News channel \${NEWS_CHANNEL_ID} is unavailable or not text-based.\`);
+      console.error(`News channel ${NEWS_CHANNEL_ID} is unavailable or not text-based.`);
       return;
     }
 
@@ -71,7 +71,7 @@ async function poll(client, { initial = false } = {}) {
     if (initial) {
       for (const item of items) seenIds.add(storyId(item));
       initialized = true;
-      console.log(\`News system initialized with \${Math.min(items.length, 10)} current BBC stories.\`);
+      console.log(`News system initialized with ${Math.min(items.length, 10)} current BBC stories.`);
       return;
     }
 
@@ -99,7 +99,7 @@ async function poll(client, { initial = false } = {}) {
     }
 
     if (fresh.length) {
-      console.log(\`Posted \${fresh.length} new world news stor\${fresh.length === 1 ? 'y' : 'ies'}.\`);
+      console.log(`Posted ${fresh.length} new world news stor${fresh.length === 1 ? 'y' : 'ies'}.`);
     }
   } catch (error) {
     console.error('World news polling failed:', error);
