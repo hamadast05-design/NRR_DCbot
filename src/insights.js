@@ -11,6 +11,20 @@ let processing = false;
 function clean(value, max = 1800) {
   return String(value || '').replace(/\u0000/g, '').trim().slice(0, max);
 }
+function extractOutputText(data) {
+  if (typeof data?.output_text === 'string' && data.output_text.trim()) return data.output_text.trim();
+  const parts = [];
+  for (const item of (Array.isArray(data?.output) ? data.output : [])) {
+    for (const block of (Array.isArray(item.content) ? item.content : [])) {
+      if ((block.type === 'output_text' || block.type === 'text') && typeof block.text === 'string') parts.push(block.text);
+    }
+  }
+  return parts.join('\n').trim();
+}
+function parseModelJson(text) {
+  const normalized = String(text || '').trim().replace(/^\x60\x60\x60(?:json)?\s*/i, '').replace(/\s*\x60\x60\x60$/, '');
+  return JSON.parse(normalized);
+}
 function parseChannelIds(value) {
   return [...new Set(String(value || '').match(/\d{15,22}/g) || [])];
 }
@@ -155,7 +169,7 @@ async function ask(interaction) {
     return interaction.editReply('The AI request failed. Check OPENAI_INSIGHTS_MODEL, API key, and Railway logs.');
   }
   const data = await response.json();
-  const answer = clean(data.output_text, 3900);
+  const answer = clean(extractOutputText(data), 3900);
   if (!answer) return interaction.editReply('The AI returned an empty answer. Please try again.');
   return interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🧠 NRR Intelligence Analysis').setDescription(answer).setColor(0x5865f2).setFooter({ text: 'Based on collected data • Model: ' + MODEL }).setTimestamp()] });
 }
@@ -184,7 +198,7 @@ async function report(interaction) {
     return interaction.editReply('The AI report failed. Check model/API configuration and Railway logs.');
   }
   const data = await response.json();
-  return interaction.editReply({ embeds: [new EmbedBuilder().setTitle('📋 NRR Weekly Intelligence Report').setDescription(clean(data.output_text, 3900) || 'Not enough analyzed data to create a report yet.').setColor(0x5865f2).setTimestamp()] });
+  return interaction.editReply({ embeds: [new EmbedBuilder().setTitle('📋 NRR Weekly Intelligence Report').setDescription(clean(extractOutputText(data), 3900) || 'Not enough analyzed data to create a report yet.').setColor(0x5865f2).setTimestamp()] });
 }
 async function onMessage(message) {
   if (!message.guild || message.author.bot || !message.content?.trim() || message.content.startsWith('/') || message.content.startsWith('!')) return;
@@ -222,7 +236,7 @@ async function analyzeBatch() {
     });
     if (!response.ok) throw new Error('AI classifier HTTP ' + response.status + ': ' + (await response.text()).slice(0, 300));
     const data = await response.json();
-    const parsed = JSON.parse(String(data.output_text || '').trim());
+    const parsed = parseModelJson(extractOutputText(data));
     if (!Array.isArray(parsed.items)) throw new Error('AI classifier returned invalid JSON.');
     const byIndex = new Map(parsed.items.filter(item => Number.isInteger(item.index) && item.index >= 0 && item.index < pending.rows.length).map(item => [item.index, item]));
     const allowed = new Set(['general', 'suggestion', 'complaint', 'potential_incident', 'question', 'event', 'other']);
