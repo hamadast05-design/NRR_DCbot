@@ -63,6 +63,8 @@ async function setup(interaction) {
     'INSERT INTO insights_settings (guild_id, enabled, channel_ids, updated_by, updated_at) VALUES ($1, TRUE, $2::jsonb, $3, NOW()) ON CONFLICT (guild_id) DO UPDATE SET enabled = TRUE, channel_ids = EXCLUDED.channel_ids, updated_by = EXCLUDED.updated_by, updated_at = NOW() RETURNING *',
     [interaction.guildId, JSON.stringify(valid), interaction.user.id]
   );
+  // Remove stored records from channels that management has deselected.
+  await db.query('DELETE FROM insights_messages WHERE guild_id = $1 AND NOT (channel_id = ANY($2::text[]))', [interaction.guildId, valid]);
   const dashboardChannel = interaction.options.getChannel('dashboard_channel');
   let posted = false;
   if (dashboardChannel?.isTextBased() && dashboardChannel.permissionsFor(interaction.client.user)?.has(['ViewChannel', 'SendMessages', 'EmbedLinks'])) {
@@ -191,6 +193,19 @@ async function onMessage(message) {
   await db.query('INSERT INTO insights_messages (guild_id, channel_id, message_id, author_id, content, created_at, analyzed) VALUES ($1, $2, $3, $4, $5, $6, FALSE) ON CONFLICT (guild_id, message_id) DO NOTHING',
     [message.guild.id, message.channel.id, message.id, message.author.id, clean(message.content), message.createdAt]);
 }
+async function onMessageDelete(message) {
+  if (!message.guild || !message.id) return;
+  await db.query('DELETE FROM insights_messages WHERE guild_id = $1 AND message_id = $2', [message.guild.id, message.id]);
+}
+async function onMessageUpdate(oldMessage, newMessage) {
+  if (!newMessage.guild || newMessage.author?.bot || !newMessage.id || !newMessage.content?.trim()) return;
+  const settings = await getSettings(newMessage.guild.id);
+  if (!settings.enabled || !Array.isArray(settings.channel_ids) || !settings.channel_ids.includes(newMessage.channel.id)) return;
+  await db.query(
+    'UPDATE insights_messages SET content = $3, analyzed = FALSE, topic = NULL, category = NULL, summary = NULL, confidence = 0, analyzed_at = NULL WHERE guild_id = $1 AND message_id = $2',
+    [newMessage.guild.id, newMessage.id, clean(newMessage.content)]
+  );
+}
 async function analyzeBatch() {
   if (processing || !clientRef || !process.env.OPENAI_API_KEY) return;
   processing = true;
@@ -250,4 +265,4 @@ async function handleInteraction(interaction) {
     return renderView(interaction, interaction.customId.slice('insights:view:'.length));
   }
 }
-module.exports = { start, onMessage, handleInteraction, dashboardEmbed, dashboardComponents, getSettings };
+module.exports = { start, onMessage, onMessageDelete, onMessageUpdate, handleInteraction, dashboardEmbed, dashboardComponents, getSettings };
