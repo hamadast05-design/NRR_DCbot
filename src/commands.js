@@ -10,6 +10,7 @@ const db = require('./db');
 const { config } = require('./config');
 const eventSystem = require('./event');
 const wordkillSystem = require('./wordkill');
+const insightsSystem = require('./insights');
 
 const COLORS = {
   fame: 0xf1c40f,
@@ -20,6 +21,21 @@ const COLORS = {
 const commands = [
   new SlashCommandBuilder().setName('start_wordkill').setDescription('Start a WordKill game in this channel.'),
   new SlashCommandBuilder().setName('end_wordkill').setDescription('End the active WordKill game in this channel.'),
+
+  new SlashCommandBuilder()
+    .setName('insights')
+    .setDescription('NRR AI Server Intelligence dashboard and analysis.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild.toString())
+    .addSubcommand(s => s.setName('dashboard').setDescription('Open the interactive Server Intelligence dashboard.'))
+    .addSubcommand(s => s.setName('disable').setDescription('Pause Server Intelligence message collection.'))
+    .addSubcommand(s => s.setName('setup').setDescription('Enable analysis for selected text channels.')
+      .addStringOption(o => o.setName('channels').setDescription('Mention text channels to monitor, separated by commas.').setRequired(true).setMaxLength(1000))
+      .addChannelOption(o => o.setName('dashboard_channel').setDescription('Optional channel where the dashboard embed should be posted.')))
+    .addSubcommand(s => s.setName('ask').setDescription('Ask the AI a question about analyzed server activity.')
+      .addStringOption(o => o.setName('question').setDescription('What would you like to understand about the community?').setRequired(true).setMaxLength(700)))
+    .addSubcommand(s => s.setName('report').setDescription('Generate a weekly AI community intelligence report.')),
+
+
   new SlashCommandBuilder().setName('createevent').setDescription('Create an event submission configuration.').addStringOption(o=>o.setName('channel_id').setDescription('Destination channel ID.').setRequired(true)),
   new SlashCommandBuilder().setName('send').setDescription('Send the event submission interface.').addStringOption(o=>o.setName('channel_id').setDescription('Channel for the submission interface.').setRequired(true)),
   new SlashCommandBuilder().setName('stick').setDescription('Keep the submission interface at the top of a channel.').addStringOption(o=>o.setName('channel_id').setDescription('Channel to stick the interface in.').setRequired(true)),
@@ -308,6 +324,7 @@ async function handleBan(interaction) {
 }
 
 async function handleInteraction(interaction) {
+  if ((interaction.isChatInputCommand() && interaction.commandName === 'insights') || (interaction.isButton() && interaction.customId.startsWith('insights:view:'))) return insightsSystem.handleInteraction(interaction);
   if (interaction.isModalSubmit() && interaction.customId.startsWith('event_submit:modal:')) return eventSystem.submit(interaction, interaction.customId.slice('event_submit:modal:'.length));
 
   if (interaction.isChatInputCommand()) {
