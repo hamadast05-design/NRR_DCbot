@@ -67,18 +67,32 @@ async function setup(interaction) {
   if (!isManager(interaction)) return interaction.reply({ content: 'Only server management can configure Server Intelligence.', ephemeral: true });
   const ids = parseChannelIds(interaction.options.getString('channels', true));
   if (!ids.length) return interaction.reply({ content: 'I could not find channel IDs. Mention text channels separated by commas.', ephemeral: true });
-  const valid = [];
+  const valid = new Set();
+  const invalid = [];
   for (const id of ids) {
-    const channel = await interaction.guild.channels.fetch(id).catch(() => null);
-    if (channel?.isTextBased() && channel.viewable && channel.permissionsFor(interaction.client.user)?.has(['ViewChannel', 'ReadMessageHistory'])) valid.push(id);
+    const selected = await interaction.guild.channels.fetch(id).catch(() => null);
+    if (!selected) { invalid.push(id); continue; }
+    // A selected category expands to its text-based child channels.
+    const candidates = selected.type === 4
+      ? interaction.guild.channels.cache.filter(channel => channel.parentId === selected.id && channel.isTextBased()).values()
+      : [selected];
+    let matched = false;
+    for (const channel of candidates) {
+      if (channel?.isTextBased() && channel.viewable && channel.permissionsFor(interaction.client.user)?.has(['ViewChannel', 'ReadMessageHistory'])) {
+        valid.add(channel.id);
+        matched = true;
+      }
+    }
+    if (!matched) invalid.push(id);
   }
-  if (!valid.length) return interaction.reply({ content: 'None of those are accessible text channels. Check the IDs and my View Channel / Read Message History permissions.', ephemeral: true });
+  const validChannels = [...valid];
+  if (!validChannels.length) return interaction.reply({ content: 'None of those selections contain accessible text channels. Mention text channels or categories, and check my View Channel / Read Message History permissions.', ephemeral: true });
   const result = await db.query(
     'INSERT INTO insights_settings (guild_id, enabled, channel_ids, updated_by, updated_at) VALUES ($1, TRUE, $2::jsonb, $3, NOW()) ON CONFLICT (guild_id) DO UPDATE SET enabled = TRUE, channel_ids = EXCLUDED.channel_ids, updated_by = EXCLUDED.updated_by, updated_at = NOW() RETURNING *',
-    [interaction.guildId, JSON.stringify(valid), interaction.user.id]
+    [interaction.guildId, JSON.stringify(validChannels), interaction.user.id]
   );
   // Remove stored records from channels that management has deselected.
-  await db.query('DELETE FROM insights_messages WHERE guild_id = $1 AND NOT (channel_id = ANY($2::text[]))', [interaction.guildId, valid]);
+  await db.query('DELETE FROM insights_messages WHERE guild_id = $1 AND NOT (channel_id = ANY($2::text[]))', [interaction.guildId, validChannels]);
   const dashboardChannel = interaction.options.getChannel('dashboard_channel');
   let posted = false;
   if (dashboardChannel?.isTextBased() && dashboardChannel.permissionsFor(interaction.client.user)?.has(['ViewChannel', 'SendMessages', 'EmbedLinks'])) {
@@ -87,7 +101,7 @@ async function setup(interaction) {
     posted = true;
   }
   return interaction.reply({
-    content: '✅ Server Intelligence enabled for ' + valid.map(id => '<#' + id + '>').join(', ') + '. ' + (posted ? 'Dashboard posted in <#' + dashboardChannel.id + '>.' : 'Use /insights dashboard to open it.') + '\nNew messages will be analyzed going forward; older messages are not backfilled automatically.',
+    content: '✅ Server Intelligence enabled for ' + validChannels.length + ' accessible text channel(s) across your selection. ' + (invalid.length ? 'Skipped ' + invalid.length + ' selection(s) with no accessible text channels. ' : '') + (posted ? 'Dashboard posted in <#' + dashboardChannel.id + '>.' : 'Use /insights dashboard to open it.') + '\nYou can select individual text channels, categories, or a mix. New messages will be analyzed going forward; older messages are not backfilled automatically.',
     ephemeral: true, allowedMentions: { parse: [] }
   });
 }
