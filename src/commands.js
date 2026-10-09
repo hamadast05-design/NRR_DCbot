@@ -27,6 +27,7 @@ const commands = [
     .setDescription('NRR AI Server Intelligence dashboard and analysis.')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild.toString())
     .addSubcommand(s => s.setName('dashboard').setDescription('Open the interactive Server Intelligence dashboard.'))
+    .addSubcommand(s => s.setName('disable').setDescription('Pause Server Intelligence message collection.'))
     .addSubcommand(s => s.setName('setup').setDescription('Enable analysis for selected text channels.')
       .addStringOption(o => o.setName('channels').setDescription('Mention text channels to monitor, separated by commas.').setRequired(true).setMaxLength(1000))
       .addChannelOption(o => o.setName('dashboard_channel').setDescription('Optional channel where the dashboard embed should be posted.')))
