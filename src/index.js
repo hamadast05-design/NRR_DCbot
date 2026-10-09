@@ -60,6 +60,14 @@ client.on(Events.GuildMemberRemove, async member => {
   await db.setMemberActive(member.guild.id, member.id, false).catch(error => console.error('Member remove sync failed:', error));
 });
 
+client.on(Events.MessageDelete, async message => {
+  try { await insightsSystem.onMessageDelete(message); } catch (error) { console.error('Server Intelligence delete error:', error); }
+});
+
+client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
+  try { await insightsSystem.onMessageUpdate(oldMessage, newMessage); } catch (error) { console.error('Server Intelligence edit error:', error); }
+});
+
 client.on(Events.MessageCreate, async message => {
   try { await wordkillSystem.onMessage(message); } catch (error) { console.error('WordKill message error:', error); }
   try { await insightsSystem.onMessage(message); } catch (error) { console.error('Server Intelligence message error:', error); }
