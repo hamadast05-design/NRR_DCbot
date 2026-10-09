@@ -91,6 +91,15 @@ async function setup(interaction) {
     ephemeral: true, allowedMentions: { parse: [] }
   });
 }
+async function disable(interaction) {
+  const result = await db.query('UPDATE insights_settings SET enabled = FALSE, updated_by = $2, updated_at = NOW() WHERE guild_id = $1 RETURNING *', [interaction.guildId, interaction.user.id]);
+  if (result.rows[0]?.dashboard_channel_id && result.rows[0]?.dashboard_message_id) {
+    const channel = await interaction.client.channels.fetch(result.rows[0].dashboard_channel_id).catch(() => null);
+    const message = channel?.isTextBased() ? await channel.messages.fetch(result.rows[0].dashboard_message_id).catch(() => null) : null;
+    if (message) await message.edit({ embeds: [dashboardEmbed(interaction.guild, result.rows[0])], components: dashboardComponents() }).catch(() => {});
+  }
+  return interaction.reply({ content: '⏸️ Server Intelligence collection is disabled. Existing reports remain available to management, and the 30-day retention policy still applies.', ephemeral: true });
+}
 async function openDashboard(interaction) {
   const settings = await getSettings(interaction.guildId);
   return interaction.reply({ embeds: [dashboardEmbed(interaction.guild, settings)], components: dashboardComponents(), ephemeral: true });
@@ -270,6 +279,7 @@ async function handleInteraction(interaction) {
     if (!isManager(interaction)) return interaction.reply({ content: 'Server Intelligence is restricted to members with Manage Server permission.', ephemeral: true });
     const sub = interaction.options.getSubcommand();
     if (sub === 'setup') return setup(interaction);
+    if (sub === 'disable') return disable(interaction);
     if (sub === 'dashboard') return openDashboard(interaction);
     if (sub === 'ask') return ask(interaction);
     if (sub === 'report') return report(interaction);
