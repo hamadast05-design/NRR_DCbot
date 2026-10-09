@@ -116,7 +116,7 @@ async function disable(interaction) {
 }
 async function openDashboard(interaction) {
   const settings = await getSettings(interaction.guildId);
-  return interaction.reply({ embeds: [dashboardEmbed(interaction.guild, settings)], components: dashboardComponents(), ephemeral: true });
+  return interaction.reply({ embeds: [dashboardEmbed(interaction.guild, settings)], components: dashboardComponents(), ephemeral: false, allowedMentions: { parse: [] } });
 }
 async function getStats(guildId) {
   const result = await db.query(
@@ -148,19 +148,19 @@ async function renderView(interaction, view) {
         { name: 'Concerns', value: String(s.complaints), inline: true },
         { name: 'Review flags', value: String(s.incidents), inline: true }
       ).setFooter({ text: 'Rolling 30-day window • Selected channels only' });
-    return interaction.reply({ embeds: [embed], ephemeral: true });
+    return interaction.reply({ embeds: [embed], ephemeral: false, allowedMentions: { parse: [] } });
   }
   if (view === 'activity') {
     const result = await db.query("SELECT DATE(created_at AT TIME ZONE 'UTC') AS day, COUNT(*)::int AS count FROM insights_messages WHERE guild_id = $1 AND created_at >= NOW() - INTERVAL '7 days' GROUP BY day ORDER BY day DESC LIMIT 7", [guildId]);
     const lines = result.rows.length ? result.rows.map(row => '• ' + new Date(row.day).toISOString().slice(0, 10) + ' — **' + row.count + ' messages**').join('\n') : 'No messages collected yet.';
-    return interaction.reply({ embeds: [new EmbedBuilder().setTitle('📈 Recent Activity').setDescription(lines).setColor(0x3498db).setFooter({ text: 'Daily counts from selected channels.' })], ephemeral: true });
+    return interaction.reply({ embeds: [new EmbedBuilder().setTitle('📈 Recent Activity').setDescription(lines).setColor(0x3498db).setFooter({ text: 'Daily counts from selected channels.' })], ephemeral: false, allowedMentions: { parse: [] } });
   }
   const category = view === 'suggestions' ? 'suggestion' : view === 'complaints' ? 'complaint' : view === 'incidents' ? 'potential_incident' : null;
   if (category) {
     const result = await db.query("SELECT topic, COUNT(*)::int AS count, MAX(created_at) AS latest FROM insights_messages WHERE guild_id = $1 AND category = $2 AND analyzed = TRUE AND created_at >= NOW() - INTERVAL '30 days' GROUP BY topic ORDER BY count DESC, latest DESC LIMIT 8", [guildId, category]);
     const label = view === 'suggestions' ? '💡 Recurring Suggestions' : view === 'complaints' ? '🗣️ Recurring Concerns' : '🛡️ Potential Incidents for Review';
     const desc = result.rows.length ? result.rows.map((row, i) => '**' + (i + 1) + '. ' + clean(row.topic || 'Uncategorized', 120) + '** — ' + row.count + ' related message(s)\nLast seen: <t:' + Math.floor(new Date(row.latest).getTime() / 1000) + ':R>').join('\n\n') : 'No analyzed items in this category yet.';
-    return interaction.reply({ embeds: [new EmbedBuilder().setTitle(label).setDescription(desc.slice(0, 4000)).setColor(view === 'incidents' ? 0xe74c3c : 0x5865f2).setFooter({ text: 'AI flags are leads for human review, not verified conclusions.' })], ephemeral: true });
+    return interaction.reply({ embeds: [new EmbedBuilder().setTitle(label).setDescription(desc.slice(0, 4000)).setColor(view === 'incidents' ? 0xe74c3c : 0x5865f2).setFooter({ text: 'AI flags are leads for human review, not verified conclusions.' })], ephemeral: view === 'incidents', allowedMentions: { parse: [] } });
   }
   const result = await db.query("SELECT topic, COUNT(*)::int AS count, MAX(created_at) AS latest FROM insights_messages WHERE guild_id = $1 AND analyzed = TRUE AND topic IS NOT NULL AND created_at >= NOW() - INTERVAL '30 days' GROUP BY topic ORDER BY count DESC, latest DESC LIMIT 10", [guildId]);
   const desc = result.rows.length ? result.rows.map((row, i) => '**' + (i + 1) + '. ' + clean(row.topic, 120) + '** — ' + row.count + ' message(s) • last seen <t:' + Math.floor(new Date(row.latest).getTime() / 1000) + ':R>').join('\n') : 'No topics analyzed yet. Give the system time to process messages after enabling it.';
@@ -170,7 +170,7 @@ async function ask(interaction) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return interaction.reply({ content: 'OPENAI_API_KEY is missing in Railway variables.', ephemeral: true });
   const question = clean(interaction.options.getString('question', true), 700);
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ ephemeral: false });
   const settings = await getSettings(interaction.guildId);
   if (!settings.enabled) return interaction.editReply('Server Intelligence is not configured. Run /insights setup and select channels.');
   const contextResult = await db.query("SELECT channel_id, message_id, content, created_at, category, topic, summary, confidence FROM insights_messages WHERE guild_id = $1 AND analyzed = TRUE AND created_at >= NOW() - INTERVAL '30 days' ORDER BY created_at DESC LIMIT 80", [interaction.guildId]);
@@ -188,8 +188,14 @@ async function ask(interaction) {
     ] })
   });
   if (!response.ok) {
-    console.error('Insights ask failed (' + response.status + '): ' + (await response.text()).slice(0, 400));
-    return interaction.editReply('The AI request failed. Check OPENAI_INSIGHTS_MODEL, API key, and Railway logs.');
+    const detail = (await response.text()).slice(0, 1200);
+    console.error('Insights ask failed. model=' + MODEL + ' status=' + response.status + ' response=' + detail);
+    let hint = 'Open Railway logs for the exact API error.';
+    if (response.status === 401) hint = 'OpenAI rejected the API key (401). Check OPENAI_API_KEY.';
+    else if (response.status === 403) hint = 'The API key or project may not have permission to use this model.';
+    else if (response.status === 429) hint = 'OpenAI API quota or rate limit reached. Check API billing and usage limits.';
+    else if (response.status === 400 && /model/i.test(detail)) hint = 'The model ID may be invalid. Set OPENAI_INSIGHTS_MODEL to gpt-4.1-mini.';
+    return interaction.editReply('The AI request failed (' + response.status + '). ' + hint);
   }
   const data = await response.json();
   const answer = clean(extractOutputText(data), 3900);
@@ -217,8 +223,9 @@ async function report(interaction) {
     ] })
   });
   if (!response.ok) {
-    console.error('Insights report failed (' + response.status + '): ' + (await response.text()).slice(0, 400));
-    return interaction.editReply('The AI report failed. Check model/API configuration and Railway logs.');
+    const detail = (await response.text()).slice(0, 1200);
+    console.error('Insights report failed. model=' + MODEL + ' status=' + response.status + ' response=' + detail);
+    return interaction.editReply('The AI report failed (' + response.status + '). Check Railway logs for the exact OpenAI API error.');
   }
   const data = await response.json();
   return interaction.editReply({ embeds: [new EmbedBuilder().setTitle('📋 NRR Weekly Intelligence Report').setDescription(clean(extractOutputText(data), 3900) || 'Not enough analyzed data to create a report yet.').setColor(0x5865f2).setTimestamp()] });
@@ -257,7 +264,7 @@ async function analyzeBatch() {
         { role: 'user', content: JSON.stringify(payload) }
       ] })
     });
-    if (!response.ok) throw new Error('AI classifier HTTP ' + response.status + ': ' + (await response.text()).slice(0, 300));
+    if (!response.ok) { const detail = (await response.text()).slice(0, 1200); throw new Error('AI classifier HTTP ' + response.status + ' model=' + MODEL + ': ' + detail); }
     const data = await response.json();
     const parsed = parseModelJson(extractOutputText(data));
     if (!Array.isArray(parsed.items)) throw new Error('AI classifier returned invalid JSON.');
