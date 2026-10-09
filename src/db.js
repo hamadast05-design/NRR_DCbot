@@ -118,6 +118,36 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_rep_members_humiliation ON reputation_members (guild_id, humiliation DESC);
     CREATE INDEX IF NOT EXISTS idx_rep_members_active ON reputation_members (guild_id, active);
     CREATE INDEX IF NOT EXISTS idx_rep_whitelist_lookup ON reputation_whitelist (guild_id, user_id, vote_type);
+
+    CREATE TABLE IF NOT EXISTS insights_settings (
+      guild_id TEXT PRIMARY KEY,
+      enabled BOOLEAN NOT NULL DEFAULT FALSE,
+      channel_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+      dashboard_channel_id TEXT,
+      dashboard_message_id TEXT,
+      updated_by TEXT,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS insights_messages (
+      guild_id TEXT NOT NULL,
+      channel_id TEXT NOT NULL,
+      message_id TEXT NOT NULL,
+      author_id TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL,
+      analyzed BOOLEAN NOT NULL DEFAULT FALSE,
+      topic TEXT,
+      category TEXT,
+      summary TEXT,
+      confidence REAL NOT NULL DEFAULT 0,
+      analyzed_at TIMESTAMPTZ,
+      PRIMARY KEY (guild_id, message_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_insights_pending ON insights_messages (analyzed, created_at);
+    CREATE INDEX IF NOT EXISTS idx_insights_category ON insights_messages (guild_id, category, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_insights_topic ON insights_messages (guild_id, topic, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_insights_channel ON insights_messages (guild_id, channel_id, created_at DESC);
   `);
 }
 
@@ -554,6 +584,7 @@ async function endEvent(eventId) {
 }
 
 module.exports = {
+  query,
   migrate,
   ensureMember,
   setMemberActive,
