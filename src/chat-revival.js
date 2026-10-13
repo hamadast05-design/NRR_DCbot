@@ -1,7 +1,7 @@
 const db = require('./db');
 const questions = require('./chat-revival-questions');
 
-const CHANNEL_ID = '1556019934608494851';
+const CHANNEL_ID = process.env.CHAT_REVIVAL_CHANNEL_ID || '1556019934608494851';
 const ROLE_ID = '1559660468480512111';
 const WINDOW_MINUTES = 45;
 const MESSAGE_THRESHOLD = 20;
