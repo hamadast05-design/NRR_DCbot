@@ -158,6 +158,14 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_chat_revival_messages_window
       ON chat_revival_messages (channel_id, created_at DESC);
 
+    CREATE TABLE IF NOT EXISTS role_redemption_codes (
+      code_hash TEXT PRIMARY KEY,
+      guild_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      role_id TEXT NOT NULL,
+      redeemed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS chat_revival_state (
       channel_id TEXT PRIMARY KEY,
       next_question_index INTEGER NOT NULL DEFAULT 0,

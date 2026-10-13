@@ -12,6 +12,7 @@ const eventSystem = require('./event');
 const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
 const insightsSystem = require('./insights');
+const roleTools = require('./role-tools');
 
 const COLORS = {
   fame: 0xf1c40f,
@@ -20,6 +21,15 @@ const COLORS = {
 };
 
 const commands = [
+  new SlashCommandBuilder()
+    .setName('redeem-role')
+    .setDescription('Redeem a one-time code for a designated role.')
+    .addStringOption(o => o.setName('code').setDescription('Your one-time redemption code.').setRequired(true).setMinLength(8).setMaxLength(80)),
+  new SlashCommandBuilder()
+    .setName('role-up')
+    .setDescription('Move the configured role higher in the role list.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles.toString())
+    .addIntegerOption(o => o.setName('positions').setDescription('Number of positions to move the role up.').setMinValue(1).setMaxValue(100).setRequired(true)),
   new SlashCommandBuilder().setName('start_wordkill').setDescription('Start a WordKill game in this channel.'),
   new SlashCommandBuilder().setName('end_wordkill').setDescription('End the active WordKill game in this channel.'),
   new SlashCommandBuilder().setName('start_pt').setDescription('Start Political Trivia in this channel.'),
@@ -327,6 +337,8 @@ async function handleBan(interaction) {
 }
 
 async function handleInteraction(interaction) {
+  if (interaction.isChatInputCommand() && interaction.commandName === 'redeem-role') return roleTools.redeemRole(interaction);
+  if (interaction.isChatInputCommand() && interaction.commandName === 'role-up') return roleTools.moveRoleUp(interaction);
   if ((interaction.isChatInputCommand() && interaction.commandName === 'insights') || (interaction.isButton() && interaction.customId.startsWith('insights:view:'))) return insightsSystem.handleInteraction(interaction);
   if (interaction.isModalSubmit() && interaction.customId.startsWith('event_submit:modal:')) return eventSystem.submit(interaction, interaction.customId.slice('event_submit:modal:'.length));
 
