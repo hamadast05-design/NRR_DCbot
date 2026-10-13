@@ -10,6 +10,7 @@ const CHECK_INTERVAL_MS = 60 * 1000;
 
 let clientRef = null;
 let checking = false;
+let initializing = false;
 let initialized = false;
 
 function isQuietHours(date = new Date()) {
@@ -144,6 +145,8 @@ async function evaluate() {
 }
 
 async function initialize(client) {
+  if (initialized || initializing) return;
+  initializing = true;
   clientRef = client;
   try {
     const channel = await client.channels.fetch(CHANNEL_ID);
@@ -156,13 +159,18 @@ async function initialize(client) {
     await evaluate();
   } catch (error) {
     console.error('Chat Revival initialization failed:', error);
+  } finally {
+    initializing = false;
   }
 }
 
 function start(client) {
   clientRef = client;
   initialize(client).catch(error => console.error('Chat Revival initialization error:', error));
-  setInterval(() => evaluate(), CHECK_INTERVAL_MS);
+  setInterval(() => {
+    if (initialized) evaluate();
+    else initialize(client).catch(error => console.error('Chat Revival initialization retry failed:', error));
+  }, CHECK_INTERVAL_MS);
   console.log('Chat Revival starting; threshold < ' + MESSAGE_THRESHOLD + ' human messages per ' + WINDOW_MINUTES + ' minutes; quiet hours 00:00–14:00 Asia/Riyadh.');
 }
 
