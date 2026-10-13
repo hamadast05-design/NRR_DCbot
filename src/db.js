@@ -148,6 +148,23 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_insights_category ON insights_messages (guild_id, category, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_insights_topic ON insights_messages (guild_id, topic, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_insights_channel ON insights_messages (guild_id, channel_id, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS chat_revival_messages (
+      channel_id TEXT NOT NULL,
+      message_id TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL,
+      PRIMARY KEY (channel_id, message_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_chat_revival_messages_window
+      ON chat_revival_messages (channel_id, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS chat_revival_state (
+      channel_id TEXT PRIMARY KEY,
+      next_question_index INTEGER NOT NULL DEFAULT 0,
+      low_activity_active BOOLEAN NOT NULL DEFAULT FALSE,
+      last_triggered_at TIMESTAMPTZ,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 }
 
