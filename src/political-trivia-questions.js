@@ -16,7 +16,7 @@ const capitals = [
 ['Finland','Helsinki'],['France','Paris'],['Georgia','Tbilisi'],['Germany','Berlin'],['Ghana','Accra'],
 ['Greece','Athens'],['Guatemala','Guatemala City'],['Honduras','Tegucigalpa'],['Hungary','Budapest'],['Iceland','Reykjavik'],
 ['India','New Delhi'],['Indonesia','Jakarta'],['Iran','Tehran'],['Iraq','Baghdad'],['Ireland','Dublin'],
-['Israel','Jerusalem'],['Italy','Rome'],['Jamaica','Kingston'],['Japan','Tokyo'],['Jordan','Amman'],
+['South Korea','Seoul'],['Italy','Rome'],['Jamaica','Kingston'],['Japan','Tokyo'],['Jordan','Amman'],
 ['Kazakhstan','Astana'],['Kenya','Nairobi'],['Kuwait','Kuwait City'],['Kyrgyzstan','Bishkek'],['Laos','Vientiane'],
 ['Latvia','Riga'],['Lebanon','Beirut'],['Libya','Tripoli'],['Liechtenstein','Vaduz'],['Lithuania','Vilnius'],
 ['Luxembourg','Luxembourg'],['Madagascar','Antananarivo'],['Malaysia','Kuala Lumpur'],['Maldives','Male'],['Mali','Bamako'],
