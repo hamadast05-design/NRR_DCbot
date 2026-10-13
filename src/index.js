@@ -7,6 +7,7 @@ const annihilateSystem = require('./annihilate');
 const wordkillSystem = require('./wordkill');
 const newsSystem = require('./news');
 const insightsSystem = require('./insights');
+const chatRevivalSystem = require('./chat-revival');
 
 validate();
 
@@ -35,6 +36,7 @@ client.once(Events.ClientReady, async readyClient => {
     setInterval(() => eventSystem.autoApprove(readyClient).catch(error => console.error('Event auto-approval failed:', error)), 30 * 1000);
     newsSystem.start(readyClient);
     insightsSystem.start(readyClient);
+    chatRevivalSystem.start(readyClient);
 
     for (const guild of readyClient.guilds.cache.values()) {
       const members = await guild.members.fetch();
@@ -62,6 +64,7 @@ client.on(Events.GuildMemberRemove, async member => {
 
 client.on(Events.MessageDelete, async message => {
   try { await insightsSystem.onMessageDelete(message); } catch (error) { console.error('Server Intelligence delete error:', error); }
+  try { await chatRevivalSystem.onMessageDelete(message); } catch (error) { console.error('Chat Revival delete error:', error); }
 });
 
 client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
@@ -69,6 +72,7 @@ client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
 });
 
 client.on(Events.MessageCreate, async message => {
+  try { await chatRevivalSystem.onMessage(message); } catch (error) { console.error('Chat Revival message error:', error); }
   try { await wordkillSystem.onMessage(message); } catch (error) { console.error('WordKill message error:', error); }
   try { await insightsSystem.onMessage(message); } catch (error) { console.error('Server Intelligence message error:', error); }
   try { await eventSystem.onMessage(message); } catch (error) { console.error('Event stick error:', error); }
