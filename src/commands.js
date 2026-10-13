@@ -10,6 +10,7 @@ const db = require('./db');
 const { config } = require('./config');
 const eventSystem = require('./event');
 const wordkillSystem = require('./wordkill');
+const politicalTriviaSystem = require('./political-trivia');
 const insightsSystem = require('./insights');
 
 const COLORS = {
@@ -21,6 +22,8 @@ const COLORS = {
 const commands = [
   new SlashCommandBuilder().setName('start_wordkill').setDescription('Start a WordKill game in this channel.'),
   new SlashCommandBuilder().setName('end_wordkill').setDescription('End the active WordKill game in this channel.'),
+  new SlashCommandBuilder().setName('start_pt').setDescription('Start Political Trivia in this channel.'),
+  new SlashCommandBuilder().setName('end_pt').setDescription('End Political Trivia in this channel.'),
 
   new SlashCommandBuilder()
     .setName('insights')
@@ -334,6 +337,8 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'end') return eventSystem.end(interaction);
     if (interaction.commandName === 'start_wordkill') return wordkillSystem.startCommand(interaction);
     if (interaction.commandName === 'end_wordkill') return wordkillSystem.endCommand(interaction);
+    if (interaction.commandName === 'start_pt') return politicalTriviaSystem.startCommand(interaction);
+    if (interaction.commandName === 'end_pt') return politicalTriviaSystem.endCommand(interaction);
     if (interaction.commandName === 'mute') return handleMute(interaction);
     if (interaction.commandName === 'kick') return handleKick(interaction);
     if (interaction.commandName === 'ban') return handleBan(interaction);

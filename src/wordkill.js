@@ -194,7 +194,27 @@ async function onMessage(message) {
   if (!message.guild || message.author.bot) return;
 
   const game = getGame(message.channel.id);
-  if (!game || !isValidWord(message.content)) return;
+  if (!game) return;
+
+  // Skip only affects WordKill; Political Trivia has its own independent handler.
+  if (message.content.trim().toLowerCase() === '!skipw') {
+    if (!game.current_target_letters || game.cooldown) {
+      await message.reply('⏳ There is no active WordKill round to skip right now.').catch(() => {});
+      return;
+    }
+    if (game.timeout) clearTimeout(game.timeout);
+    game.timeout = null;
+    const answer = game.current_full_word;
+    game.current_target_letters = '';
+    await message.channel.send('⏭️ WordKill skipped. The full answer was **' + answer + '**. No points awarded.');
+    game.cooldown = setTimeout(() => {
+      game.cooldown = null;
+      sendQuestion(message.channel, game).catch(error => console.error('WordKill skipped round error:', error));
+    }, NORMAL_COOLDOWN_MS);
+    return;
+  }
+
+  if (!isValidWord(message.content)) return;
 
   const guess = message.content.trim().toLowerCase();
   if (!game.current_target_letters || !guess.includes(game.current_target_letters)) return;
