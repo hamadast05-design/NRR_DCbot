@@ -198,7 +198,6 @@ const borders = [
 ['Which country borders both Brazil and Argentina and has Asuncion as its capital?','Which landlocked South American country between Brazil and Argentina has Asuncion as capital?','Paraguay'],
 ['Which country borders India, China and Pakistan and has Islamabad as its capital?','Which South Asian country has Islamabad as capital and borders India and China?','Pakistan'],
 ['Which two countries share the island of New Guinea?','Which country shares New Guinea with Papua New Guinea?','Indonesia'],
-['Which country has a land border with the United States and is south of it?','Which country borders the United States to the south?','Mexico'],
 ['Which territory is administered by Morocco and also claimed by the Polisario Front as the Sahrawi Arab Democratic Republic?','What disputed territory in northwest Africa is claimed by both Morocco and the Sahrawi Arab Democratic Republic?','Western Sahara']
 ];
 for (const [q, alt, answer] of borders) add('Borders and territories', q, alt, answer, 'Official country profiles; UN and International Court of Justice materials for disputed territories.');
