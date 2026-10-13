@@ -202,6 +202,8 @@ const borders = [
 ];
 for (const [q, alt, answer] of borders) add('Borders and territories', q, alt, answer, 'Official country profiles; UN and International Court of Justice materials for disputed territories.');
 
+add('International relations', 'Which UN programme publishes the annual Human Development Report?', 'Which UN development agency is known for the Human Development Report?', 'United Nations Development Programme', 'United Nations Development Programme official publications.');
+
 const questions = [];
 for (const fact of facts) {
   questions.push({
