@@ -84,7 +84,8 @@ async function moveRoleUp(interaction) {
     return interaction.reply({ content: '❌ My highest role must be above the target role before I can move it.', ephemeral: true });
   }
 
-  const requestedPosition = role.position + steps;
+  const originalPosition = role.position;
+  const requestedPosition = originalPosition + steps;
   const maximumPosition = botHighest.position - 1;
   const newPosition = Math.min(requestedPosition, maximumPosition);
   if (newPosition <= role.position) {
@@ -94,7 +95,7 @@ async function moveRoleUp(interaction) {
   try {
     await role.setPosition(newPosition, { reason: 'Role position adjusted by an authorized server manager' });
     const refreshed = await interaction.guild.roles.fetch(role.id);
-    const movedBy = refreshed.position - role.position;
+    const movedBy = refreshed.position - originalPosition;
     return interaction.reply({
       content: '✅ Moved <@&' + role.id + '> up by **' + movedBy + '** position' + (movedBy === 1 ? '' : 's') + (movedBy < steps ? ' (maximum allowed by my role hierarchy).' : '.') ,
       allowedMentions: { parse: [] },
