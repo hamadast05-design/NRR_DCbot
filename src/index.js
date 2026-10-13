@@ -5,6 +5,7 @@ const { handleInteraction } = require('./commands');
 const eventSystem = require('./event');
 const annihilateSystem = require('./annihilate');
 const wordkillSystem = require('./wordkill');
+const politicalTriviaSystem = require('./political-trivia');
 const newsSystem = require('./news');
 const insightsSystem = require('./insights');
 const chatRevivalSystem = require('./chat-revival');
@@ -74,6 +75,7 @@ client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
 client.on(Events.MessageCreate, async message => {
   try { await chatRevivalSystem.onMessage(message); } catch (error) { console.error('Chat Revival message error:', error); }
   try { await wordkillSystem.onMessage(message); } catch (error) { console.error('WordKill message error:', error); }
+  try { await politicalTriviaSystem.onMessage(message); } catch (error) { console.error('Political Trivia message error:', error); }
   try { await insightsSystem.onMessage(message); } catch (error) { console.error('Server Intelligence message error:', error); }
   try { await eventSystem.onMessage(message); } catch (error) { console.error('Event stick error:', error); }
   try { await annihilateSystem.onMessage(message); } catch (error) { console.error('Annihilate message error:', error); }
