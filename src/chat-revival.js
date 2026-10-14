@@ -36,6 +36,7 @@ async function saveMessage(message) {
 
 async function onMessage(message) {
   if (!message || message.channelId !== CHANNEL_ID || !isHumanMessage(message)) return;
+  if (['!stopic', '!openic'].includes(String(message.content || '').trim().toLowerCase())) return;
   try {
     await saveMessage(message);
   } catch (error) {
