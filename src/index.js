@@ -7,8 +7,8 @@ const annihilateSystem = require('./annihilate');
 const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
 const newsSystem = require('./news');
-const insightsSystem = require('./insights');
 const chatRevivalSystem = require('./chat-revival');
+const gameRotationSystem = require('./game-rotation');
 
 validate();
 
@@ -24,7 +24,7 @@ async function registerApplicationCommands() {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions],
 });
 
 client.once(Events.ClientReady, async readyClient => {
@@ -36,8 +36,8 @@ client.once(Events.ClientReady, async readyClient => {
 
     setInterval(() => eventSystem.autoApprove(readyClient).catch(error => console.error('Event auto-approval failed:', error)), 30 * 1000);
     newsSystem.start(readyClient);
-    insightsSystem.start(readyClient);
     chatRevivalSystem.start(readyClient);
+    gameRotationSystem.start(readyClient);
 
     for (const guild of readyClient.guilds.cache.values()) {
       const members = await guild.members.fetch();
@@ -64,21 +64,19 @@ client.on(Events.GuildMemberRemove, async member => {
 });
 
 client.on(Events.MessageDelete, async message => {
-  try { await insightsSystem.onMessageDelete(message); } catch (error) { console.error('Server Intelligence delete error:', error); }
   try { await chatRevivalSystem.onMessageDelete(message); } catch (error) { console.error('Chat Revival delete error:', error); }
-});
-
-client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
-  try { await insightsSystem.onMessageUpdate(oldMessage, newMessage); } catch (error) { console.error('Server Intelligence edit error:', error); }
 });
 
 client.on(Events.MessageCreate, async message => {
   try { await chatRevivalSystem.onMessage(message); } catch (error) { console.error('Chat Revival message error:', error); }
   try { await wordkillSystem.onMessage(message); } catch (error) { console.error('WordKill message error:', error); }
   try { await politicalTriviaSystem.onMessage(message); } catch (error) { console.error('Political Trivia message error:', error); }
-  try { await insightsSystem.onMessage(message); } catch (error) { console.error('Server Intelligence message error:', error); }
   try { await eventSystem.onMessage(message); } catch (error) { console.error('Event stick error:', error); }
   try { await annihilateSystem.onMessage(message); } catch (error) { console.error('Annihilate message error:', error); }
+});
+
+client.on(Events.MessageReactionAdd, async (reaction, user) => {
+  try { await gameRotationSystem.onReactionAdd(reaction, user); } catch (error) { console.error('Automatic game reaction error:', error); }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
