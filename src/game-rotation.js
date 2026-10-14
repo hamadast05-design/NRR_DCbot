@@ -1,5 +1,6 @@
 const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
+const chatRevivalSystem = require('./chat-revival');
 
 const CHANNEL_ID = process.env.GENERAL_CHAT_CHANNEL_ID || '1487521278591111399';
 const GAME_PING_ROLE_ID = process.env.GAME_PING_ROLE_ID || '1487521278591111399';
@@ -14,6 +15,7 @@ let activeGame = null;
 let nextAllowedAt = 0;
 let lastPromptKind = null;
 let started = false;
+let quietHoursSuppressed = false;
 
 function getSystem(kind) {
   return kind === 'wordkill' ? wordkillSystem : politicalTriviaSystem;
@@ -41,7 +43,6 @@ async function cancelInvite(reason) {
   const invite = activeInvite;
   activeInvite = null;
   nextAllowedAt = Date.now() + INVITE_INTERVAL_MS;
-  await invite.channel.send('⌛ Game invitation cancelled: ' + reason + ' The next automatic invitation will be after the 90-minute cooldown.').catch(() => {});
   console.log('Automatic game invite cancelled; cooldown started. Reason: ' + reason);
 }
 
@@ -68,7 +69,19 @@ async function startInvitedGame(invite) {
 }
 
 async function createInvite() {
-  if (activeInvite || activeGame || Date.now() < nextAllowedAt) return;
+  if (activeInvite || activeGame) return;
+  if (chatRevivalSystem.isQuietHours()) {
+    quietHoursSuppressed = true;
+    return;
+  }
+  // Like Chat Revival, do not send a catch-up invitation immediately when quiet hours end.
+  if (quietHoursSuppressed) {
+    quietHoursSuppressed = false;
+    nextAllowedAt = Math.max(nextAllowedAt, Date.now() + INVITE_INTERVAL_MS);
+    console.log('Automatic game invitations resuming after Saudi quiet hours; waiting through the cooldown first.');
+    return;
+  }
+  if (Date.now() < nextAllowedAt) return;
   const channel = await getChannel();
   if (!channel) {
     console.error('Automatic games cannot access the configured general chat channel:', CHANNEL_ID);

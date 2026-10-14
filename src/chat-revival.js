@@ -127,7 +127,7 @@ async function evaluate() {
 
     const index = Number(state.next_question_index || 0) % questions.length;
     await channel.send({
-      content: '<@&' + ROLE_ID + '> **NRR Chat Revival**\n\n' + questions[index],
+      content: '<@&' + ROLE_ID + '> ' + questions[index],
       allowedMentions: { parse: [], roles: [ROLE_ID] }
     });
 
