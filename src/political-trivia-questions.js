@@ -17,13 +17,8 @@ const capitals = [
 ['Greece','Athens'],['Guatemala','Guatemala City'],['Honduras','Tegucigalpa'],['Hungary','Budapest'],['Iceland','Reykjavik'],
 ['India','New Delhi'],['Indonesia','Jakarta'],['Iran','Tehran'],['Iraq','Baghdad'],['Ireland','Dublin'],
 ['South Korea','Seoul'],['Italy','Rome'],['Jamaica','Kingston'],['Japan','Tokyo'],['Jordan','Amman'],
-['Kazakhstan','Astana'],['Kenya','Nairobi'],['Kuwait','Kuwait City'],['Kyrgyzstan','Bishkek'],['Laos','Vientiane'],
-['Latvia','Riga'],['Lebanon','Beirut'],['Libya','Tripoli'],['Liechtenstein','Vaduz'],['Lithuania','Vilnius'],
-['Luxembourg','Luxembourg'],['Madagascar','Antananarivo'],['Malaysia','Kuala Lumpur'],['Maldives','Male'],['Mali','Bamako'],
-['Malta','Valletta'],['Mexico','Mexico City'],['Moldova','Chisinau'],['Monaco','Monaco'],['Mongolia','Ulaanbaatar'],
-['Montenegro','Podgorica'],['Morocco','Rabat'],['Mozambique','Maputo'],['Myanmar','Naypyidaw'],['Namibia','Windhoek'],
-['Nepal','Kathmandu'],['Netherlands','Amsterdam'],['New Zealand','Wellington'],['Nicaragua','Managua'],['Nigeria','Abuja'],
-['North Korea','Pyongyang'],['North Macedonia','Skopje'],['Norway','Oslo'],['Oman','Muscat'],['Pakistan','Islamabad']
+['Kazakhstan','Astana'],['Kenya','Nairobi'],['Kuwait','Kuwait City'],['Kyrgyzstan','Bishkek'],['Laos','Vientiane']
+
 ];
 for (const [country, capital] of capitals) {
   add('Flags and capitals', 'What is the capital city of ' + country + '?', 'Which city serves as the capital of ' + country + '?', [capital], 'CIA World Factbook; national government references. Some states have multiple or disputed capital arrangements.');
@@ -94,6 +89,36 @@ const history = [
 ['Which US president was assassinated in Dallas in 1963?','Who was the American president killed in Dallas, Texas?','John F. Kennedy'],
 ['Which 1947 event created the independent states of India and Pakistan?','What was the division of British India into India and Pakistan called?','Partition of India'],
 ['What attacks took place in the United States on September 11, 2001?','Which 2001 terrorist attacks changed US security and foreign policy?','September 11 attacks'],
+['Which 1066 battle led to the Norman conquest of England?','What famous battle in 1066 brought William the Conqueror to England?','Battle of Hastings'],
+['Who developed the movable-type printing press in Europe in the 15th century?','Which inventor is famous for spreading movable-type printing in Europe?','Johannes Gutenberg'],
+['Which German religious reformer is associated with the start of the Protestant Reformation in 1517?','Who challenged church practices in 1517 and helped begin the Reformation?','Martin Luther'],
+['Which document adopted in 1776 announced the American colonies’ independence from Britain?','What 1776 document declared the thirteen American colonies independent?','United States Declaration of Independence'],
+['Which Caribbean country became independent from France in 1804 after a revolution led by formerly enslaved people?','Which country became the first independent Black-led republic in 1804?','Haiti'],
+['Which amendment abolished slavery throughout the United States in 1865?','What US constitutional amendment formally abolished slavery?','Thirteenth Amendment'],
+['Which Japanese transformation beginning in 1868 restored imperial rule and rapidly modernized the country?','What 19th-century period transformed and modernized Japan?','Meiji Restoration'],
+['Which canal connecting the Mediterranean and Red seas opened in 1869?','What major shipping canal in Egypt opened in 1869?','Suez Canal'],
+['Which two brothers made the first successful powered airplane flight in 1903?','Who are credited with the first powered, controlled airplane flight?','Wright brothers'],
+['Which 1918 agreement stopped the fighting on the Western Front in World War I?','What armistice ended the fighting in World War I on 11 November 1918?','Armistice of 11 November 1918'],
+['What was the systematic Nazi genocide of six million Jews during World War II called?','What is the name for the Nazi genocide of European Jews?','The Holocaust'],
+['Which 1948–1949 operation supplied West Berlin by air during the Soviet blockade?','What airlift supplied West Berlin during the early Cold War?','Berlin Airlift'],
+['Which military alliance was founded in 1949 by North American and European countries?','What collective-defence alliance was created in 1949?','NATO'],
+['Which Soviet satellite became the first artificial satellite in 1957?','What was the name of the first artificial satellite launched into orbit?','Sputnik 1'],
+['Who became the first human to travel into space in 1961?','Which Soviet cosmonaut made the first human spaceflight?','Yuri Gagarin'],
+['Which 1962 Cold War confrontation brought the United States and Soviet Union close to nuclear war?','What crisis followed the discovery of Soviet missiles in Cuba in 1962?','Cuban Missile Crisis'],
+['Which US civil rights law passed in 1964 outlawed segregation in many public places?','What landmark US law of 1964 prohibited discrimination in public accommodations?','Civil Rights Act of 1964'],
+['Which country reunited in 1975 after the end of the Vietnam War?','What country was reunified after the Vietnam War ended in 1975?','Vietnam'],
+['Which revolution in 1979 overthrew the monarchy in Iran?','What 1979 uprising led to the end of Iran’s monarchy?','Iranian Revolution'],
+['Which 1986 nuclear disaster occurred in what is now Ukraine?','What nuclear accident occurred at a power plant in 1986 in the Soviet Union?','Chernobyl disaster'],
+['Which 1989 protests and political changes peacefully ended communist rule in Czechoslovakia?','What was the peaceful 1989 revolution in Czechoslovakia called?','Velvet Revolution'],
+['In which year did apartheid-era South Africa hold its first fully multiracial democratic election?','What year did South Africa hold its first democratic election open to all races?','1994'],
+['Which 1993 treaty laid the foundation for the modern European Union?','What treaty signed in 1992 and effective in 1993 created the European Union framework?','Maastricht Treaty'],
+['Which 1997 agreement transferred Hong Kong from British to Chinese sovereignty?','In what year did Hong Kong return from British to Chinese rule?','1997'],
+['Which financial crisis began in 2007–2008 and caused a global recession?','What global economic crisis followed the collapse of the US housing bubble?','Global financial crisis'],
+['Which country was the starting point of the Arab Spring in 2010?','In which country did the protests that began the Arab Spring first start?','Tunisia'],
+['Which 2016 UK vote supported leaving the European Union?','What was the 2016 public vote on the UK leaving the EU called?','Brexit referendum'],
+['Which global health emergency was declared a pandemic by the WHO in March 2020?','What disease outbreak did the WHO characterize as a pandemic in 2020?','COVID-19 pandemic'],
+['Which 1990 event formally marked the reunification of East and West Germany?','In what year did East and West Germany officially reunite?','1990'],
+['Which 1955 conference in Indonesia became a landmark meeting of Asian and African countries during the Cold War?','What 1955 meeting in Bandung promoted cooperation among Asian and African states?','Bandung Conference'],
 ];
 for (const [q, alt, answer] of history) add('History', q, alt, answer, 'UN historical records; national archives; museum and university history references.');
 
