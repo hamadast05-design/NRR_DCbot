@@ -76,7 +76,7 @@ const history = [
 ['Which 1776 document declared the thirteen American colonies independent from Britain?','What document announced US independence in 1776?','United States Declaration of Independence'],
 ['Which empire’s capital was Tenochtitlan?','Which empire had its capital at Tenochtitlan?','Aztec Empire'],
 ['Which pandemic devastated Europe in the mid-14th century and is also called the Black Death?','What major 14th-century pandemic is known as the Black Death?','Black Death'],
-['Which 1989 protests and political changes led to the end of communist rule in Czechoslovakia, known as the Velvet Revolution?','What was the peaceful 1989 revolution in Czechoslovakia called?','Velvet Revolution']
+['Which 1989 protests and political changes led to the end of communist rule in Czechoslovakia, known as the Velvet Revolution?','What was the peaceful 1989 revolution in Czechoslovakia called?','Velvet Revolution'],
 ['In which year did the Titanic sink on its maiden voyage?','What year did the RMS Titanic sink in the North Atlantic?','1912'],
 ['Which event began on 1 September 1939 when Germany invaded Poland?','What major war began in Europe after Germany invaded Poland in 1939?','World War II'],
 ['Which 1969 mission first landed humans on the Moon?','What was the name of the Apollo mission that first landed people on the Moon?','Apollo 11'],
