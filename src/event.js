@@ -1,6 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, LabelBuilder, FileUploadBuilder, PermissionFlagsBits } = require('discord.js');
 const db = require('./db');
 const { config } = require('./config');
+const { isSuperuser } = require('./access');
 
 const SUBMIT = 'event_submit:';
 const REVIEW = 'event_review:';
@@ -19,6 +20,7 @@ function channelPermissionIssues(channel, includeManageMessages = false) {
 }
 
 function isManager(i) {
+  if (isSuperuser(i.user?.id)) return true;
   if (config.eventManagerRoleIds.length) return config.eventManagerRoleIds.some(id => i.member?.roles?.cache?.has(id));
   return i.memberPermissions?.has(PermissionFlagsBits.ManageGuild);
 }
