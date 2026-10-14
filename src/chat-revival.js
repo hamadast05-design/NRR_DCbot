@@ -1,5 +1,6 @@
 const db = require('./db');
 const questions = require('./chat-revival-questions');
+const automationControl = require('./automation-control');
 
 const CHANNEL_ID = process.env.CHAT_REVIVAL_CHANNEL_ID || '1487521278591111399';
 const ROLE_ID = '1559660468480512111';
@@ -35,6 +36,7 @@ async function saveMessage(message) {
 
 async function onMessage(message) {
   if (!message || message.channelId !== CHANNEL_ID || !isHumanMessage(message)) return;
+  if (['!stopic', '!openic'].includes(String(message.content || '').trim().toLowerCase())) return;
   try {
     await saveMessage(message);
   } catch (error) {
@@ -77,7 +79,7 @@ async function hydrateRecentMessages(channel) {
 }
 
 async function evaluate() {
-  if (checking || !clientRef || !initialized) return;
+  if (checking || !clientRef || !initialized || automationControl.isStopped()) return;
   checking = true;
 
   try {
