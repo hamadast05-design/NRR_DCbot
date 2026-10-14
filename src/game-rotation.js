@@ -1,6 +1,7 @@
 const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
 const chatRevivalSystem = require('./chat-revival');
+const automationControl = require('./automation-control');
 
 const CHANNEL_ID = process.env.GENERAL_CHAT_CHANNEL_ID || '1487521278591111399';
 const GAME_PING_ROLE_ID = process.env.GAME_PING_ROLE_ID || '1487521278591111399';
@@ -81,6 +82,7 @@ async function createInvite() {
     console.log('Automatic game invitations resuming after Saudi quiet hours; waiting through the cooldown first.');
     return;
   }
+  if (automationControl.isStopped()) return;
   if (Date.now() < nextAllowedAt) return;
   const channel = await getChannel();
   if (!channel) {
@@ -140,6 +142,14 @@ async function onReactionAdd(reaction, user) {
   }
 }
 
+function pauseInvitations() {
+  if (!activeInvite) return;
+  clearTimeout(activeInvite.timeout);
+  activeInvite = null;
+  nextAllowedAt = Math.max(nextAllowedAt, Date.now() + INVITE_INTERVAL_MS);
+  console.log('Pending automatic game invitation cleared while invitations are paused.');
+}
+
 function start(client) {
   if (started) return;
   started = true;
@@ -156,4 +166,4 @@ function start(client) {
   console.log('Automatic game rotation enabled: 90-minute cooldown, 120-second reaction window, four legitimate reactions including the bot.');
 }
 
-module.exports = { start, onReactionAdd };
+module.exports = { start, onReactionAdd, pauseInvitations };
