@@ -294,9 +294,9 @@ async function handleMute(interaction) {
 
 async function handlePrefixMute(message) {
   if (!message.guild || message.author.bot || message.webhookId) return false;
-  if (!/^!mute\\b/i.test(message.content.trim())) return false;
+  if (!/^!mute\b/i.test(message.content.trim())) return false;
 
-  const match = message.content.trim().match(/^!mute\\s+<@!?(\\d+)>\\s+(.+?)\\s*$/i);
+  const match = message.content.trim().match(/^!mute\s+<@!?(\d+)>\s+(.+?)\s*$/i);
   if (!match) {
     await message.reply('Usage: `!mute @user 1 Minute` | `5 Minutes` | `10 Minutes` | `1 Hour` | `1 Day` | `1 Week`').catch(() => {});
     return true;
