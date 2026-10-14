@@ -11,7 +11,6 @@ const { config } = require('./config');
 const eventSystem = require('./event');
 const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
-const insightsSystem = require('./insights');
 const roleTools = require('./role-tools');
 
 const COLORS = {
@@ -21,6 +20,12 @@ const COLORS = {
 };
 
 const commands = [
+  new SlashCommandBuilder()
+    .setName('setup_rolegiver')
+    .setDescription('Post a button that lets members receive a role.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles.toString())
+    .addStringOption(o => o.setName('role_id').setDescription('ID of the role to grant.').setRequired(true).setMinLength(17).setMaxLength(22))
+    .addStringOption(o => o.setName('channel_id').setDescription('ID of the channel where the role button should be posted.').setRequired(true).setMinLength(17).setMaxLength(22)),
   new SlashCommandBuilder()
     .setName('redeem-role')
     .setDescription('Redeem a one-time code for a designated role.')
@@ -34,20 +39,6 @@ const commands = [
   new SlashCommandBuilder().setName('end_wordkill').setDescription('End the active WordKill game in this channel.'),
   new SlashCommandBuilder().setName('start_pt').setDescription('Start Political Trivia in this channel.'),
   new SlashCommandBuilder().setName('end_pt').setDescription('End Political Trivia in this channel.'),
-
-  new SlashCommandBuilder()
-    .setName('insights')
-    .setDescription('NRR AI Server Intelligence dashboard and analysis.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild.toString())
-    .addSubcommand(s => s.setName('dashboard').setDescription('Open the interactive Server Intelligence dashboard.'))
-    .addSubcommand(s => s.setName('disable').setDescription('Pause Server Intelligence message collection.'))
-    .addSubcommand(s => s.setName('setup').setDescription('Enable analysis for selected text channels.')
-      .addStringOption(o => o.setName('channels').setDescription('Mention text channels or categories to monitor, separated by commas.').setRequired(true).setMaxLength(1000))
-      .addChannelOption(o => o.setName('dashboard_channel').setDescription('Optional channel where the dashboard embed should be posted.')))
-    .addSubcommand(s => s.setName('ask').setDescription('Ask the AI a question about analyzed server activity.')
-      .addStringOption(o => o.setName('question').setDescription('What would you like to understand about the community?').setRequired(true).setMaxLength(700)))
-    .addSubcommand(s => s.setName('report').setDescription('Generate a weekly AI community intelligence report.')),
-
 
   new SlashCommandBuilder().setName('createevent').setDescription('Create an event submission configuration.').addStringOption(o=>o.setName('channel_id').setDescription('Destination channel ID.').setRequired(true)),
   new SlashCommandBuilder().setName('send').setDescription('Send the event submission interface.').addStringOption(o=>o.setName('channel_id').setDescription('Channel for the submission interface.').setRequired(true)),
@@ -336,13 +327,66 @@ async function handleBan(interaction) {
   catch (error) { console.error('Ban error:', error); return interaction.reply({ content: '❌ I could not ban that member. Check my permissions and role hierarchy.', ephemeral: true }); }
 }
 
+async function setupRoleGiver(interaction) {
+  if (!interaction.inGuild() || !interaction.guild) return interaction.reply({ content: '❌ Use this command inside a server.', ephemeral: true });
+  const roleId = interaction.options.getString('role_id', true).trim();
+  const channelId = interaction.options.getString('channel_id', true).trim();
+  if (!/^\d{17,22}$/.test(roleId) || !/^\d{17,22}$/.test(channelId)) {
+    return interaction.reply({ content: '❌ Please provide valid Discord role and channel IDs.', ephemeral: true });
+  }
+  const role = await interaction.guild.roles.fetch(roleId).catch(() => null);
+  const channel = await interaction.guild.channels.fetch(channelId).catch(() => null);
+  if (!role) return interaction.reply({ content: '❌ I could not find that role in this server.', ephemeral: true });
+  if (!channel?.isTextBased() || !channel.send) return interaction.reply({ content: '❌ I could not find an accessible text channel with that ID.', ephemeral: true });
+  const botMember = interaction.guild.members.me;
+  if (!botMember?.permissions.has(PermissionFlagsBits.ManageRoles) || !botMember.roles.highest || botMember.roles.highest.position <= role.position || role.managed) {
+    return interaction.reply({ content: '❌ I cannot assign that role. Check Manage Roles and make sure my highest role is above it.', ephemeral: true });
+  }
+  const embed = new EmbedBuilder()
+    .setColor(0x5865f2)
+    .setDescription('Click on the button below to receive the Ping role:\n<@&' + role.id + '>');
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('rolegiver:get:' + role.id).setLabel('Get Role').setStyle(ButtonStyle.Primary)
+  );
+  try {
+    await channel.send({ embeds: [embed], components: [row], allowedMentions: { parse: [] } });
+    return interaction.reply({ content: '✅ Role-giver message posted in <#' + channel.id + '>.', ephemeral: true, allowedMentions: { parse: [] } });
+  } catch (error) {
+    console.error('Role-giver setup failed:', error);
+    return interaction.reply({ content: '❌ I could not post the role-giver message in that channel.', ephemeral: true });
+  }
+}
+
+async function handleRoleGiverButton(interaction) {
+  if (!interaction.inGuild() || !interaction.guild) return interaction.reply({ content: '❌ This button only works inside a server.', ephemeral: true });
+  if (interaction.message?.author?.id !== interaction.client.user.id) return interaction.reply({ content: '❌ This role button is not valid.', ephemeral: true });
+  const roleId = interaction.customId.slice('rolegiver:get:'.length);
+  const role = await interaction.guild.roles.fetch(roleId).catch(() => null);
+  if (!role || role.managed) return interaction.reply({ content: '❌ That role is no longer available.', ephemeral: true });
+  const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+  if (!member) return interaction.reply({ content: '❌ I could not find your server membership.', ephemeral: true });
+  if (member.roles.cache.has(role.id)) return interaction.reply({ content: 'ℹ️ You already have this role.', ephemeral: true });
+  const botMember = interaction.guild.members.me;
+  if (!botMember?.permissions.has(PermissionFlagsBits.ManageRoles) || !botMember.roles.highest || botMember.roles.highest.position <= role.position) {
+    return interaction.reply({ content: '❌ I cannot assign that role because of my permissions or role hierarchy.', ephemeral: true });
+  }
+  try {
+    await member.roles.add(role, 'Self-service role button');
+    return interaction.reply({ content: '✅ You have received <@&' + role.id + '>.', ephemeral: true, allowedMentions: { parse: [] } });
+  } catch (error) {
+    console.error('Role-giver assignment failed:', error);
+    return interaction.reply({ content: '❌ I could not assign the role. Please contact a server administrator.', ephemeral: true });
+  }
+}
+
 async function handleInteraction(interaction) {
   if (interaction.isChatInputCommand() && interaction.commandName === 'redeem-role') return roleTools.redeemRole(interaction);
   if (interaction.isChatInputCommand() && interaction.commandName === 'role-up') return roleTools.moveRoleUp(interaction);
-  if ((interaction.isChatInputCommand() && interaction.commandName === 'insights') || (interaction.isButton() && interaction.customId.startsWith('insights:view:'))) return insightsSystem.handleInteraction(interaction);
+  if (interaction.isButton() && interaction.customId.startsWith('rolegiver:get:')) return handleRoleGiverButton(interaction);
   if (interaction.isModalSubmit() && interaction.customId.startsWith('event_submit:modal:')) return eventSystem.submit(interaction, interaction.customId.slice('event_submit:modal:'.length));
 
   if (interaction.isChatInputCommand()) {
+    if (interaction.commandName === 'setup_rolegiver') return setupRoleGiver(interaction);
     if (interaction.commandName === 'createevent') return eventSystem.createEvent(interaction);
     if (interaction.commandName === 'send') return eventSystem.send(interaction);
     if (interaction.commandName === 'stick') return eventSystem.stick(interaction);
