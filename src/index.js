@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Events, REST, Routes } = require('discord.js');
+const { Client, GatewayIntentBits, Events, REST, Routes, PermissionFlagsBits } = require('discord.js');
 const { config, validate } = require('./config');
 const db = require('./db');
 const { handleInteraction } = require('./commands');
@@ -8,6 +8,7 @@ const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
 const newsSystem = require('./news');
 const chatRevivalSystem = require('./chat-revival');
+const automationControl = require('./automation-control');
 const gameRotationSystem = require('./game-rotation');
 
 validate();
@@ -53,6 +54,40 @@ client.once(Events.ClientReady, async readyClient => {
   }
 });
 
+async function handleAutomationControlMessage(message) {
+  if (!message.guild || message.author.bot || message.webhookId) return;
+  const command = message.content.trim().toLowerCase();
+  if (command !== '!stopic' && command !== '!openic') return;
+
+  if (!message.member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
+    await message.reply({
+      content: '❌ You need the Manage Server permission to control Chat Revival and automatic game invitations.',
+      allowedMentions: { parse: [] }
+    }).catch(() => {});
+    return;
+  }
+
+  if (command === '!stopic') {
+    const result = automationControl.stop();
+    gameRotationSystem.pauseInvitations();
+    await message.reply({
+      content: result.changed
+        ? '⏸️ Chat Revival and automatic game invitations are now paused.'
+        : 'ℹ️ Chat Revival and automatic game invitations are already paused.',
+      allowedMentions: { parse: [] }
+    }).catch(() => {});
+    return;
+  }
+
+  const result = automationControl.open();
+  await message.reply({
+    content: result.changed
+      ? '▶️ Chat Revival and automatic game invitations are now active again.'
+      : 'ℹ️ Chat Revival and automatic game invitations are already active.',
+    allowedMentions: { parse: [] }
+  }).catch(() => {});
+}
+
 client.on(Events.GuildMemberAdd, async member => {
   if (!member.user.bot || config.allowBotTargets) {
     await db.setMemberActive(member.guild.id, member.id, true).catch(error => console.error('Member add sync failed:', error));
@@ -68,6 +103,7 @@ client.on(Events.MessageDelete, async message => {
 });
 
 client.on(Events.MessageCreate, async message => {
+  try { await handleAutomationControlMessage(message); } catch (error) { console.error('Automation control command failed:', error); }
   try { await chatRevivalSystem.onMessage(message); } catch (error) { console.error('Chat Revival message error:', error); }
   try { await wordkillSystem.onMessage(message); } catch (error) { console.error('WordKill message error:', error); }
   try { await politicalTriviaSystem.onMessage(message); } catch (error) { console.error('Political Trivia message error:', error); }
