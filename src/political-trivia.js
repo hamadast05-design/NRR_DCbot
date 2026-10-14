@@ -41,11 +41,8 @@ function chooseQuestion(game) {
 
 function questionEmbed(game) {
   return new EmbedBuilder()
-    .setTitle('🌍 Political Trivia')
     .setDescription(game.current.question)
-    .addFields({ name: 'Category', value: game.current.category, inline: true })
-    .setColor(0x3498db)
-    .setFooter({ text: 'First correct answer wins • 30 seconds • Round ' + (game.question_counter + 1) });
+    .setColor(0x3498db);
 }
 
 function leaderboardEmbed(game) {
@@ -70,6 +67,7 @@ function createGame(channelId) {
     current: null,
     question_counter: 0,
     points: new Map(),
+    unansweredStreak: 0,
     usedQuestions: new Set(),
     timeout: null,
     cooldown: null,
@@ -89,6 +87,14 @@ async function sendQuestion(channel, game) {
     game.timeout = null;
     game.current = null;
     await channel.send('⏰ Time\'s up! The correct answer was **' + answer + '**.').catch(() => {});
+    game.unansweredStreak = (game.unansweredStreak || 0) + 1;
+    if (game.unansweredStreak >= 3) {
+      game.active = false;
+      clearTimers(game);
+      games.delete(channel.id);
+      await channel.send('🛑 Political Trivia ended because nobody answered three questions in a row. The automatic game invitation cooldown is now active.').catch(() => {});
+      return;
+    }
     game.cooldown = setTimeout(() => {
       game.cooldown = null;
       sendQuestion(channel, game).catch(error => console.error('Political Trivia next round error:', error));
@@ -157,10 +163,11 @@ async function onMessage(message) {
   game.timeout = null;
   game.current = null;
   const userId = message.author.id;
+  game.unansweredStreak = 0;
   game.points.set(userId, (game.points.get(userId) || 0) + 1);
   game.question_counter += 1;
 
-  await message.channel.send('✅ ' + message.author + ' got it right! **+1 point**.');
+  await message.channel.send({ content: '✅ <@' + userId + '> got it right! **+1 point**.', allowedMentions: { parse: [], users: [userId] } });
   const milestone = game.question_counter % 5 === 0;
   if (milestone) await message.channel.send({ embeds: [leaderboardEmbed(game)] });
 

@@ -131,6 +131,7 @@ function createGame(channelId) {
     current_full_word: '',
     question_counter: 0,
     points: new Map(),
+    unansweredStreak: 0,
     timeout: null,
     cooldown: null,
   };
@@ -154,6 +155,12 @@ async function sendQuestion(channel, game) {
     game.timeout = null;
     game.current_target_letters = '';
     await channel.send(`⏰ Time's up! The correct answer was **${game.current_full_word}**.`).catch(() => {});
+    game.unansweredStreak = (game.unansweredStreak || 0) + 1;
+    if (game.unansweredStreak >= 3) {
+      endGame(channel.id);
+      await channel.send('🛑 WordKill ended because nobody answered three rounds in a row. The automatic game invitation cooldown is now active.').catch(() => {});
+      return;
+    }
 
     game.cooldown = setTimeout(() => {
       game.cooldown = null;
@@ -224,13 +231,15 @@ async function onMessage(message) {
 
   const correctAnswer = game.current_full_word;
   game.current_target_letters = '';
+  game.unansweredStreak = 0;
   const userId = message.author.id;
   game.points.set(userId, (game.points.get(userId) || 0) + 1);
   game.question_counter += 1;
 
-  await message.channel.send(
-    `${message.author} Has guessed the right word!`
-  );
+  await message.channel.send({
+    content: `✅ <@${userId}> has guessed the right word!`,
+    allowedMentions: { parse: [], users: [userId] }
+  });
 
   const milestone = game.question_counter % 5 === 0;
   if (milestone) {
