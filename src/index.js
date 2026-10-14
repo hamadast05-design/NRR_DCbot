@@ -1,7 +1,8 @@
 const { Client, GatewayIntentBits, Events, REST, Routes, PermissionFlagsBits } = require('discord.js');
 const { config, validate } = require('./config');
 const db = require('./db');
-const { handleInteraction } = require('./commands');
+const { handleInteraction, handlePrefixMute } = require('./commands');
+const { hasPermission } = require('./access');
 const eventSystem = require('./event');
 const annihilateSystem = require('./annihilate');
 const wordkillSystem = require('./wordkill');
@@ -59,7 +60,7 @@ async function handleAutomationControlMessage(message) {
   const command = message.content.trim().toLowerCase();
   if (command !== '!stopic' && command !== '!openic') return;
 
-  if (!message.member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
+  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) {
     await message.reply({
       content: '❌ You need the Manage Server permission to control Chat Revival and automatic game invitations.',
       allowedMentions: { parse: [] }
@@ -103,6 +104,7 @@ client.on(Events.MessageDelete, async message => {
 });
 
 client.on(Events.MessageCreate, async message => {
+  try { await handlePrefixMute(message); } catch (error) { console.error('Prefix mute command failed:', error); }
   try { await handleAutomationControlMessage(message); } catch (error) { console.error('Automation control command failed:', error); }
   try { await chatRevivalSystem.onMessage(message); } catch (error) { console.error('Chat Revival message error:', error); }
   try { await wordkillSystem.onMessage(message); } catch (error) { console.error('WordKill message error:', error); }
