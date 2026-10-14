@@ -27,10 +27,6 @@ const commands = [
     .addStringOption(o => o.setName('role_id').setDescription('ID of the role to grant.').setRequired(true).setMinLength(17).setMaxLength(22))
     .addStringOption(o => o.setName('channel_id').setDescription('ID of the channel where the role button should be posted.').setRequired(true).setMinLength(17).setMaxLength(22)),
   new SlashCommandBuilder()
-    .setName('redeem-role')
-    .setDescription('Redeem a one-time code for a designated role.')
-    .addStringOption(o => o.setName('code').setDescription('Your one-time redemption code.').setRequired(true).setMinLength(8).setMaxLength(80)),
-  new SlashCommandBuilder()
     .setName('role-up')
     .setDescription('Move the configured role higher in the role list.')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles.toString())
@@ -380,7 +376,6 @@ async function handleRoleGiverButton(interaction) {
 }
 
 async function handleInteraction(interaction) {
-  if (interaction.isChatInputCommand() && interaction.commandName === 'redeem-role') return roleTools.redeemRole(interaction);
   if (interaction.isChatInputCommand() && interaction.commandName === 'role-up') return roleTools.moveRoleUp(interaction);
   if (interaction.isButton() && interaction.customId.startsWith('rolegiver:get:')) return handleRoleGiverButton(interaction);
   if (interaction.isModalSubmit() && interaction.customId.startsWith('event_submit:modal:')) return eventSystem.submit(interaction, interaction.customId.slice('event_submit:modal:'.length));
