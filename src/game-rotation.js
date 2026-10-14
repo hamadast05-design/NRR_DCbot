@@ -78,14 +78,19 @@ async function createInvite() {
   const kind = lastPromptKind === 'wordkill' ? 'political-trivia' : 'wordkill';
   lastPromptKind = kind;
   const role = await channel.guild.roles.fetch(GAME_PING_ROLE_ID).catch(() => null);
+  if (!role) {
+    console.error('Automatic games cannot ping Game Ping role; configure a valid GAME_PING_ROLE_ID:', GAME_PING_ROLE_ID);
+    nextAllowedAt = Date.now() + INVITE_INTERVAL_MS;
+    return;
+  }
   const phrase = kind === 'wordkill'
     ? '4 Reactions to start WordKill, React with ✅️ if you will participate.'
     : '4 Reactions to start Political Trivia, React with ✅️ if you will participate.';
-  const content = (role ? '<@&' + role.id + '> ' : '') + phrase;
+  const content = '<@&' + role.id + '> ' + phrase;
   try {
     const message = await channel.send({
       content,
-      allowedMentions: { parse: [], roles: role ? [role.id] : [] }
+      allowedMentions: { parse: [], roles: [role.id] }
     });
     await message.react('✅');
     const invite = { kind, channel, message, timeout: null };
