@@ -1,5 +1,6 @@
 const { PermissionFlagsBits, WebhookClient } = require('discord.js');
 const db = require('./db');
+const { hasPermission } = require('./access');
 
 const TIMEOUT_MS = 10 * 60 * 1000;
 
@@ -8,7 +9,7 @@ function parseMention(content) {
 }
 
 async function hasModerationPermission(message) {
-  return message.guild && message.member?.permissions?.has(PermissionFlagsBits.ModerateMembers);
+  return message.guild && hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ModerateMembers);
 }
 
 async function annihilate(message) {
