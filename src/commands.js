@@ -11,6 +11,7 @@ const { config } = require('./config');
 const eventSystem = require('./event');
 const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
+const { isSuperuser, hasPermission } = require('./access');
 
 const COLORS = {
   fame: 0xf1c40f,
@@ -22,7 +23,6 @@ const commands = [
   new SlashCommandBuilder()
     .setName('setup_rolegiver')
     .setDescription('Post a button that lets members receive a role.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles.toString())
     .addStringOption(o => o.setName('role_id').setDescription('ID of the role to grant.').setRequired(true).setMinLength(17).setMaxLength(22))
     .addStringOption(o => o.setName('channel_id').setDescription('ID of the channel where the role button should be posted.').setRequired(true).setMinLength(17).setMaxLength(22)),
   new SlashCommandBuilder().setName('start_wordkill').setDescription('Start a WordKill game in this channel.'),
@@ -38,7 +38,6 @@ const commands = [
   new SlashCommandBuilder()
     .setName('mute')
     .setDescription('Timeout a member.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers.toString())
     .addUserOption(o => o.setName('user').setDescription('Member to mute.').setRequired(true))
     .addStringOption(o => o.setName('time').setDescription('Any duration up to 28 days, e.g. 10 minutes, 90m, 2 hours.').setRequired(true))
     .addStringOption(o => o.setName('reason').setDescription('Reason for the mute.').setRequired(false)),
@@ -46,14 +45,12 @@ const commands = [
   new SlashCommandBuilder()
     .setName('kick')
     .setDescription('Kick a member from the server.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers.toString())
     .addUserOption(o => o.setName('user').setDescription('Member to kick.').setRequired(true))
     .addStringOption(o => o.setName('reason').setDescription('Reason for the kick.').setRequired(false)),
 
   new SlashCommandBuilder()
     .setName('ban')
     .setDescription('Ban a member from the server.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers.toString())
     .addUserOption(o => o.setName('user').setDescription('Member to ban.').setRequired(true))
     .addStringOption(o => o.setName('reason').setDescription('Reason for the ban.').setRequired(false)),
 
@@ -82,7 +79,6 @@ const commands = [
   new SlashCommandBuilder()
     .setName('whitelist')
     .setDescription('Manage Fame and Humiliation immunity.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild.toString())
     .addSubcommand(s => s.setName('add').setDescription('Make a member immune from Fame or Humiliation.')
       .addUserOption(o => o.setName('member').setDescription('Member to whitelist.').setRequired(true))
       .addStringOption(o => o.setName('type').setDescription('Reputation type to make immune.').setRequired(true)
@@ -95,7 +91,6 @@ const commands = [
   new SlashCommandBuilder()
     .setName('reputation-admin')
     .setDescription('Manage Fame & Reputation. Staff only.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild.toString())
     .addSubcommand(s => s.setName('reset').setDescription('Reset a member\'s Fame and Humiliation.')
       .addUserOption(o => o.setName('member').setDescription('Member to reset.').setRequired(true)))
     .addSubcommand(s => s.setName('add-fame').setDescription('Add Fame to a member.')
@@ -158,7 +153,7 @@ async function handleVote(interaction, type) {
 }
 
 async function handleWhitelist(interaction) {
-  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: '❌ You do not have permission to manage the reputation whitelist.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: '❌ You do not have permission to manage the reputation whitelist.', ephemeral: true });
   const sub = interaction.options.getSubcommand();
   const target = interaction.options.getUser('member', true);
   const type = interaction.options.getString('type', true);
@@ -227,7 +222,7 @@ async function showLeaderboard(interaction, type, page = 1) {
 }
 
 async function handleAdmin(interaction) {
-  if (!interaction.memberPermissions?.has(config.adminPermission)) return interaction.reply({ content: '❌ You do not have permission to use reputation administration commands.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, config.adminPermission)) return interaction.reply({ content: '❌ You do not have permission to use reputation administration commands.', ephemeral: true });
   const sub = interaction.options.getSubcommand();
   const target = interaction.options.getUser('member', true);
   if (target.bot && !config.allowBotTargets) return interaction.reply({ content: '❌ Bots cannot be modified by the reputation system.', ephemeral: true });
@@ -286,7 +281,7 @@ async function getModerationTarget(interaction, optionName) {
 }
 
 async function handleMute(interaction) {
-  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ModerateMembers)) return interaction.reply({ content: '❌ You do not have permission to mute members.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ModerateMembers)) return interaction.reply({ content: '❌ You do not have permission to mute members.', ephemeral: true });
   const target = await getModerationTarget(interaction, 'user');
   if (target.error) return interaction.reply({ content: target.error, ephemeral: true });
   const duration = parseMuteDuration(interaction.options.getString('time', true));
@@ -297,8 +292,74 @@ async function handleMute(interaction) {
   catch (error) { console.error('Mute error:', error); return interaction.reply({ content: '❌ I could not mute that member. Check my permissions and role hierarchy.', ephemeral: true }); }
 }
 
+async function handlePrefixMute(message) {
+  if (!message.guild || message.author.bot || message.webhookId) return false;
+  if (!/^!mute\\b/i.test(message.content.trim())) return false;
+
+  const match = message.content.trim().match(/^!mute\\s+<@!?(\\d+)>\\s+(.+?)\\s*$/i);
+  if (!match) {
+    await message.reply('Usage: `!mute @user 1 Minute` | `5 Minutes` | `10 Minutes` | `1 Hour` | `1 Day` | `1 Week`').catch(() => {});
+    return true;
+  }
+  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ModerateMembers)) {
+    await message.reply('❌ You need Moderate Members permission to mute members.').catch(() => {});
+    return true;
+  }
+
+  const durationLabels = {
+    '1 minute': 60_000,
+    '5 minutes': 5 * 60_000,
+    '10 minutes': 10 * 60_000,
+    '1 hour': 60 * 60_000,
+    '1 day': 24 * 60 * 60_000,
+    '1 week': 7 * 24 * 60 * 60_000,
+    '1m': 60_000,
+    '5m': 5 * 60_000,
+    '10m': 10 * 60_000,
+    '1h': 60 * 60_000,
+    '1d': 24 * 60 * 60_000,
+    '1w': 7 * 24 * 60 * 60_000,
+  };
+  const duration = durationLabels[match[2].trim().toLowerCase()];
+  if (!duration) {
+    await message.reply('❌ Invalid duration. Choose: 1 Minute, 5 Minutes, 10 Minutes, 1 Hour, 1 Day, or 1 Week.').catch(() => {});
+    return true;
+  }
+
+  const targetId = match[1];
+  if (targetId === message.author.id) {
+    await message.reply('❌ You cannot mute yourself.').catch(() => {});
+    return true;
+  }
+  const target = await message.guild.members.fetch(targetId).catch(() => null);
+  if (!target) {
+    await message.reply('❌ That member is not in this server.').catch(() => {});
+    return true;
+  }
+  if (target.id === message.guild.ownerId) {
+    await message.reply('❌ You cannot mute the server owner.').catch(() => {});
+    return true;
+  }
+  const botMember = message.guild.members.me;
+  if (!botMember?.permissions.has(PermissionFlagsBits.ModerateMembers) || !target.moderatable) {
+    await message.reply('❌ I cannot mute that member. Check my Moderate Members permission and role hierarchy.').catch(() => {});
+    return true;
+  }
+  try {
+    await target.timeout(duration, 'Mute command used by ' + message.author.tag);
+    await message.reply({
+      content: `🔇 <@${target.id}> has been timed out for **${match[2].trim()}**.`,
+      allowedMentions: { parse: [] },
+    });
+  } catch (error) {
+    console.error('Prefix mute error:', error);
+    await message.reply('❌ I could not mute that member. Check my permissions and role hierarchy.').catch(() => {});
+  }
+  return true;
+}
+
 async function handleKick(interaction) {
-  if (!interaction.memberPermissions?.has(PermissionFlagsBits.KickMembers)) return interaction.reply({ content: '❌ You do not have permission to kick members.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.KickMembers)) return interaction.reply({ content: '❌ You do not have permission to kick members.', ephemeral: true });
   const target = await getModerationTarget(interaction, 'user');
   if (target.error) return interaction.reply({ content: target.error, ephemeral: true });
   if (!target.member.kickable) return interaction.reply({ content: '❌ I cannot kick that member. Check my role position and Kick Members permission.', ephemeral: true });
@@ -308,7 +369,7 @@ async function handleKick(interaction) {
 }
 
 async function handleBan(interaction) {
-  if (!interaction.memberPermissions?.has(PermissionFlagsBits.BanMembers)) return interaction.reply({ content: '❌ You do not have permission to ban members.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.BanMembers)) return interaction.reply({ content: '❌ You do not have permission to ban members.', ephemeral: true });
   const target = await getModerationTarget(interaction, 'user');
   if (target.error) return interaction.reply({ content: target.error, ephemeral: true });
   if (!target.member.bannable) return interaction.reply({ content: '❌ I cannot ban that member. Check my role position and Ban Members permission.', ephemeral: true });
@@ -319,6 +380,7 @@ async function handleBan(interaction) {
 
 async function setupRoleGiver(interaction) {
   if (!interaction.inGuild() || !interaction.guild) return interaction.reply({ content: '❌ Use this command inside a server.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageRoles)) return interaction.reply({ content: '❌ You need Manage Roles to configure a role-giver.', ephemeral: true });
   const roleId = interaction.options.getString('role_id', true).trim();
   const channelId = interaction.options.getString('channel_id', true).trim();
   if (!/^\d{17,22}$/.test(roleId) || !/^\d{17,22}$/.test(channelId)) {
@@ -411,4 +473,4 @@ async function handleInteraction(interaction) {
   }
 }
 
-module.exports = { commands, handleInteraction };
+module.exports = { commands, handleInteraction, handlePrefixMute };
