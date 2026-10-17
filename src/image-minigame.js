@@ -8,7 +8,7 @@ const HINT_AFTER_MS = 15_000;
 const games = new Map();
 
 function normalize(value) {
-  return String(value || '').normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9\\s-]/g, ' ').replace(/\\s+/g, ' ').trim();
+  return String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function editDistanceAtMostOne(a, b) {
@@ -69,7 +69,7 @@ function createGame(channel, config) {
 
 function questionEmbed(game) {
   const embed = new EmbedBuilder().setTitle(game.key === 'gtp' ? '🏛️ GUESS THE POLITICIAN' : '🌍 FLAGRUSH').setColor(game.color)
-    .setDescription(game.key === 'gtp' ? '**Who is this political figure?**\\nBe the first to type their name!' : '**Which country does this flag represent?**\\nBe the first to type the country name!')
+    .setDescription(game.key === 'gtp' ? '**Who is this political figure?**\nBe the first to type their name!' : '**Which country does this flag represent?**\nBe the first to type the country name!')
     .setImage(game.current.image || game.current.fallbackImage)
     .setFooter({ text: '30 seconds • First correct answer wins • 3 unanswered rounds ends the game' });
   if (game.hintEnabled) embed.addFields({ name: 'Hint', value: 'A hint may appear after 15 seconds.' });
