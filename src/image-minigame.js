@@ -68,10 +68,9 @@ function createGame(channel, config) {
 
 function questionEmbed(game) {
   const embed = new EmbedBuilder().setTitle(game.key === 'gtp' ? '🏛️ GUESS THE POLITICIAN' : '🌍 FLAGRUSH').setColor(game.color)
-    .setDescription(game.key === 'gtp' ? '**Who is this political figure?**\nBe the first to type their name!' : '**Which country does this flag represent?**\nBe the first to type the country name!')
-    .setImage(game.current.image || game.current.fallbackImage)
-    .setFooter({ text: '30 seconds • First correct answer wins • 3 unanswered rounds ends the game' });
-  if (game.hintEnabled) embed.addFields({ name: 'Hint', value: 'A hint may appear after 15 seconds.' });
+    .setDescription(game.key === 'gtp' ? '**Who is this political figure?**' : '**Which country does this flag represent?**')
+    .setImage(game.current.resolvedImage || game.current.image || game.current.fallbackImage)
+    .setFooter({ text: '30 seconds..' });
   return embed;
 }
 
@@ -92,16 +91,38 @@ async function finishGame(channel, game, reason) {
   await channel.send({ embeds: [finalEmbed(game, reason)], allowedMentions: { parse: [] } }).catch(() => {});
 }
 
+const resolvedImageCache = new Map();
+
+async function resolveImageUrl(url) {
+  if (!url || !url.includes('Special:FilePath')) return url;
+  if (resolvedImageCache.has(url)) return resolvedImageCache.get(url);
+  const pending = fetch(url, {
+    method: 'HEAD',
+    redirect: 'follow',
+    signal: AbortSignal.timeout(8000)
+  }).then(response => response.ok && response.url ? response.url : url)
+    .catch(error => {
+      console.warn('Could not resolve politician image redirect; using original URL:', error.message);
+      return url;
+    });
+  resolvedImageCache.set(url, pending);
+  return pending;
+}
+
 async function sendQuestion(channel, game) {
   if (!game.active || games.get(gameId(game.key, channel.id)) !== game) return;
   game.current = pickQuestion(game);
   const q = game.current;
+  q.resolvedImage = await resolveImageUrl(q.image);
+  if (q.resolvedImage === q.image && q.fallbackImage && q.fallbackImage !== q.image) {
+    q.resolvedImage = await resolveImageUrl(q.fallbackImage);
+  }
   try {
     await channel.send({ embeds: [questionEmbed(game)] });
   } catch (error) {
-    if (!q.fallbackImage || q.fallbackImage === q.image) throw error;
-    const fallbackEmbed = questionEmbed(game).setImage(q.fallbackImage);
-    await channel.send({ embeds: [fallbackEmbed] });
+    if (!q.fallbackImage || q.fallbackImage === q.resolvedImage) throw error;
+    q.resolvedImage = await resolveImageUrl(q.fallbackImage);
+    await channel.send({ embeds: [questionEmbed(game)] });
   }
   game.timeout = setTimeout(async () => {
     if (!game.active || games.get(gameId(game.key, channel.id)) !== game || !game.current) return;
