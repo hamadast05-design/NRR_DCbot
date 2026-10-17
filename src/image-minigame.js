@@ -4,7 +4,6 @@ const { hasPermission } = require('./access');
 const ROUND_TIMEOUT_MS = 30_000;
 const NORMAL_COOLDOWN_MS = 5_000;
 const MILESTONE_COOLDOWN_MS = 10_000;
-const HINT_AFTER_MS = 15_000;
 const games = new Map();
 
 function normalize(value) {
@@ -112,12 +111,6 @@ async function sendQuestion(channel, game) {
     if (game.unansweredStreak >= 3) { await finishGame(channel, game, 'Nobody answered correctly for three rounds in a row.'); return; }
     game.cooldown = setTimeout(() => { game.cooldown = null; sendQuestion(channel, game).catch(error => console.error(game.title + ' next round error:', error)); }, NORMAL_COOLDOWN_MS);
   }, ROUND_TIMEOUT_MS);
-  if (game.hintEnabled && game.key === 'gtp') {
-    game.hintTimeout = setTimeout(async () => {
-      if (!game.active || games.get(gameId(game.key, channel.id)) !== game || !game.current) return;
-      await channel.send('💡 Hint: This figure is associated with **' + game.current.country + '** and the role of **' + game.current.role + '**.').catch(() => {});
-    }, HINT_AFTER_MS);
-  }
 }
 
 async function start(channel, config) {
@@ -157,4 +150,4 @@ async function onMessage(message, config) {
   if (game.question_counter % 5 === 0) await message.channel.send({ embeds: [leaderboardEmbed(game)] });
   game.cooldown = setTimeout(() => { game.cooldown = null; sendQuestion(message.channel, game).catch(error => console.error(game.title + ' next round error:', error)); }, game.question_counter % 5 === 0 ? MILESTONE_COOLDOWN_MS : NORMAL_COOLDOWN_MS);
 }
-module.exports = { startCommand, endCommand, onMessage };
+module.exports = { startCommand, endCommand, onMessage, start, getGame: (channelId, key) => getGame(channelId, key) };
