@@ -11,6 +11,8 @@ const { config } = require('./config');
 const eventSystem = require('./event');
 const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
+const guessPoliticianSystem = require('./guess-the-politician');
+const flagRushSystem = require('./flagrush');
 const { isSuperuser, hasPermission } = require('./access');
 
 const COLORS = {
@@ -29,6 +31,10 @@ const commands = [
   new SlashCommandBuilder().setName('end_wordkill').setDescription('End the active WordKill game in this channel.'),
   new SlashCommandBuilder().setName('start_pt').setDescription('Start Political Trivia in this channel.'),
   new SlashCommandBuilder().setName('end_pt').setDescription('End Political Trivia in this channel.'),
+  new SlashCommandBuilder().setName('start_guess_politician').setDescription('Start Guess The Politician in this channel.'),
+  new SlashCommandBuilder().setName('end_guess_politician').setDescription('End Guess The Politician in this channel.'),
+  new SlashCommandBuilder().setName('start_flagrush').setDescription('Start FlagRush in this channel.'),
+  new SlashCommandBuilder().setName('end_flagrush').setDescription('End FlagRush in this channel.'),
 
   new SlashCommandBuilder().setName('createevent').setDescription('Create an event submission configuration.').addStringOption(o=>o.setName('channel_id').setDescription('Destination channel ID.').setRequired(true)),
   new SlashCommandBuilder().setName('send').setDescription('Send the event submission interface.').addStringOption(o=>o.setName('channel_id').setDescription('Channel for the submission interface.').setRequired(true)),
@@ -445,6 +451,10 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'end_wordkill') return wordkillSystem.endCommand(interaction);
     if (interaction.commandName === 'start_pt') return politicalTriviaSystem.startCommand(interaction);
     if (interaction.commandName === 'end_pt') return politicalTriviaSystem.endCommand(interaction);
+    if (interaction.commandName === 'start_guess_politician') return guessPoliticianSystem.startCommand(interaction);
+    if (interaction.commandName === 'end_guess_politician') return guessPoliticianSystem.endCommand(interaction);
+    if (interaction.commandName === 'start_flagrush') return flagRushSystem.startCommand(interaction);
+    if (interaction.commandName === 'end_flagrush') return flagRushSystem.endCommand(interaction);
     if (interaction.commandName === 'mute') return handleMute(interaction);
     if (interaction.commandName === 'kick') return handleKick(interaction);
     if (interaction.commandName === 'ban') return handleBan(interaction);
