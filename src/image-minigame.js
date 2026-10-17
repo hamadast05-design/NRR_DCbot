@@ -107,6 +107,7 @@ async function sendQuestion(channel, game) {
   game.timeout = setTimeout(async () => {
     if (!game.active || games.get(gameId(game.key, channel.id)) !== game || !game.current) return;
     const missed = game.current; game.current = null; game.timeout = null; game.unansweredStreak++;
+    for (const [userId] of game.currentStreak) game.currentStreak.set(userId, 0);
     await channel.send('⏰ Time is up! ' + answerDescription(game, missed) + '.').catch(() => {});
     if (game.unansweredStreak >= 3) { await finishGame(channel, game, 'Nobody answered correctly for three rounds in a row.'); return; }
     game.cooldown = setTimeout(() => { game.cooldown = null; sendQuestion(channel, game).catch(error => console.error(game.title + ' next round error:', error)); }, NORMAL_COOLDOWN_MS);
