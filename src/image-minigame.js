@@ -97,7 +97,13 @@ async function sendQuestion(channel, game) {
   if (!game.active || games.get(gameId(game.key, channel.id)) !== game) return;
   game.current = pickQuestion(game);
   const q = game.current;
-  await channel.send({ embeds: [questionEmbed(game)] });
+  try {
+    await channel.send({ embeds: [questionEmbed(game)] });
+  } catch (error) {
+    if (!q.fallbackImage || q.fallbackImage === q.image) throw error;
+    const fallbackEmbed = questionEmbed(game).setImage(q.fallbackImage);
+    await channel.send({ embeds: [fallbackEmbed] });
+  }
   game.timeout = setTimeout(async () => {
     if (!game.active || games.get(gameId(game.key, channel.id)) !== game || !game.current) return;
     const missed = game.current; game.current = null; game.timeout = null; game.unansweredStreak++;
