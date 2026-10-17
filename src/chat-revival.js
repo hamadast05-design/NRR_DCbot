@@ -4,7 +4,7 @@ const automationControl = require('./automation-control');
 
 const CHANNEL_ID = process.env.CHAT_REVIVAL_CHANNEL_ID || '1487521278591111399';
 const ROLE_ID = '1559660468480512111';
-const WINDOW_MINUTES = 45;
+const WINDOW_MINUTES = 90;
 const MESSAGE_THRESHOLD = 20;
 const QUIET_END_HOUR = 14; // Quiet hours are 00:00–13:59 in Asia/Riyadh.
 const CHECK_INTERVAL_MS = 60 * 1000;
@@ -13,6 +13,7 @@ let clientRef = null;
 let checking = false;
 let initializing = false;
 let initialized = false;
+let started = false;
 
 function isQuietHours(date = new Date()) {
   const hour = Number(new Intl.DateTimeFormat('en-GB', {
@@ -118,16 +119,22 @@ async function evaluate() {
       return;
     }
 
-    // Latch low activity during quiet hours too, preventing a catch-up ping at 14:00.
+    // Claim this low-activity episode atomically. If multiple bot instances or
+    // overlapping checks evaluate at once, only one can flip FALSE -> TRUE and send.
+    // Keep the latch active during quiet hours too, preventing a catch-up ping at 14:00.
     if (wasLow) return;
-    await db.query('UPDATE chat_revival_state SET low_activity_active = TRUE, updated_at = NOW() WHERE channel_id = $1', [CHANNEL_ID]);
+    const claimResult = await db.query(
+      'UPDATE chat_revival_state SET low_activity_active = TRUE, updated_at = NOW() WHERE channel_id = $1 AND low_activity_active = FALSE RETURNING next_question_index',
+      [CHANNEL_ID]
+    );
+    if (!claimResult.rowCount) return;
 
     if (isQuietHours()) {
       console.log('Chat Revival: low activity during Saudi quiet hours; no message sent.');
       return;
     }
 
-    const index = Number(state.next_question_index || 0) % questions.length;
+    const index = Number(claimResult.rows[0]?.next_question_index ?? state.next_question_index ?? 0) % questions.length;
     await channel.send({
       content: '<@&' + ROLE_ID + '> ' + questions[index],
       allowedMentions: { parse: [], roles: [ROLE_ID] }
@@ -167,13 +174,18 @@ async function initialize(client) {
 }
 
 function start(client) {
+  if (started) {
+    console.warn('Chat Revival start ignored because its scheduler is already running.');
+    return;
+  }
+  started = true;
   clientRef = client;
   initialize(client).catch(error => console.error('Chat Revival initialization error:', error));
   setInterval(() => {
     if (initialized) evaluate();
     else initialize(client).catch(error => console.error('Chat Revival initialization retry failed:', error));
   }, CHECK_INTERVAL_MS);
-  console.log('Chat Revival starting; threshold < ' + MESSAGE_THRESHOLD + ' human messages per ' + WINDOW_MINUTES + ' minutes; quiet hours 00:00–14:00 Asia/Riyadh.');
+  console.log('Chat Revival starting; threshold < ' + MESSAGE_THRESHOLD + ' human messages per ' + WINDOW_MINUTES + ' minutes; at most one ping per low-activity episode; quiet hours 00:00–14:00 Asia/Riyadh.');
 }
 
 module.exports = { start, onMessage, onMessageDelete, isQuietHours };
