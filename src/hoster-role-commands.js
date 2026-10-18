@@ -93,8 +93,8 @@ async function handlePrefixRoleCommands(message) {
     return true;
   }
 
-  if (/^!gicon(?:\\s|$)/i.test(input)) {
-    const iconInput = input.replace(/^!gicon\\s*/i, '').trim();
+  if (/^!gicon(?:\s|$)/i.test(input)) {
+    const iconInput = input.replace(/^!gicon\s*/i, '').trim();
     const attachment = message.attachments?.first?.() || null;
     const clearing = /^(clear|remove|none)$/i.test(iconInput);
 
@@ -102,7 +102,7 @@ async function handlePrefixRoleCommands(message) {
       await message.reply('Usage: `!Gicon 😀` to use an emoji, or attach a PNG/JPG/WebP image to `!Gicon`. Use `!Gicon clear` to remove the icon.').catch(() => {});
       return true;
     }
-    if (iconInput && !clearing && !attachment && (Array.from(iconInput).length > 16 || /\\s/.test(iconInput))) {
+    if (iconInput && !clearing && !attachment && (Array.from(iconInput).length > 16 || /\s/.test(iconInput))) {
       await message.reply('❌ Provide one emoji, attach a PNG/JPG/WebP image, or use `!Gicon clear`.').catch(() => {});
       return true;
     }
