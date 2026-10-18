@@ -191,9 +191,19 @@ async function sendQuestion(channel, game) {
   if (!game.active || games.get(gameId(game.key, channel.id)) !== game) return;
   game.current = pickQuestion(game);
   const q = game.current;
-  q.resolvedImage = await resolveImageUrl(q.image, q.name);
-  if (!q.resolvedImage && q.fallbackImage && q.fallbackImage !== q.image) {
-    q.resolvedImage = await resolveImageUrl(q.fallbackImage, q.name);
+  // Guess The Politician needs Commons lookup because some configured filenames
+  // are stale. FlagRush already uses direct FlagCDN URLs; searching Commons by a
+  // country name can return a politician portrait and corrupt the flag round.
+  if (game.key === 'gtp') {
+    q.resolvedImage = await resolveImageUrl(q.image, q.name);
+    if (!q.resolvedImage && q.fallbackImage && q.fallbackImage !== q.image) {
+      q.resolvedImage = await resolveImageUrl(q.fallbackImage, q.name);
+    }
+  } else {
+    q.resolvedImage = q.image && /^https:\/\//i.test(q.image) ? q.image : null;
+    if (!q.resolvedImage && q.fallbackImage && /^https:\/\//i.test(q.fallbackImage)) {
+      q.resolvedImage = q.fallbackImage;
+    }
   }
   if (!q.resolvedImage) {
     console.error('No usable image found for ' + q.name + '; skipping this question to avoid a broken image.');
@@ -207,7 +217,10 @@ async function sendQuestion(channel, game) {
     await channel.send({ embeds: [questionEmbed(game)] });
   } catch (error) {
     if (!q.fallbackImage || q.fallbackImage === q.resolvedImage) throw error;
-    q.resolvedImage = await resolveImageUrl(q.fallbackImage, q.name);
+    q.resolvedImage = game.key === 'gtp'
+      ? await resolveImageUrl(q.fallbackImage, q.name)
+      : (q.fallbackImage && /^https:\/\//i.test(q.fallbackImage) ? q.fallbackImage : null);
+    if (!q.resolvedImage) throw error;
     await channel.send({ embeds: [questionEmbed(game)] });
   }
   game.timeout = setTimeout(async () => {
