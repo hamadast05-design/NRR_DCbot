@@ -2,6 +2,7 @@ const { Client, GatewayIntentBits, Events, REST, Routes, PermissionFlagsBits } =
 const { config, validate } = require('./config');
 const db = require('./db');
 const { handleInteraction, handlePrefixMute } = require('./commands');
+const { handlePrefixRoleCommands } = require('./hoster-role-commands');
 const { hasPermission } = require('./access');
 const eventSystem = require('./event');
 const annihilateSystem = require('./annihilate');
@@ -107,6 +108,7 @@ client.on(Events.MessageDelete, async message => {
 
 client.on(Events.MessageCreate, async message => {
   try { await handlePrefixMute(message); } catch (error) { console.error('Prefix mute command failed:', error); }
+  try { await handlePrefixRoleCommands(message); } catch (error) { console.error('Hoster Manager role command failed:', error); }
   try { await handleAutomationControlMessage(message); } catch (error) { console.error('Automation control command failed:', error); }
   try { await chatRevivalSystem.onMessage(message); } catch (error) { console.error('Chat Revival message error:', error); }
   try { await wordkillSystem.onMessage(message); } catch (error) { console.error('WordKill message error:', error); }
