@@ -93,19 +93,97 @@ async function finishGame(channel, game, reason) {
 
 const resolvedImageCache = new Map();
 
-async function resolveImageUrl(url) {
-  if (!url || !url.includes('Special:FilePath')) return url;
-  if (resolvedImageCache.has(url)) return resolvedImageCache.get(url);
-  const pending = fetch(url, {
-    method: 'HEAD',
-    redirect: 'follow',
-    signal: AbortSignal.timeout(8000)
-  }).then(response => response.ok && response.url ? response.url : url)
-    .catch(error => {
-      console.warn('Could not resolve politician image redirect; using original URL:', error.message);
-      return url;
-    });
-  resolvedImageCache.set(url, pending);
+function imageInfoUrl(info, width = 900) {
+  if (!info) return null;
+  if (info.thumburl && /^https:\/\//i.test(info.thumburl)) return info.thumburl;
+  if (info.url && /^https:\/\//i.test(info.url) && /^image\/(jpeg|png|webp|gif)$/i.test(info.mime || '')) return info.url;
+  return null;
+}
+
+async function requestCommons(params) {
+  const url = 'https://commons.wikimedia.org/w/api.php?' + new URLSearchParams({
+    action: 'query',
+    format: 'json',
+    origin: '*',
+    ...params
+  }).toString();
+  const response = await fetch(url, {
+    headers: { 'User-Agent': 'NRR-Discord-Bot/1.0 (Guess The Politician image resolver)' },
+    signal: AbortSignal.timeout(9000)
+  });
+  if (!response.ok) throw new Error('Wikimedia Commons API returned HTTP ' + response.status);
+  return response.json();
+}
+
+async function findCommonsImage(url, name) {
+  // First resolve the exact configured filename through the Commons API.
+  // This avoids relying on Special:FilePath redirects inside Discord embeds.
+  if (url && url.includes('Special:FilePath/')) {
+    try {
+      const raw = url.split('Special:FilePath/')[1].split(/[?#]/)[0];
+      const filename = decodeURIComponent(raw).replace(/_/g, ' ');
+      const data = await requestCommons({
+        titles: 'File:' + filename,
+        prop: 'imageinfo',
+        iiprop: 'url|mime|size',
+        iiurlwidth: '900'
+      });
+      const page = Object.values(data.query?.pages || {})[0];
+      const exact = imageInfoUrl(page?.imageinfo?.[0]);
+      if (exact) return exact;
+    } catch (error) {
+      console.warn('Exact Commons image lookup failed for ' + name + ':', error.message);
+    }
+  }
+
+  // Several entries in the curated bank point to outdated or nonexistent
+  // filenames. Search Commons by the politician's name and select a real
+  // raster image URL instead of returning a broken redirect.
+  const searches = [name + ' official portrait', name + ' politician portrait', name];
+  for (const query of searches) {
+    try {
+      const data = await requestCommons({
+        generator: 'search',
+        gsrsearch: query,
+        gsrnamespace: '6',
+        gsrlimit: '12',
+        prop: 'imageinfo',
+        iiprop: 'url|mime|size',
+        iiurlwidth: '900'
+      });
+      const pages = Object.values(data.query?.pages || {}).sort((a, b) => {
+        const titleA = String(a.title || '').toLowerCase();
+        const titleB = String(b.title || '').toLowerCase();
+        const target = name.toLowerCase();
+        const score = title => (title.includes(target) ? 0 : title.includes('portrait') ? 1 : 2);
+        return score(titleA) - score(titleB);
+      });
+      for (const page of pages) {
+        const info = page.imageinfo?.[0];
+        const direct = imageInfoUrl(info);
+        if (!direct || !/^image\/(jpeg|png|webp|gif)$/i.test(info.mime || '')) continue;
+        if (info.width && info.width < 250) continue;
+        if (/coat of arms|flag of|logo|signature|map of/i.test(page.title || '')) continue;
+        return direct;
+      }
+    } catch (error) {
+      console.warn('Commons search failed for ' + name + ' (' + query + '):', error.message);
+    }
+  }
+
+  // Keep a final direct-image fallback if Commons search is temporarily unavailable.
+  if (url && !url.includes('Special:FilePath/')) return url;
+  return null;
+}
+
+async function resolveImageUrl(url, name) {
+  const cacheKey = String(name || url || '').toLowerCase();
+  if (resolvedImageCache.has(cacheKey)) return resolvedImageCache.get(cacheKey);
+  const pending = findCommonsImage(url, name || 'politician').catch(error => {
+    console.warn('Could not resolve image for ' + name + ':', error.message);
+    return url && !url.includes('Special:FilePath/') ? url : null;
+  });
+  resolvedImageCache.set(cacheKey, pending);
   return pending;
 }
 
@@ -113,15 +191,23 @@ async function sendQuestion(channel, game) {
   if (!game.active || games.get(gameId(game.key, channel.id)) !== game) return;
   game.current = pickQuestion(game);
   const q = game.current;
-  q.resolvedImage = await resolveImageUrl(q.image);
-  if (q.resolvedImage === q.image && q.fallbackImage && q.fallbackImage !== q.image) {
-    q.resolvedImage = await resolveImageUrl(q.fallbackImage);
+  q.resolvedImage = await resolveImageUrl(q.image, q.name);
+  if (!q.resolvedImage && q.fallbackImage && q.fallbackImage !== q.image) {
+    q.resolvedImage = await resolveImageUrl(q.fallbackImage, q.name);
+  }
+  if (!q.resolvedImage) {
+    console.error('No usable image found for ' + q.name + '; skipping this question to avoid a broken image.');
+    if (game.used.size >= game.bank.length) {
+      await finishGame(channel, game, 'No usable images could be found for this question bank. Please notify a bot administrator.');
+      return;
+    }
+    return sendQuestion(channel, game);
   }
   try {
     await channel.send({ embeds: [questionEmbed(game)] });
   } catch (error) {
     if (!q.fallbackImage || q.fallbackImage === q.resolvedImage) throw error;
-    q.resolvedImage = await resolveImageUrl(q.fallbackImage);
+    q.resolvedImage = await resolveImageUrl(q.fallbackImage, q.name);
     await channel.send({ embeds: [questionEmbed(game)] });
   }
   game.timeout = setTimeout(async () => {
