@@ -197,7 +197,10 @@ async function sendQuestion(channel, game) {
   }
   if (!q.resolvedImage) {
     console.error('No usable image found for ' + q.name + '; skipping this question to avoid a broken image.');
-    game.used.delete(game.bank.indexOf(q));
+    if (game.used.size >= game.bank.length) {
+      await finishGame(channel, game, 'No usable images could be found for this question bank. Please notify a bot administrator.');
+      return;
+    }
     return sendQuestion(channel, game);
   }
   try {
