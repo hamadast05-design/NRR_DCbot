@@ -50,7 +50,7 @@ const people = [
   ["Martin Luther King Jr.","United States","Civil rights leader","Martin Luther King Jr NYWTS.jpg",["Martin Luther King","MLK","MLK Jr"]],
   ["Charlie Kirk","United States","Political commentator","Charlie Kirk by Gage Skidmore.jpg",["Kirk"]],
   ["Benjamin Franklin","United States","Founding Father","Benjamin Franklin by Joseph-Siffred Duplessis.jpg",["Franklin"]],
-  ["Hillary Clinton","United States","Former Secretary of State","Hillary Clinton official Secretary of State portrait crop.jpg",["Hillary Rodham Clinton","Clinton"]]
+  ["Hillary Clinton","United States","Former Secretary of State","Hillary Clinton official Secretary of State portrait crop.jpg",["Hillary Rodham Clinton"]]
 ];
 module.exports = people.map(([name,country,role,file,extraAliases]) => {
   const encoded = encodeURIComponent(file).replace(/%2F/g, "/");
