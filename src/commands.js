@@ -13,6 +13,7 @@ const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
 const guessPoliticianSystem = require('./guess-the-politician');
 const flagRushSystem = require('./flagrush');
+const chessPuzzleSystem = require('./chess-puzzle');
 const { isSuperuser, hasPermission } = require('./access');
 
 const COLORS = {
@@ -35,6 +36,8 @@ const commands = [
   new SlashCommandBuilder().setName('end_guess_politician').setDescription('End Guess The Politician in this channel.'),
   new SlashCommandBuilder().setName('start_flagrush').setDescription('Start FlagRush in this channel.'),
   new SlashCommandBuilder().setName('end_flagrush').setDescription('End FlagRush in this channel.'),
+  new SlashCommandBuilder().setName('start_chess_puzzle').setDescription('Start the Chess Puzzle minigame in this channel.'),
+  new SlashCommandBuilder().setName('end_chess_puzzle').setDescription('End the active Chess Puzzle minigame in this channel.'),
 
   new SlashCommandBuilder().setName('createevent').setDescription('Create an event submission configuration.').addStringOption(o=>o.setName('channel_id').setDescription('Destination channel ID.').setRequired(true)),
   new SlashCommandBuilder().setName('send').setDescription('Send the event submission interface.').addStringOption(o=>o.setName('channel_id').setDescription('Channel for the submission interface.').setRequired(true)),
@@ -455,6 +458,8 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'end_guess_politician') return guessPoliticianSystem.endCommand(interaction);
     if (interaction.commandName === 'start_flagrush') return flagRushSystem.startCommand(interaction);
     if (interaction.commandName === 'end_flagrush') return flagRushSystem.endCommand(interaction);
+    if (interaction.commandName === 'start_chess_puzzle') return chessPuzzleSystem.startCommand(interaction);
+    if (interaction.commandName === 'end_chess_puzzle') return chessPuzzleSystem.endCommand(interaction);
     if (interaction.commandName === 'mute') return handleMute(interaction);
     if (interaction.commandName === 'kick') return handleKick(interaction);
     if (interaction.commandName === 'ban') return handleBan(interaction);
