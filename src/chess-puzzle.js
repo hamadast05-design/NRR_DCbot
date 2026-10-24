@@ -17,8 +17,7 @@ const PUZZLES = [
   { name: 'Back-rank pressure', theme: 'Active rook check', fen: '6k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1', solution: 'Re8#', hint: 'Use the rook to invade the eighth rank.' },
   { name: 'Queen net', theme: 'Checkmate in one', fen: '7k/6pp/5KQ1/8/8/8/8/8 w - - 0 1', solution: 'Qxg7#', hint: 'The king can help protect a queen sacrifice.' },
   { name: 'Cornered king', theme: 'Checkmate in one', fen: 'k7/pp6/1QK5/8/8/8/8/8 w - - 0 1', solution: 'Qxb7#', hint: 'Look for a queen capture that leaves the king no safe square.' },
-  { name: 'Develop with tempo', theme: 'Tactical check', fen: 'r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4', solution: 'Bxf7+', hint: 'A bishop sacrifice can pull the king into the open.' },
-  { name: 'Knight attack', theme: 'Fork threat', fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3', solution: 'Nxe5', hint: 'Can the knight take the central pawn safely?' },
+  { name: 'Queen capture', theme: 'Win the queen', fen: '4k3/8/5q2/3N4/8/8/8/4K3 w - - 0 1', solution: 'Nxf6', hint: 'A knight can capture the undefended queen.' },
   { name: 'Central capture', theme: 'Tactical capture', fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3', solution: 'Nxe5', hint: 'Can the knight capture the central pawn?' }
 ];
 
