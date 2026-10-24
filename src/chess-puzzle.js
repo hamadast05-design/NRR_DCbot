@@ -49,6 +49,21 @@ function pickPuzzle(game) {
 
 // Render a real PNG board from the puzzle's FEN. The position image and answer always come
 // from the same puzzle record, so no manually matched screenshot bank can drift out of sync.
+// Use vector-drawn chess pieces: Unicode chess glyphs become empty tofu boxes on Railway's minimal Linux fonts.
+function pieceSvg(type, color, x, y) {
+  const white = color === 'w', fill = white ? '#fffdf4' : '#202820', stroke = white ? '#353c32' : '#f4f0df';
+  const style = 'fill="' + fill + '" stroke="' + stroke + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"';
+  const shape = {
+    k: '<path d="M0 -35V-22M-9 -29H9" fill="none" stroke="' + stroke + '" stroke-width="4"/><path d="M-17 22L-12 8L-9 -12L-15 -19L-7 -24L0 -17L7 -24L15 -19L9 -12L12 8L17 22Z" ' + style + '/><path d="M-22 23H22V30H-22Z" ' + style + '/>',
+    q: '<circle cx="-14" cy="-22" r="4" ' + style + '/><circle cx="0" cy="-29" r="4" ' + style + '/><circle cx="14" cy="-22" r="4" ' + style + '/><path d="M-21 20L-16 -12L-6 2L0 -16L6 2L16 -12L21 20Z" ' + style + '/><path d="M-23 22H23V30H-23Z" ' + style + '/>',
+    r: '<path d="M-20 -25H-11V-16H-4V-25H4V-16H11V-25H20V-7L14 0L17 20H-17L-14 0L-20 -7Z" ' + style + '/><path d="M-22 22H22V30H-22Z" ' + style + '/>',
+    b: '<circle cx="0" cy="-23" r="7" ' + style + '/><path d="M-5 -16L-16 1L-10 8L-15 20H15L10 8L16 1L5 -16Z" ' + style + '/><path d="M-22 22H22V30H-22Z" ' + style + '/><path d="M-6 -20L5 -7" fill="none" stroke="' + stroke + '" stroke-width="3"/>',
+    n: '<path d="M-18 22L-15 9L-21 -1L-13 -16L-1 -26L11 -20L21 -5L13 0L8 12L15 22Z" ' + style + '/><path d="M-23 22H22V30H-23Z" ' + style + '/><circle cx="5" cy="-15" r="2.5" fill="' + stroke + '"/>',
+    p: '<circle cx="0" cy="-18" r="8" ' + style + '/><path d="M-8 -8L-13 8L-10 20H10L13 8L8 -8Z" ' + style + '/><path d="M-19 22H19V30H-19Z" ' + style + '/>'
+  };
+  return '<g transform="translate(' + x + ' ' + y + ')">' + shape[type] + '</g>';
+}
+
 async function renderBoard(fen) {
   const board = new Chess(fen).board();
   const square = 80;
@@ -68,15 +83,7 @@ async function renderBoard(fen) {
       const fill = (row + col) % 2 === 0 ? light : dark;
       pieces.push('<rect x="' + x + '" y="' + y + '" width="' + square + '" height="' + square + '" fill="' + fill + '"/>');
       const piece = board[row][col];
-      if (piece) {
-        const glyph = PIECES[piece.color][piece.type];
-        const isWhite = piece.color === 'w';
-        const fillColor = isWhite ? '#fffdf5' : '#202820';
-        const outline = isWhite ? '#343a32' : '#f5f1e5';
-        const cx = x + square / 2;
-        const cy = y + square / 2 + 2;
-        pieces.push('<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="central" font-family="DejaVu Sans, Noto Sans Symbols 2, serif" font-size="64" font-weight="bold" fill="' + fillColor + '" stroke="' + outline + '" stroke-width="1.2" paint-order="stroke fill">' + glyph + '</text>');
-      }
+      if (piece) pieces.push(pieceSvg(piece.type, piece.color, x + square / 2, y + square / 2));
     }
   }
 
