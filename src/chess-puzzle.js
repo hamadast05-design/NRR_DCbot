@@ -18,7 +18,6 @@ const PUZZLES = [
   { name: 'Queen net', theme: 'Checkmate in one', fen: '7k/6pp/5KQ1/8/8/8/8/8 w - - 0 1', solution: 'Qxg7#', hint: 'The king can help protect a queen sacrifice.' },
   { name: 'Cornered king', theme: 'Checkmate in one', fen: 'k7/pp6/1QK5/8/8/8/8/8 w - - 0 1', solution: 'Qxb7#', hint: 'Look for a queen capture that leaves the king no safe square.' },
   { name: 'Queen capture', theme: 'Win the queen', fen: '4k3/8/5q2/3N4/8/8/8/4K3 w - - 0 1', solution: 'Nxf6', hint: 'A knight can capture the undefended queen.' },
-  { name: 'Central capture', theme: 'Tactical capture', fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3', solution: 'Nxe5', hint: 'Can the knight capture the central pawn?' }
 ];
 
 function validatePuzzles() {
