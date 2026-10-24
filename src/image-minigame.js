@@ -171,8 +171,10 @@ async function findCommonsImage(url, name) {
     }
   }
 
-  // Keep a final direct-image fallback if Commons search is temporarily unavailable.
-  if (url && !url.includes('Special:FilePath/')) return url;
+  // Never let a temporary Commons API failure invalidate the entire bank.
+  // Special:FilePath URLs are redirect URLs, but Discord can render them directly;
+  // they are the final fallback after trying to resolve a direct raster URL.
+  if (url && /^https:\/\//i.test(url)) return url;
   return null;
 }
 
@@ -181,7 +183,7 @@ async function resolveImageUrl(url, name) {
   if (resolvedImageCache.has(cacheKey)) return resolvedImageCache.get(cacheKey);
   const pending = findCommonsImage(url, name || 'politician').catch(error => {
     console.warn('Could not resolve image for ' + name + ':', error.message);
-    return url && !url.includes('Special:FilePath/') ? url : null;
+    return url && /^https:\/\//i.test(url) ? url : null;
   });
   resolvedImageCache.set(cacheKey, pending);
   return pending;
