@@ -14,11 +14,12 @@ const PIECES = {
 // SAN is the canonical answer; coordinate moves (e2e4) are accepted too.
 const PUZZLES = [
   { name: 'Scholar’s Mate finish', theme: 'Checkmate in one', fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4', solution: 'Qxf7#', hint: 'The queen and bishop are aiming at the same square.' },
-  { name: 'Back-rank pressure', theme: 'Active rook check', fen: '6k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1', solution: 'Re8+', hint: 'Use the rook to invade the eighth rank.' },
-  { name: 'Queen gives check', theme: 'Forcing move', fen: '7k/5Qpp/6K1/8/8/8/8/8 w - - 0 1', solution: 'Qf8+', hint: 'Look for a forcing queen move near the enemy king.' },
+  { name: 'Back-rank pressure', theme: 'Active rook check', fen: '6k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1', solution: 'Re8#', hint: 'Use the rook to invade the eighth rank.' },
+  { name: 'Queen net', theme: 'Checkmate in one', fen: '7k/6pp/5KQ1/8/8/8/8/8 w - - 0 1', solution: 'Qxg7#', hint: 'The king can help protect a queen sacrifice.' },
+  { name: 'Cornered king', theme: 'Checkmate in one', fen: 'k7/pp6/1QK5/8/8/8/8/8 w - - 0 1', solution: 'Qxb7#', hint: 'Look for a queen capture that leaves the king no safe square.' },
   { name: 'Develop with tempo', theme: 'Tactical check', fen: 'r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4', solution: 'Bxf7+', hint: 'A bishop sacrifice can pull the king into the open.' },
   { name: 'Knight attack', theme: 'Fork threat', fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3', solution: 'Nxe5', hint: 'Can the knight take the central pawn safely?' },
-  { name: 'Central capture', theme: 'Win material', fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2', solution: 'Nf3', hint: 'Develop a piece while preparing to attack the centre.' }
+  { name: 'Central capture', theme: 'Tactical capture', fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3', solution: 'Nxe5', hint: 'Can the knight capture the central pawn?' }
 ];
 
 function validatePuzzles() {
