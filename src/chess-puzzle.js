@@ -54,10 +54,7 @@ function renderBoard(fen) {
     lines.push((8 - rank) + ' ' + cells.join(' '));
   }
   lines.push('  a b c d e f g h');
-  return '```
-' + lines.join('
-') + '
-```';
+  return ['```', ...lines, '```'].join(String.fromCharCode(10));
 }
 function puzzleEmbed(puzzle, round) {
   return new EmbedBuilder().setTitle('♟️ CHESS PUZZLE')
