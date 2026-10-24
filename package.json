@@ -15,6 +15,7 @@
     "dotenv": "^17.2.2",
     "pg": "^8.16.3",
     "a-set-of-english-words": "^1.0.0",
-    "rss-parser": "^3.13.0"
+    "rss-parser": "^3.13.0",
+    "chess.js": "^1.4.0"
   }
 }
