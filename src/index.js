@@ -10,6 +10,7 @@ const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
 const guessPoliticianSystem = require('./guess-the-politician');
 const flagRushSystem = require('./flagrush');
+const chessPuzzleSystem = require('./chess-puzzle');
 const newsSystem = require('./news');
 const chatRevivalSystem = require('./chat-revival');
 const automationControl = require('./automation-control');
@@ -115,6 +116,7 @@ client.on(Events.MessageCreate, async message => {
   try { await politicalTriviaSystem.onMessage(message); } catch (error) { console.error('Political Trivia message error:', error); }
   try { await guessPoliticianSystem.onMessage(message); } catch (error) { console.error('Guess The Politician message error:', error); }
   try { await flagRushSystem.onMessage(message); } catch (error) { console.error('FlagRush message error:', error); }
+  try { await chessPuzzleSystem.onMessage(message); } catch (error) { console.error('Chess Puzzle message error:', error); }
   try { await eventSystem.onMessage(message); } catch (error) { console.error('Event stick error:', error); }
   try { await annihilateSystem.onMessage(message); } catch (error) { console.error('Annihilate message error:', error); }
 });
