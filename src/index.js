@@ -42,8 +42,8 @@ client.once(Events.ClientReady, async readyClient => {
 
     setInterval(() => eventSystem.autoApprove(readyClient).catch(error => console.error('Event auto-approval failed:', error)), 30 * 1000);
     newsSystem.start(readyClient);
-    chatRevivalSystem.start(readyClient);
-    gameRotationSystem.start(readyClient);
+    // Temporarily disabled by administrator request: no Chat Revival or automatic game-invitation messages.
+    console.log('Chat Revival and automatic game invitations are disabled.');
 
     for (const guild of readyClient.guilds.cache.values()) {
       const members = await guild.members.fetch();
@@ -104,14 +104,14 @@ client.on(Events.GuildMemberRemove, async member => {
 });
 
 client.on(Events.MessageDelete, async message => {
-  try { await chatRevivalSystem.onMessageDelete(message); } catch (error) { console.error('Chat Revival delete error:', error); }
+  // Chat Revival is intentionally disabled; do not trigger message deletion/revival logic.
 });
 
 client.on(Events.MessageCreate, async message => {
   try { await handlePrefixMute(message); } catch (error) { console.error('Prefix mute command failed:', error); }
   try { await handlePrefixRoleCommands(message); } catch (error) { console.error('Hoster Manager role command failed:', error); }
-  try { await handleAutomationControlMessage(message); } catch (error) { console.error('Automation control command failed:', error); }
-  try { await chatRevivalSystem.onMessage(message); } catch (error) { console.error('Chat Revival message error:', error); }
+  // Automation controls remain inactive while Chat Revival and game invitations are paused.
+  // Chat Revival is intentionally disabled; no revival prompts should be sent.
   try { await wordkillSystem.onMessage(message); } catch (error) { console.error('WordKill message error:', error); }
   try { await politicalTriviaSystem.onMessage(message); } catch (error) { console.error('Political Trivia message error:', error); }
   try { await guessPoliticianSystem.onMessage(message); } catch (error) { console.error('Guess The Politician message error:', error); }
