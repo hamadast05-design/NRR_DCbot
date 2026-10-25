@@ -507,7 +507,7 @@ async function createSubmission({ eventId, guildId, submitterId, imageUrl, image
   const result = await query(`
     INSERT INTO event_submissions
       (event_id, guild_id, submitter_id, image_url, image_name, submitted_at, auto_approve_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $6 + INTERVAL '3 hours')
+    VALUES ($1, $2, $3, $4, $5, $6::timestamptz, $6::timestamptz + INTERVAL '3 hours')
     RETURNING *
   `, [eventId, guildId, submitterId, imageUrl, imageName || null, submitted]);
   return result.rows[0];
