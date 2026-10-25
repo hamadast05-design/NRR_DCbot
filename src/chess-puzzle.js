@@ -50,18 +50,46 @@ function pickPuzzle(game) {
 // Render a real PNG board from the puzzle's FEN. The position image and answer always come
 // from the same puzzle record, so no manually matched screenshot bank can drift out of sync.
 // Use vector-drawn chess pieces: Unicode chess glyphs become empty tofu boxes on Railway's minimal Linux fonts.
+// Font-independent, clean Staunton-style SVG silhouettes so pieces render consistently on Railway.
 function pieceSvg(type, color, x, y) {
-  const white = color === 'w', fill = white ? '#fffdf4' : '#202820', stroke = white ? '#353c32' : '#f4f0df';
-  const style = 'fill="' + fill + '" stroke="' + stroke + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"';
-  const shape = {
-    k: '<path d="M0 -35V-22M-9 -29H9" fill="none" stroke="' + stroke + '" stroke-width="4"/><path d="M-17 22L-12 8L-9 -12L-15 -19L-7 -24L0 -17L7 -24L15 -19L9 -12L12 8L17 22Z" ' + style + '/><path d="M-22 23H22V30H-22Z" ' + style + '/>',
-    q: '<circle cx="-14" cy="-22" r="4" ' + style + '/><circle cx="0" cy="-29" r="4" ' + style + '/><circle cx="14" cy="-22" r="4" ' + style + '/><path d="M-21 20L-16 -12L-6 2L0 -16L6 2L16 -12L21 20Z" ' + style + '/><path d="M-23 22H23V30H-23Z" ' + style + '/>',
-    r: '<path d="M-20 -25H-11V-16H-4V-25H4V-16H11V-25H20V-7L14 0L17 20H-17L-14 0L-20 -7Z" ' + style + '/><path d="M-22 22H22V30H-22Z" ' + style + '/>',
-    b: '<circle cx="0" cy="-23" r="7" ' + style + '/><path d="M-5 -16L-16 1L-10 8L-15 20H15L10 8L16 1L5 -16Z" ' + style + '/><path d="M-22 22H22V30H-22Z" ' + style + '/><path d="M-6 -20L5 -7" fill="none" stroke="' + stroke + '" stroke-width="3"/>',
-    n: '<path d="M-18 22L-15 9L-21 -1L-13 -16L-1 -26L11 -20L21 -5L13 0L8 12L15 22Z" ' + style + '/><path d="M-23 22H22V30H-23Z" ' + style + '/><circle cx="5" cy="-15" r="2.5" fill="' + stroke + '"/>',
-    p: '<circle cx="0" cy="-18" r="8" ' + style + '/><path d="M-8 -8L-13 8L-10 20H10L13 8L8 -8Z" ' + style + '/><path d="M-19 22H19V30H-19Z" ' + style + '/>'
+  const white = color === 'w', fill = white ? '#fffdf7' : '#202820', stroke = white ? '#353c32' : '#f4f0df';
+  const style = 'fill="' + fill + '" stroke="' + stroke + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"';
+  const shapes = {
+    k: '<path d="M0 -34V-20M-8 -27H8" fill="none" stroke="' + stroke + '" stroke-width="4"/><path d="M-13 -18L-8 -10L-11 8L-17 22H17L11 8L8 -10L13 -18L7 -22L0 -15L-7 -22Z" ' + style + '/><path d="M-22 23H22V30H-22Z" ' + style + '/>',
+    q: '<path d="M-20 -18L-14 5L-19 -17L-8 -7L0 -24L8 -7L19 -17L14 5L20 -18L14 20H-14Z" ' + style + '/><circle cx="-19" cy="-22" r="4" ' + style + '/><circle cx="0" cy="-29" r="4" ' + style + '/><circle cx="19" cy="-22" r="4" ' + style + '/><path d="M-23 22H23V30H-23Z" ' + style + '/>',
+    r: '<path d="M-20 -25H-11V-16H-4V-25H4V-16H11V-25H20V-8L14 0L17 20H-17L-14 0L-20 -8Z" ' + style + '/><path d="M-22 22H22V30H-22Z" ' + style + '/>',
+    b: '<path d="M0 -29C-12 -29 -15 -15 -7 -7L-14 8L-16 20H16L14 8L7 -7C15 -15 12 -29 0 -29Z" ' + style + '/><path d="M-4 -24L5 -11" fill="none" stroke="' + stroke + '" stroke-width="3"/><path d="M-22 22H22V30H-22Z" ' + style + '/>',
+    n: '<path d="M-17 22L-14 10L-20 0L-14 -13L-4 -23L8 -25L18 -15L21 -3L13 1L8 12L16 22Z" ' + style + '/><path d="M-23 22H22V30H-23Z" ' + style + '/><path d="M-10 -13L-3 -9" fill="none" stroke="' + stroke + '" stroke-width="3"/><circle cx="7" cy="-17" r="2.5" fill="' + stroke + '"/>',
+    p: '<circle cx="0" cy="-18" r="9" ' + style + '/><path d="M-7 -8L-13 8L-10 20H10L13 8L7 -8Z" ' + style + '/><path d="M-19 22H19V30H-19Z" ' + style + '/>'
   };
-  return '<g transform="translate(' + x + ' ' + y + ')">' + shape[type] + '</g>';
+  return '<g transform="translate(' + x + ' ' + y + ')">' + shapes[type] + '</g>';
+}
+
+// Draw coordinate labels from vector blocks, not fonts (the server image lacks system fonts).
+const BITMAP = {
+  a:['01110','10001','10001','11111','10001','10001','10001'],
+  b:['11110','10001','10001','11110','10001','10001','11110'],
+  c:['01111','10000','10000','10000','10000','10000','01111'],
+  d:['11110','10001','10001','10001','10001','10001','11110'],
+  e:['11111','10000','10000','11110','10000','10000','11111'],
+  f:['11111','10000','10000','11110','10000','10000','10000'],
+  g:['01111','10000','10000','10111','10001','10001','01111'],
+  h:['10001','10001','10001','11111','10001','10001','10001'],
+  '1':['00100','01100','00100','00100','00100','00100','01110'],
+  '2':['01110','10001','00001','00010','00100','01000','11111'],
+  '3':['11110','00001','00001','01110','00001','00001','11110'],
+  '4':['00010','00110','01010','10010','11111','00010','00010'],
+  '5':['11111','10000','10000','11110','00001','00001','11110'],
+  '6':['01110','10000','10000','11110','10001','10001','01110'],
+  '7':['11111','00001','00010','00100','01000','01000','01000'],
+  '8':['01110','10001','10001','01110','10001','10001','01110']
+};
+function bitmapGlyph(char, x, y, scale, color) {
+  const rows = BITMAP[char], rects = [];
+  rows.forEach((row, ry) => [...row].forEach((bit, rx) => {
+    if (bit === '1') rects.push('<rect x="' + (x + rx * scale) + '" y="' + (y + ry * scale) + '" width="' + scale + '" height="' + scale + '" rx="' + (scale * .12) + '" fill="' + color + '"/>');
+  }));
+  return rects.join('');
 }
 
 async function renderBoard(fen) {
@@ -88,21 +116,20 @@ async function renderBoard(fen) {
   }
 
   const coords = [];
+  const labelColor = '#e8eee0';
   for (let col = 0; col < 8; col++) {
     const label = String.fromCharCode(97 + col);
-    coords.push('<text x="' + (left + col * square + square / 2) + '" y="' + (top + boardSize + 26) + '" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#dce4d3">' + label + '</text>');
+    coords.push(bitmapGlyph(label, left + col * square + 35, top + boardSize + 12, 2.2, labelColor));
   }
   for (let row = 0; row < 8; row++) {
-    coords.push('<text x="' + (left - 25) + '" y="' + (top + row * square + square / 2 + 6) + '" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#dce4d3">' + (8 - row) + '</text>');
+    coords.push(bitmapGlyph(String(8 - row), left - 28, top + row * square + 29, 2.2, labelColor));
   }
 
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '">' +
     '<defs><filter id="shadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#000" flood-opacity=".25"/></filter></defs>' +
     '<rect width="100%" height="100%" rx="26" fill="#202a24"/>' +
-    '<text x="' + (width / 2) + '" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="3" fill="#f0f4e8">NRR CHESS PUZZLE</text>' +
     '<rect x="' + (left - 2) + '" y="' + (top - 2) + '" width="' + (boardSize + 4) + '" height="' + (boardSize + 4) + '" rx="3" fill="#101710" filter="url(#shadow)"/>' +
     pieces.join('') + coords.join('') +
-    '<text x="' + (width / 2) + '" y="778" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#aeb9a9">WHITE TO MOVE</text>' +
     '</svg>';
 
   return sharp(Buffer.from(svg)).png().toBuffer();
