@@ -22,6 +22,8 @@ const COLORS = {
   reputation: 0x5865f2,
 };
 
+const staffAnalytics = require('./staff-analytics');
+
 const commands = [
   new SlashCommandBuilder()
     .setName('setup_rolegiver')
@@ -36,6 +38,17 @@ const commands = [
   new SlashCommandBuilder().setName('end_guess_politician').setDescription('End Guess The Politician in this channel.'),
   new SlashCommandBuilder().setName('start_flagrush').setDescription('Start FlagRush in this channel.'),
   new SlashCommandBuilder().setName('end_flagrush').setDescription('End FlagRush in this channel.'),
+  new SlashCommandBuilder().setName('stats_staff').setDescription('View activity and moderation statistics for a staff member.')
+    .addUserOption(o=>o.setName('user').setDescription('Staff member to inspect.')),
+  new SlashCommandBuilder().setName('stats').setDescription('View message activity statistics for a regular member.')
+    .addUserOption(o=>o.setName('user').setDescription('Member to inspect.')),
+  new SlashCommandBuilder().setName('check_punishments').setDescription('Search a member’s recorded punishment history.')
+    .addUserOption(o=>o.setName('user').setDescription('Member whose history to view.').setRequired(true))
+    .addBooleanOption(o=>o.setName('bans').setDescription('Include bans (default: yes).'))
+    .addBooleanOption(o=>o.setName('kicks').setDescription('Include kicks (default: yes).'))
+    .addBooleanOption(o=>o.setName('timeouts').setDescription('Include timeouts (default: yes).'))
+    .addStringOption(o=>o.setName('start_date').setDescription('Start date, YYYY-MM-DD.'))
+    .addStringOption(o=>o.setName('end_date').setDescription('End date, YYYY-MM-DD.')),
   new SlashCommandBuilder().setName('start_chess_puzzle').setDescription('Start the Chess Puzzle minigame in this channel.'),
   new SlashCommandBuilder().setName('end_chess_puzzle').setDescription('End the active Chess Puzzle minigame in this channel.'),
 
@@ -441,6 +454,7 @@ async function handleRoleGiverButton(interaction) {
 }
 
 async function handleInteraction(interaction) {
+  if (interaction.isButton() && interaction.customId.startsWith('staffstats:punishments:')) return staffAnalytics.handleButton(interaction);
   if (interaction.isButton() && interaction.customId.startsWith('rolegiver:get:')) return handleRoleGiverButton(interaction);
   if (interaction.isModalSubmit() && interaction.customId.startsWith('event_submit:modal:')) return eventSystem.submit(interaction, interaction.customId.slice('event_submit:modal:'.length));
 
@@ -450,6 +464,9 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'send') return eventSystem.send(interaction);
     if (interaction.commandName === 'stick') return eventSystem.stick(interaction);
     if (interaction.commandName === 'end') return eventSystem.end(interaction);
+    if (interaction.commandName === 'stats_staff') return staffAnalytics.statsCommand(interaction, true);
+    if (interaction.commandName === 'stats') return staffAnalytics.statsCommand(interaction, false);
+    if (interaction.commandName === 'check_punishments') return staffAnalytics.checkPunishments(interaction);
     if (interaction.commandName === 'start_wordkill') return wordkillSystem.startCommand(interaction);
     if (interaction.commandName === 'end_wordkill') return wordkillSystem.endCommand(interaction);
     if (interaction.commandName === 'start_pt') return politicalTriviaSystem.startCommand(interaction);
