@@ -15,6 +15,7 @@ const newsSystem = require('./news');
 const chatRevivalSystem = require('./chat-revival');
 const automationControl = require('./automation-control');
 const gameRotationSystem = require('./game-rotation');
+const staffAnalytics = require('./staff-analytics');
 
 validate();
 
@@ -38,7 +39,10 @@ client.once(Events.ClientReady, async readyClient => {
   try {
     await registerApplicationCommands();
     await db.migrate();
+    await staffAnalytics.migrate();
     console.log('Database migrations ready.');
+    await staffAnalytics.backfillAuditLogs(readyClient);
+    setInterval(() => staffAnalytics.backfillAuditLogs(readyClient).catch(error => console.error('Punishment audit scan failed:', error)), 10 * 60 * 1000);
 
     setInterval(() => eventSystem.autoApprove(readyClient).catch(error => console.error('Event auto-approval failed:', error)), 30 * 1000);
     newsSystem.start(readyClient);
@@ -112,6 +116,7 @@ client.on(Events.MessageCreate, async message => {
   try { await handlePrefixRoleCommands(message); } catch (error) { console.error('Hoster Manager role command failed:', error); }
   // Automation controls remain inactive while Chat Revival and game invitations are paused.
   // Chat Revival is intentionally disabled; no revival prompts should be sent.
+  try { await staffAnalytics.onMessage(message); } catch (error) { console.error('Staff activity tracking failed:', error); }
   try { await wordkillSystem.onMessage(message); } catch (error) { console.error('WordKill message error:', error); }
   try { await politicalTriviaSystem.onMessage(message); } catch (error) { console.error('Political Trivia message error:', error); }
   try { await guessPoliticianSystem.onMessage(message); } catch (error) { console.error('Guess The Politician message error:', error); }
@@ -119,6 +124,11 @@ client.on(Events.MessageCreate, async message => {
   try { await chessPuzzleSystem.onMessage(message); } catch (error) { console.error('Chess Puzzle message error:', error); }
   try { await eventSystem.onMessage(message); } catch (error) { console.error('Event stick error:', error); }
   try { await annihilateSystem.onMessage(message); } catch (error) { console.error('Annihilate message error:', error); }
+});
+
+
+client.on(Events.GuildBanAdd, async ban => {
+  try { const logs = await ban.guild.fetchAuditLogs({ type: require('discord.js').AuditLogEvent.MemberBanAdd, limit: 5 }); for (const entry of logs.entries.values()) { if (entry.target?.id === ban.user.id && Date.now() - entry.createdTimestamp < 15000) await staffAnalytics.recordAudit(ban.guild, entry); } } catch (error) { console.error('Ban audit capture failed:', error); }
 });
 
 client.on(Events.MessageReactionAdd, async (reaction, user) => {
