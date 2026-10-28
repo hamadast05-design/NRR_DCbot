@@ -146,7 +146,7 @@ async function checkPunishments(interaction) {
   const result=await db.query(`SELECT * FROM nrr_punishments WHERE guild_id=$1 AND moderator_id=$2 AND action=ANY($3::text[])${dateClause} ORDER BY occurred_at DESC LIMIT 20`,params);
   const embed=new EmbedBuilder().setColor(0x2b2d31).setTitle('Punishments issued by • '+target.username).setThumbnail(target.displayAvatarURL({size:256}));
   if(!result.rows.length) embed.setDescription('No punishments issued by this staff member match these filters. Note: records are collected from feature activation onward and available audit logs.');
-  else embed.setDescription(result.rows.map((p,i)=>'**'+(i+1)+'. '+p.action.toUpperCase()+'** • <t:'+Math.floor(new Date(p.occurred_at).getTime()/1000)+':f>\n**Moderator:** '+(p.moderator_id?'<@'+p.moderator_id+'>':'Unknown')+'\n**Reason:** '+(p.reason||'No reason recorded')+'\n**Source:** '+p.source).join('\n\n').slice(0,4000));
+  else embed.setDescription(result.rows.map((p,i)=>'**'+(i+1)+'. '+p.action.toUpperCase()+'** • <t:'+Math.floor(new Date(p.occurred_at).getTime()/1000)+':f>\n**Target:** '+'<@'+p.target_id+'>'+'\n**Reason:** '+(p.reason||'No reason recorded')+'\n**Source:** '+p.source).join('\n\n').slice(0,4000));
   embed.setFooter({text:'Showing up to 20 records • Date format YYYY-MM-DD'});
   return interaction.editReply({embeds:[embed],allowedMentions:{parse:[]}});
 }
