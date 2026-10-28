@@ -124,6 +124,9 @@ function validDate(value) {
 async function checkPunishments(interaction) {
   if (!interaction.inGuild()) return interaction.reply({content:'Use this command inside a server.',ephemeral:true});
   const target=interaction.options.getUser('user',true);
+  const member=await interaction.guild.members.fetch(target.id).catch(()=>null);
+  if(!member) return interaction.reply({content:'I could not find that member in this server.',ephemeral:true});
+  if(!isStaff(member)) return interaction.reply({content:'This user is not a staff member. /check_punishments only shows punishments issued by staff members.',ephemeral:true});
   const bans=interaction.options.getBoolean('bans') ?? true;
   const kicks=interaction.options.getBoolean('kicks') ?? true;
   const timeouts=interaction.options.getBoolean('timeouts') ?? true;
@@ -140,9 +143,9 @@ async function checkPunishments(interaction) {
   let dateClause='';
   if(start){params.push(start);dateClause+=' AND occurred_at >= $'+params.length+'::timestamptz';}
   if(end){params.push(end);dateClause+=` AND occurred_at < ($${params.length}::timestamptz + INTERVAL '1 day')`;}
-  const result=await db.query(`SELECT * FROM nrr_punishments WHERE guild_id=$1 AND target_id=$2 AND action=ANY($3::text[])${dateClause} ORDER BY occurred_at DESC LIMIT 20`,params);
-  const embed=new EmbedBuilder().setColor(0x2b2d31).setTitle('Punishment history • '+target.username).setThumbnail(target.displayAvatarURL({size:256}));
-  if(!result.rows.length) embed.setDescription('No recorded punishments match these filters. Note: records are collected from feature activation onward and available audit logs.');
+  const result=await db.query(`SELECT * FROM nrr_punishments WHERE guild_id=$1 AND moderator_id=$2 AND action=ANY($3::text[])${dateClause} ORDER BY occurred_at DESC LIMIT 20`,params);
+  const embed=new EmbedBuilder().setColor(0x2b2d31).setTitle('Punishments issued by • '+target.username).setThumbnail(target.displayAvatarURL({size:256}));
+  if(!result.rows.length) embed.setDescription('No punishments issued by this staff member match these filters. Note: records are collected from feature activation onward and available audit logs.');
   else embed.setDescription(result.rows.map((p,i)=>'**'+(i+1)+'. '+p.action.toUpperCase()+'** • <t:'+Math.floor(new Date(p.occurred_at).getTime()/1000)+':f>\n**Moderator:** '+(p.moderator_id?'<@'+p.moderator_id+'>':'Unknown')+'\n**Reason:** '+(p.reason||'No reason recorded')+'\n**Source:** '+p.source).join('\n\n').slice(0,4000));
   embed.setFooter({text:'Showing up to 20 records • Date format YYYY-MM-DD'});
   return interaction.editReply({embeds:[embed],allowedMentions:{parse:[]}});
