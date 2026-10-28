@@ -90,14 +90,14 @@ async function statsCommand(interaction, staffOnly) {
   while(activeDays.get(utcDay(cursor))>=15){streak++;cursor=new Date(cursor);cursor.setUTCDate(cursor.getUTCDate()-1);}
   const lastActive=lastR.rows[0]?.last_active;
   const fields = [
-    {name:'Total messages',value:'**'+Number(totalR.rows[0]?.count||0).toLocaleString()+'**',inline:true},
-    {name:'Last active',value:lastActive?'<t:'+Math.floor(new Date(lastActive).getTime()/1000)+':R>':'No activity recorded',inline:true},
-    {name:'Daily streak',value:'**'+streak+' day'+(streak===1?'':'s')+'**\\n15+ messages/day',inline:true},
-    {name:'24 Hours',value:'**'+windows[0].toLocaleString()+'**',inline:true},
-    {name:'3 Days',value:'**'+windows[1].toLocaleString()+'**',inline:true},
-    {name:'7 Days',value:'**'+windows[2].toLocaleString()+'**',inline:true},
-    {name:'14 Days',value:'**'+windows[3].toLocaleString()+'**',inline:true},
-    {name:'Top channels',value:topR.rows.length?topR.rows.map((r,i)=>(i+1)+'. <#'+r.channel_id+'> — **'+Number(r.count).toLocaleString()+'**').join('\\n'):'No channel activity recorded yet',inline:false}
+    {name:'┃ MESSAGE ACTIVITY',value:'━━━━━━━━━━━━━━━━',inline:false},
+    {name:'Total Messages',value:'`'+Number(totalR.rows[0]?.count||0).toLocaleString()+'`',inline:true},
+    {name:'Daily Streak',value:'`'+streak+' day'+(streak===1?'':'s')+'`\n15+ messages/day',inline:true},
+    {name:'Last 24 Hours',value:'`'+windows[0].toLocaleString()+'`',inline:true},
+    {name:'Last 3 Days',value:'`'+windows[1].toLocaleString()+'`',inline:true},
+    {name:'Last 7 Days',value:'`'+windows[2].toLocaleString()+'`',inline:true},
+    {name:'Last 14 Days',value:'`'+windows[3].toLocaleString()+'`',inline:true},
+    {name:'┃ TOP CHANNELS',value:'━━━━━━━━━━━━━━━━\n'+(topR.rows.length?topR.rows.map((r,i)=>'`'+(i+1)+'` <#'+r.channel_id+'> ┃ `'+Number(r.count).toLocaleString()+'`').join('\n'):'No channel activity recorded yet'),inline:false}
   ];
   const rows=[];
   if (staffOnly) {
@@ -106,13 +106,14 @@ async function statsCommand(interaction, staffOnly) {
       ranking(interaction.guild,'activity',target.id), ranking(interaction.guild,'punishments',target.id)
     ]);
     const highest = member.roles.highest?.name;
-    fields.unshift({name:'Staff member',value:highest && highest !== '@everyone' ? highest : 'Staff Team',inline:false});
-    fields.push({name:'Punishments',value:'**Issued (14 days):** '+punishments,inline:true});
-    fields.push({name:'Ranking',value:'**Punishments:** '+(punishmentRank?ordinal(punishmentRank.rank)+' of '+punishmentRank.total:'Unranked')+'\n**Activity:** '+(activityRank?ordinal(activityRank.rank)+' of '+activityRank.total:'Unranked'),inline:false});
+    fields.splice(1,0,{name:'Staff Member',value:highest && highest !== '@everyone' ? highest : 'Staff Team',inline:false});
+    fields.push({name:'┃ STAFF RECORD',value:'━━━━━━━━━━━━━━━━',inline:false});
+    fields.push({name:'Punishments Issued (14 Days)',value:'`'+punishments+'`',inline:true});
+    fields.push({name:'┃ RANKINGS',value:'━━━━━━━━━━━━━━━━\n◆ Punishments: `'+(punishmentRank?ordinal(punishmentRank.rank)+' of '+punishmentRank.total:'Unranked')+'`\n◆ Activity: `'+(activityRank?ordinal(activityRank.rank)+' of '+activityRank.total:'Unranked')+'`',inline:false});
     rows.push(new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('staffstats:punishments:'+interaction.guild.id+':'+target.id+':'+interaction.user.id).setLabel('Punishments').setStyle(ButtonStyle.Secondary)));
   }
   const embed=makeStatsEmbed(target, target.username+' • Statistics', fields,self,staffOnly);
-  embed.setColor(staffOnly ? COLORS.staff : COLORS.member).setAuthor({name:'NR:R',iconURL:'https://plain-eeur-prod-public.komododecks.com/202610/24/if8DMbiGuy0pn3tIQvrO/image.jpg'}).setFooter({text:'NR:R • Server activity'});
+  embed.setColor(staffOnly ? COLORS.staff : COLORS.member).setAuthor({name:'┃ STAFF STATISTICS',iconURL:'https://plain-eeur-prod-public.komododecks.com/202610/24/if8DMbiGuy0pn3tIQvrO/image.jpg'}).setFooter({text:lastActive?'NR:R • Last active '+new Date(lastActive).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'UTC'})+' UTC':'NR:R • No activity recorded'});
   return interaction.editReply({embeds:[embed],components:rows,allowedMentions:{parse:[]}});
 }
 function validDate(value) {
@@ -147,19 +148,38 @@ async function checkPunishments(interaction) {
   const embed=new EmbedBuilder().setColor(0x2b2d31).setTitle('Punishments issued by • '+target.username).setThumbnail(target.displayAvatarURL({size:256}));
   if(!result.rows.length) embed.setDescription('No punishments issued by this staff member match these filters. Note: records are collected from feature activation onward and available audit logs.');
   else embed.setDescription(result.rows.map((p,i)=>'**'+(i+1)+'. '+p.action.toUpperCase()+'** • <t:'+Math.floor(new Date(p.occurred_at).getTime()/1000)+':f>\n**Target:** '+'<@'+p.target_id+'>'+'\n**Reason:** '+(p.reason||'No reason recorded')+'\n**Source:** '+p.source).join('\n\n').slice(0,4000));
-  embed.setFooter({text:'Showing up to 20 records • Date format YYYY-MM-DD'});
+  embed.setFooter({text:'NR:R • Staff Punishment Records'});
   return interaction.editReply({embeds:[embed],allowedMentions:{parse:[]}});
 }
 async function handleButton(interaction) {
-  if(!interaction.customId.startsWith('staffstats:punishments:')) return false;
-  const [, , guildId,userId,ownerId]=interaction.customId.split(':');
+  if(!interaction.customId.startsWith('staffstats:')) return false;
+  const [, , actionOrGuild,maybeUser,maybeOwner]=interaction.customId.split(':');
+  let action,guildId,userId,ownerId;
+  if(interaction.customId.startsWith('staffstats:punishments:')) { action='punishments'; guildId=actionOrGuild; userId=maybeUser; ownerId=maybeOwner; }
+  else if(interaction.customId.startsWith('staffstats:activity:')) { action='activity'; guildId=actionOrGuild; userId=maybeUser; ownerId=maybeOwner; }
+  else return false;
   if(interaction.user.id!==ownerId) return interaction.reply({content:'Only the person who opened these stats can use this button.',ephemeral:true});
   const member=await interaction.guild?.members.fetch(userId).catch(()=>null);
   if(!member) return interaction.reply({content:'Member is no longer in this server.',ephemeral:true});
-  const result=await db.query('SELECT * FROM nrr_punishments WHERE guild_id=$1 AND moderator_id=$2 AND occurred_at >= NOW()-INTERVAL \'14 days\' ORDER BY occurred_at DESC LIMIT 15',[guildId,userId]);
-  const embed=new EmbedBuilder().setColor(COLORS.staff).setTitle('Punishments issued • '+member.user.username).setThumbnail(member.user.displayAvatarURL({size:256}));
-  embed.setDescription(result.rows.length?result.rows.map((p,i)=>'**'+(i+1)+'. '+p.action.toUpperCase()+'** • <t:'+Math.floor(new Date(p.occurred_at).getTime()/1000)+':R>\n**Target:** <@'+p.target_id+'>\n**Reason:** '+(p.reason||'No reason recorded')).join('\n\n').slice(0,4000):'No issued punishments have been recorded in the last 14 days.');
-  return interaction.update({embeds:[embed],components:[]});
+  if(action==='punishments') {
+    const result=await db.query("SELECT * FROM nrr_punishments WHERE guild_id=$1 AND moderator_id=$2 AND occurred_at >= NOW()-INTERVAL '14 days' ORDER BY occurred_at DESC LIMIT 15",[guildId,userId]);
+    const embed=new EmbedBuilder().setColor(COLORS.staff).setTitle('Punishments Issued • '+member.user.username).setThumbnail(member.user.displayAvatarURL({size:256}));
+    embed.setDescription(result.rows.length?result.rows.map((p,i)=>'**'+(i+1)+'. '+p.action.toUpperCase()+'** • <t:'+Math.floor(new Date(p.occurred_at).getTime()/1000)+':R>\n**Target:** <@'+p.target_id+'>\n**Reason:** '+(p.reason||'No reason recorded')).join('\n\n').slice(0,4000):'No issued punishments have been recorded in the last 14 days.');
+    embed.setFooter({text:'NR:R • Staff Punishment Records'});
+    const row=new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('staffstats:activity:'+guildId+':'+userId+':'+ownerId).setLabel('Activity Stats').setStyle(ButtonStyle.Secondary));
+    return interaction.update({embeds:[embed],components:[row],allowedMentions:{parse:[]}});
+  }
+  const [windows,totalR,lastR,topR,daysR]=await Promise.all([Promise.all([1,3,7,14].map(days=>countMessages(guildId,userId,days))),db.query('SELECT COUNT(*)::int AS count FROM nrr_message_activity WHERE guild_id=$1 AND user_id=$2',[guildId,userId]),db.query('SELECT MAX(created_at) AS last_active FROM nrr_message_activity WHERE guild_id=$1 AND user_id=$2',[guildId,userId]),db.query('SELECT channel_id,COUNT(*)::int AS count FROM nrr_message_activity WHERE guild_id=$1 AND user_id=$2 GROUP BY channel_id ORDER BY count DESC LIMIT 3',[guildId,userId]),db.query("SELECT day::date AS day,COUNT(*)::int AS count FROM (SELECT date_trunc('day',created_at AT TIME ZONE 'UTC') AS day FROM nrr_message_activity WHERE guild_id=$1 AND user_id=$2 AND created_at >= NOW()-INTERVAL '90 days') x GROUP BY day ORDER BY day DESC",[guildId,userId])]);
+  let streak=0; const activeDays=new Map(daysR.rows.map(r=>[new Date(r.day).toISOString().slice(0,10),Number(r.count)])); const utcDay=d=>d.toISOString().slice(0,10);
+  const today=new Date(); today.setUTCHours(0,0,0,0); const yesterday=new Date(today); yesterday.setUTCDate(yesterday.getUTCDate()-1); let cursor=activeDays.has(utcDay(today))?today:yesterday;
+  while(activeDays.get(utcDay(cursor))>=15){streak++;cursor=new Date(cursor);cursor.setUTCDate(cursor.getUTCDate()-1);}
+  const lastActive=lastR.rows[0]?.last_active;
+  const fields=[{name:'┃ MESSAGE ACTIVITY',value:'━━━━━━━━━━━━━━━━',inline:false},{name:'Staff Member',value:member.roles.highest?.name&&member.roles.highest.name!=='@everyone'?member.roles.highest.name:'Staff Team',inline:false},{name:'Total Messages',value:'`'+Number(totalR.rows[0]?.count||0).toLocaleString()+'`',inline:true},{name:'Daily Streak',value:'`'+streak+' day'+(streak===1?'':'s')+'`\n15+ messages/day',inline:true},{name:'Last 24 Hours',value:'`'+windows[0].toLocaleString()+'`',inline:true},{name:'Last 3 Days',value:'`'+windows[1].toLocaleString()+'`',inline:true},{name:'Last 7 Days',value:'`'+windows[2].toLocaleString()+'`',inline:true},{name:'Last 14 Days',value:'`'+windows[3].toLocaleString()+'`',inline:true},{name:'┃ TOP CHANNELS',value:'━━━━━━━━━━━━━━━━\n'+(topR.rows.length?topR.rows.map((r,i)=>'`'+(i+1)+'` <#'+r.channel_id+'> ┃ `'+Number(r.count).toLocaleString()+'`').join('\n'):'No channel activity recorded yet'),inline:false}];
+  const [punishments,activityRank,punishmentRank]=await Promise.all([punishmentCount(guildId,userId,14),ranking(interaction.guild,'activity',userId),ranking(interaction.guild,'punishments',userId)]);
+  fields.push({name:'┃ STAFF RECORD',value:'━━━━━━━━━━━━━━━━',inline:false},{name:'Punishments Issued (14 Days)',value:'`'+punishments+'`',inline:true},{name:'┃ RANKINGS',value:'━━━━━━━━━━━━━━━━\n◆ Punishments: `'+(punishmentRank?ordinal(punishmentRank.rank)+' of '+punishmentRank.total:'Unranked')+'`\n◆ Activity: `'+(activityRank?ordinal(activityRank.rank)+' of '+activityRank.total:'Unranked')+'`',inline:false});
+  const embed=new EmbedBuilder().setColor(COLORS.staff).setTitle(member.user.username+' • Statistics').setThumbnail(member.user.displayAvatarURL({size:256})).setAuthor({name:'┃ STAFF STATISTICS',iconURL:'https://plain-eeur-prod-public.komododecks.com/202610/24/if8DMbiGuy0pn3tIQvrO/image.jpg'}).addFields(fields).setFooter({text:lastActive?'NR:R • Last active '+new Date(lastActive).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'UTC'})+' UTC':'NR:R • No activity recorded'});
+  const row=new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('staffstats:punishments:'+guildId+':'+userId+':'+ownerId).setLabel('Punishments').setStyle(ButtonStyle.Secondary));
+  return interaction.update({embeds:[embed],components:[row],allowedMentions:{parse:[]}});
 }
 async function recordAudit(guild, entry) {
   let action=null, targetId=entry.target?.id;
