@@ -57,7 +57,7 @@ const commands = [
     .addBooleanOption(o => o.setName('buttons').setDescription('Use four answer buttons instead of message answers.')),
   new SlashCommandBuilder().setName('stop_tlg').setDescription('Stop the Language Game in this channel.'),
   new SlashCommandBuilder().setName('start_academics').setDescription('Start the Academic Game.')
-    .addStringOption(o => o.setName('subject').setDescription('Choose a subject.').addChoices({name:'Math',value:'Math'},{name:'Science',value:'Science'},{name:'Physics',value:'Physics'},{name:'Chemistry',value:'Chemistry'})),
+    .addStringOption(o => o.setName('subject').setDescription('Choose a subject.').addChoices({name:'Math',value:'Math'},{name:'Science',value:'Science'},{name:'Physics',value:'Physics'},{name:'Chemistry',value:'Chemistry'},{name:'Biology',value:'Biology'})),
   new SlashCommandBuilder().setName('stop_academics').setDescription('Stop the Academic Game in this channel.'),
 
   new SlashCommandBuilder().setName('start_chess_puzzle').setDescription('Start the Chess Puzzle minigame in this channel.'),
