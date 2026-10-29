@@ -25,7 +25,6 @@ function mathBank(){
   add('Solve for x: 5x − 6 = '+(5*x-6),x,'Hard');
   add('Solve for x: 2(x + 3) = '+(2*(x+3)),x,'Hard');
   add('Solve for x: 4x ÷ 2 = '+(2*x),x,'Hard');
-  add('Solve for x: x/3 + 4 = '+(x/3+4),x,'Hard');
   add('Solve for x: x² = '+(x*x),x,'Hard');
   add('What is '+x+'² mod 5?',(x*x)%5,'Hard');
   add('What is the next multiple of 7 after '+(7*x-1)+'?',7*x,'Hard');
@@ -37,7 +36,7 @@ function mathBank(){
   add('Simplify the ratio '+(n*2)+':'+(n*3)+' (answer as a:b)', '2:3','Hard');
   add('What is the absolute value of '+(n-12)+'?',Math.abs(n-12),'Hard');
   add('Evaluate: 2³ × '+n+' − '+n,7*n,'Hard');
-  add('Evaluate: ('+n+' + 2)² − '+(n*n+4*n+4),0,'Hard');
+  add('Evaluate: ('+n+' + 2)² − '+n+'²',4*n+4,'Hard');
  }
  return [...new Map(out.map(x=>[x.q,x])).values()];
 }
