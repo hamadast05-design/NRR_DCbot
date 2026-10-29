@@ -11,6 +11,7 @@ const politicalTriviaSystem = require('./political-trivia');
 const guessPoliticianSystem = require('./guess-the-politician');
 const flagRushSystem = require('./flagrush');
 const chessPuzzleSystem = require('./chess-puzzle');
+const learningGames = require('./learning-games');
 const newsSystem = require('./news');
 const chatRevivalSystem = require('./chat-revival');
 const automationControl = require('./automation-control');
@@ -117,6 +118,7 @@ client.on(Events.MessageCreate, async message => {
   // Automation controls remain inactive while Chat Revival and game invitations are paused.
   // Chat Revival is intentionally disabled; no revival prompts should be sent.
   try { await staffAnalytics.onMessage(message); } catch (error) { console.error('Staff activity tracking failed:', error); }
+  try { await learningGames.onMessage(message); } catch (error) { console.error('Learning game message error:', error); }
   try { await wordkillSystem.onMessage(message); } catch (error) { console.error('WordKill message error:', error); }
   try { await politicalTriviaSystem.onMessage(message); } catch (error) { console.error('Political Trivia message error:', error); }
   try { await guessPoliticianSystem.onMessage(message); } catch (error) { console.error('Guess The Politician message error:', error); }
