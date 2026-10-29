@@ -1,5 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const games = new Map();
+const questionHistory = new Map();
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
 function distance(a,b){if(a.length>b.length)[a,b]=[b,a];let p=Array.from({length:a.length+1},(_,i)=>i);for(let i=1;i<=b.length;i++){const c=[i];for(let j=1;j<=a.length;j++)c[j]=Math.min(c[j-1]+1,p[j]+1,p[j-1]+(a[j-1]===b[i-1]?0:1));p=c;}return p[a.length];}
@@ -39,6 +40,7 @@ function embed(g){
  e.setThumbnail(thumbs[g.type]);return e;
 }
 function board(g){const rows=[...g.points.entries()].sort((a,b)=>b[1]-a[1]);return new EmbedBuilder().setColor(0x3c3c3d).setTitle(title(g)+' ┃ Leaderboard').setDescription(rows.length?rows.map((x,i)=>(i+1)+'. <@'+x[0]+'> — **'+x[1]+'**').join('\n'):'No points yet.').setFooter({text:'Round complete  ┃  '+g.correct+' correct answers'});}
+function historyFor(type,variant){const key=type+':'+variant;if(!questionHistory.has(key))questionHistory.set(key,new Set());return questionHistory.get(key);}
 function poolFor(g){if(g.type==='math')return g.theme==='Easy'?math.filter(x=>x.level==='Easy'):g.theme==='Medium'?math.filter(x=>x.level==='Medium'):g.theme==='Hard'?math.filter(x=>x.level==='Hard'):math.filter(x=>x.level!=='Hard');if(g.type==='language')return languages;return g.subject?academic[g.subject]:Object.values(academic).flat();}
 function nextQuestion(g){const pool=poolFor(g),fresh=pool.filter(x=>!g.seen.has(x.q));if(!fresh.length)g.seen.clear();const item=pick(fresh.length?fresh:pool);g.seen.add(item.q);return item;}
 function stopState(id){const g=games.get(id);if(!g)return false;g.active=false;if(g.timer)clearTimeout(g.timer);if(g.next)clearTimeout(g.next);games.delete(id);return true;}
@@ -56,7 +58,7 @@ async function post(channel,g){
 async function start(interaction,type,option){
  const ch=interaction.channel;if(!interaction.inGuild()||!ch?.isTextBased())return interaction.reply({content:'Use this game in a server text channel.',ephemeral:true});
  if(active(ch.id))return interaction.reply({content:'A learning game is already active in this channel.',ephemeral:true});
- const g={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),active:true,type,theme:type==='math'?(option||'Mixed'):null,subject:type==='academics'?(option||null):null,buttons:type==='language'?Boolean(option):false,number:0,correct:0,points:new Map(),answered:false,current:null,options:[],timer:null,next:null,seen:new Set()};
+ const g={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),active:true,type,theme:type==='math'?(option||'Mixed'):null,subject:type==='academics'?(option||null):null,buttons:type==='language'?Boolean(option):false,number:0,correct:0,points:new Map(),answered:false,current:null,options:[],timer:null,next:null,seen:historyFor(type,type==='math'?(option||'Mixed'):type==='academics'?(option||'Mixed'):'all-languages')};
  games.set(ch.id,g);await interaction.reply({content:title(g)+' started — 10 questions, 40 seconds per question.',ephemeral:true});await post(ch,g);
 }
 async function stop(interaction,type){const g=active(interaction.channelId);if(!g||g.type!==type)return interaction.reply({content:'No active '+title({type})+' in this channel.',ephemeral:true});stopState(interaction.channelId);return interaction.reply({content:title(g)+' stopped.',ephemeral:true});}
