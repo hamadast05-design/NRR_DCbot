@@ -14,6 +14,7 @@ const politicalTriviaSystem = require('./political-trivia');
 const guessPoliticianSystem = require('./guess-the-politician');
 const flagRushSystem = require('./flagrush');
 const chessPuzzleSystem = require('./chess-puzzle');
+const learningGames = require('./learning-games');
 const { isSuperuser, hasPermission } = require('./access');
 
 const COLORS = {
@@ -49,6 +50,16 @@ const commands = [
     .addBooleanOption(o=>o.setName('timeouts').setDescription('Include timeouts (default: yes).'))
     .addStringOption(o=>o.setName('start_date').setDescription('Start date, YYYY-MM-DD.'))
     .addStringOption(o=>o.setName('end_date').setDescription('End date, YYYY-MM-DD.')),
+  new SlashCommandBuilder().setName('start_math').setDescription('Start the Math Game.')
+    .addStringOption(o => o.setName('theme').setDescription('Question difficulty.').addChoices({name:'Easy',value:'Easy'},{name:'Medium',value:'Medium'},{name:'Hard',value:'Hard'})),
+  new SlashCommandBuilder().setName('stop_math').setDescription('Stop the Math Game in this channel.'),
+  new SlashCommandBuilder().setName('start_language_game').setDescription('Start the Language Game.')
+    .addBooleanOption(o => o.setName('buttons').setDescription('Use four answer buttons instead of message answers.')),
+  new SlashCommandBuilder().setName('stop_tlg').setDescription('Stop the Language Game in this channel.'),
+  new SlashCommandBuilder().setName('start_academics').setDescription('Start the Academic Game.')
+    .addStringOption(o => o.setName('subject').setDescription('Choose a subject.').addChoices({name:'Math',value:'Math'},{name:'Science',value:'Science'},{name:'Physics',value:'Physics'},{name:'Chemistry',value:'Chemistry'})),
+  new SlashCommandBuilder().setName('stop_academics').setDescription('Stop the Academic Game in this channel.'),
+
   new SlashCommandBuilder().setName('start_chess_puzzle').setDescription('Start the Chess Puzzle minigame in this channel.'),
   new SlashCommandBuilder().setName('end_chess_puzzle').setDescription('End the active Chess Puzzle minigame in this channel.'),
 
@@ -454,6 +465,7 @@ async function handleRoleGiverButton(interaction) {
 }
 
 async function handleInteraction(interaction) {
+  if (interaction.isButton() && interaction.customId.startsWith('learn:')) return learningGames.onButton(interaction);
   if (interaction.isButton() && interaction.customId.startsWith('staffstats:punishments:')) return staffAnalytics.handleButton(interaction);
   if (interaction.isButton() && interaction.customId.startsWith('rolegiver:get:')) return handleRoleGiverButton(interaction);
   if (interaction.isModalSubmit() && interaction.customId.startsWith('event_submit:modal:')) return eventSystem.submit(interaction, interaction.customId.slice('event_submit:modal:'.length));
@@ -475,6 +487,12 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'end_guess_politician') return guessPoliticianSystem.endCommand(interaction);
     if (interaction.commandName === 'start_flagrush') return flagRushSystem.startCommand(interaction);
     if (interaction.commandName === 'end_flagrush') return flagRushSystem.endCommand(interaction);
+    if (interaction.commandName === 'start_math') return learningGames.startMath(interaction);
+    if (interaction.commandName === 'stop_math') return learningGames.stopMath(interaction);
+    if (interaction.commandName === 'start_language_game') return learningGames.startLanguage(interaction);
+    if (interaction.commandName === 'stop_tlg') return learningGames.stopLanguage(interaction);
+    if (interaction.commandName === 'start_academics') return learningGames.startAcademics(interaction);
+    if (interaction.commandName === 'stop_academics') return learningGames.stopAcademics(interaction);
     if (interaction.commandName === 'start_chess_puzzle') return chessPuzzleSystem.startCommand(interaction);
     if (interaction.commandName === 'end_chess_puzzle') return chessPuzzleSystem.endCommand(interaction);
     if (interaction.commandName === 'mute') return handleMute(interaction);
