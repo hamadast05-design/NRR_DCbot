@@ -7,10 +7,37 @@ function distance(a,b){if(a.length>b.length)[a,b]=[b,a];let p=Array.from({length
 function matches(input, answers){const g=norm(input);return answers.some(v=>{const a=norm(v);return g===a||(a.length>=5&&g.length>=4&&Math.abs(g.length-a.length)<=2&&distance(g,a)<=1);});}
 function mathBank(){
  const out=[],add=(q,a,level)=>out.push({q,a:[String(a)],level});
- for(let a=2;a<=30;a++)for(let b=2;b<=20;b++){add(a+' + '+b+' = ?',a+b,'Easy');add((a+b)+' − '+a+' = ?',b,'Easy');add(a+' × '+b+' = ?',a*b,a<=12&&b<=12?'Easy':'Medium');if(a>b&&a*b<=600)add((a*b)+' ÷ '+b+' = ?',a,'Medium');if(a<=15)add(a+'² = ?',a*a,a<=10?'Medium':'Hard');if(a+b<=24)add('('+a+' + '+b+')² = ?', (a+b)**2,'Hard');if(a*b<300)add(a+' × '+b+' + '+a+' = ?',a*b+a,'Medium');if(a>b)add(a+'² − '+b+'² = ?',a*a-b*b,'Hard');}
- for(let n=2;n<=30;n++){add('√'+(n*n)+' = ?',n,'Medium');if(n<=10)add(n+'³ = ?',n**3,'Hard');add('10% of '+(n*10)+' = ?',n,'Easy');add('25% of '+(n*4)+' = ?',n,'Medium');add('15% of '+(n*20)+' = ?',n*3,'Hard');add('('+n+' × 3) − '+n+' = ?',n*2,'Medium');add(n+' × '+n+' − '+(n-1)+' × '+(n-1)+' = ?',2*n-1,'Hard');}
- for(let a=3;a<=18;a++)for(let b=2;b<=9;b++){add('('+a+' + '+b+') × 2 = ?', (a+b)*2,'Medium');add(a+' × '+b+' − '+a+' = ?',a*b-a,'Medium');add(a+' × '+b+' + '+b+' = ?',a*b+b,'Hard');if(a%b===0)add(a+' ÷ '+b+' + '+b+' = ?',a/b+b,'Medium');}
- for(let n=2;n<=12;n++){add('Solve mentally: 3x = '+(3*n),n,'Medium');add('Solve mentally: 2x + 5 = '+(2*n+5),n,'Hard');add('Solve mentally: 5x − 7 = '+(5*n-7),n,'Hard');}
+ for(let a=2;a<=30;a++)for(let b=2;b<=20;b++){
+  add(a+' + '+b+' = ?',a+b,'Easy');add((a+b)+' − '+a+' = ?',b,'Easy');add(a+' × '+b+' = ?',a*b,a<=12&&b<=12?'Easy':'Medium');
+  if(a>b&&a*b<=600)add((a*b)+' ÷ '+b+' = ?',a,'Medium');if(a<=15)add(a+'² = ?',a*a,a<=10?'Medium':'Hard');
+  if(a+b<=24)add('('+a+' + '+b+')² = ?',(a+b)**2,'Hard');if(a*b<300)add(a+' × '+b+' + '+a+' = ?',a*b+a,'Medium');if(a>b)add(a+'² − '+b+'² = ?',a*a-b*b,'Hard');
+ }
+ for(let n=2;n<=30;n++){
+  add('√'+(n*n)+' = ?',n,'Medium');if(n<=10)add(n+'³ = ?',n**3,'Hard');add('10% of '+(n*10)+' = ?',n,'Easy');add('25% of '+(n*4)+' = ?',n,'Medium');add('15% of '+(n*20)+' = ?',n*3,'Hard');
+  add('('+n+' × 3) − '+n+' = ?',n*2,'Medium');add(n+' × '+n+' − '+(n-1)+' × '+(n-1)+' = ?',2*n-1,'Hard');
+ }
+ for(let a=3;a<=18;a++)for(let b=2;b<=9;b++){
+  add('('+a+' + '+b+') × 2 = ?',(a+b)*2,'Medium');add(a+' × '+b+' − '+a+' = ?',a*b-a,'Medium');add(a+' × '+b+' + '+b+' = ?',a*b+b,'Hard');if(a%b===0)add(a+' ÷ '+b+' + '+b+' = ?',a/b+b,'Medium');
+ }
+ // Hard mode: varied, short mental algebra and number properties.
+ for(let x=2;x<=25;x++){
+  add('Solve for x: 3x + 4 = '+(3*x+4),x,'Hard');
+  add('Solve for x: 5x − 6 = '+(5*x-6),x,'Hard');
+  add('Solve for x: 2(x + 3) = '+(2*(x+3)),x,'Hard');
+  add('Solve for x: 4x ÷ 2 = '+(2*x),x,'Hard');
+  add('Solve for x: x² = '+(x*x),x,'Hard');
+  add('What is '+x+'² mod 5?',(x*x)%5,'Hard');
+  add('What is the next multiple of 7 after '+(7*x-1)+'?',7*x,'Hard');
+  add('If a = '+x+', what is 2a² − a?',2*x*x-x,'Hard');
+ }
+ for(let n=2;n<=20;n++){
+  add('What is 12.5% of '+(n*8),n,'Hard');
+  add('What is 3/4 of '+(n*4),n*3,'Hard');
+  add('Simplify the ratio '+(n*2)+':'+(n*3)+' (answer as a:b)', '2:3','Hard');
+  add('What is the absolute value of '+(n-12)+'?',Math.abs(n-12),'Hard');
+  add('Evaluate: 2³ × '+n+' − '+n,7*n,'Hard');
+  add('Evaluate: ('+n+' + 2)² − '+n+'²',4*n+4,'Hard');
+ }
  return [...new Map(out.map(x=>[x.q,x])).values()];
 }
 const math=mathBank();
@@ -32,10 +59,11 @@ function title(g){return g.type==='math'?'◆ Math Game':g.type==='language'?'�
 function active(id){const g=games.get(id);return g&&g.active?g:null;}
 function progress(g){const n=Math.min(g.number,10);return '▰'.repeat(n)+'▱'.repeat(10-n);}
 function embed(g){
+ const step=((g.number-1)%10)+1,bar='▰'.repeat(step)+'▱'.repeat(10-step);
+ const seconds=g.type==='math'?40:20;
  const e=new EmbedBuilder().setColor(0x3c3c3d).setTitle(title(g))
- .setDescription('**━━━━━━━━━━━━━━━━━━**\n\n## '+g.current.q+'\n\n**━━━━━━━━━━━━━━━━━━**')
- .addFields({name:'◆ ROUND',value:'Question **'+g.number+'/10**',inline:true},{name:'◇ RESPONSE TIME',value:'**40 seconds**',inline:true},{name:'📊 PROGRESS',value:progress(g)+'  '+(Math.min(g.number,10)*10)+'%',inline:false})
- .setFooter({text:'NRR Game Centre  ┃  First correct answer wins'});
+  .setDescription('**━━━━━━━━━━━━━━━━━━**\n\n## '+g.current.q+'\n\n**━━━━━━━━━━━━━━━━━━**\n\n⏱ **'+seconds+' seconds**\n\n'+bar+'  '+(step*10)+'%')
+  .setFooter({text:'First correct answer wins  ┃  NRR'});
  const thumbs={math:'https://cdn-icons-png.flaticon.com/512/2103/2103633.png',language:'https://cdn-icons-png.flaticon.com/512/3898/3898082.png',academics:'https://cdn-icons-png.flaticon.com/512/2436/2436636.png'};
  e.setThumbnail(thumbs[g.type]);return e;
 }
@@ -46,22 +74,31 @@ function nextQuestion(g){const pool=poolFor(g),fresh=pool.filter(x=>!g.seen.has(
 function stopState(id){const g=games.get(id);if(!g)return false;g.active=false;if(g.timer)clearTimeout(g.timer);if(g.next)clearTimeout(g.next);games.delete(id);return true;}
 function schedule(channel,g,ms=6000){if(g.next)clearTimeout(g.next);g.next=setTimeout(()=>{g.next=null;post(channel,g).catch(e=>console.error('Learning game next question failed:',e));},ms);}
 function buttonRow(g){return new ActionRowBuilder().addComponents(g.options.map((o,i)=>new ButtonBuilder().setCustomId('learn:'+g.id+':'+i).setLabel(o.slice(0,80)).setStyle(ButtonStyle.Secondary)));}
+async function finish(channel,g,reason){
+ if(!g.active||games.get(channel.id)!==g)return;
+ stopState(channel.id);
+ await channel.send({embeds:[new EmbedBuilder().setColor(0x3c3c3d).setTitle('◆ '+title(g).replace('◆ ','')+' Ended').setDescription('━━━━━━━━━━━━━━━━━━\n'+reason+'\n\n'+progress(g)+'  '+(g.number%10===0?100:(g.number%10)*10)+'%').addFields({name:'Correct Answers',value:String(g.correct),inline:true},{name:'Questions Failed',value:String(g.failures||0),inline:true},{name:'Players Scored',value:String(g.points.size),inline:true}).setFooter({text:'Game session ended'})]}).catch(()=>{});
+ if(g.points.size)await channel.send({embeds:[board(g)]}).catch(()=>{});
+}
 async function post(channel,g){
  if(!g.active||games.get(channel.id)!==g)return;
- if(g.number>=10){await channel.send({embeds:[new EmbedBuilder().setColor(0x3c3c3d).setTitle('◆ Round Complete').setDescription('━━━━━━━━━━━━━━━━━━\n**10 / 10 questions completed**\n'+progress(g)+'\n\nStart the game again for a fresh round.').addFields({name:'◇ Correct Answers',value:String(g.correct),inline:true},{name:'◇ Players Scored',value:String(g.points.size),inline:true})]}).catch(()=>{});if(g.points.size)await channel.send({embeds:[board(g)]}).catch(()=>{});stopState(channel.id);return;}
  g.current=nextQuestion(g);g.number++;g.answered=false;
  const payload={embeds:[embed(g)]};
- if(g.type==='language'&&g.buttons){const correct=pick(g.current.a);const wrong=[...new Set(languages.filter(x=>x.lang===g.current.lang).map(x=>x.a[0]).filter(x=>norm(x)!==norm(correct)))];const opts=[correct];while(opts.length<4&&wrong.length)opts.push(wrong.splice(Math.floor(Math.random()*wrong.length),1)[0]);g.options=opts.sort(()=>Math.random()-.5);payload.components=[buttonRow(g)];}
+ if(g.type==='language'&&g.buttons){
+  const correct=pick(g.current.a),wrong=[...new Set(languages.filter(x=>x.lang===g.current.lang).map(x=>x.a[0]).filter(x=>norm(x)!==norm(correct)))];
+  const opts=[correct];while(opts.length<4&&wrong.length)opts.push(wrong.splice(Math.floor(Math.random()*wrong.length),1)[0]);
+  g.options=opts.sort(()=>Math.random()-.5);payload.components=[buttonRow(g)];
+ }
  await channel.send(payload);
- g.timer=setTimeout(async()=>{if(!g.active||g.answered)return;g.answered=true;await channel.send('⌛ Time is up. Correct answer: **'+g.current.a[0]+'**').catch(()=>{});schedule(channel,g,6000);},40000);
+ g.timer=setTimeout(async()=>{if(!g.active||g.answered)return;g.answered=true;g.failures++;await channel.send('⌛ Time is up. Correct answer: **'+g.current.a[0]+'**').catch(()=>{});if(g.failures>=3)return finish(channel,g,'The game ended automatically after **3 unanswered questions**.');schedule(channel,g,6000);},g.type==='math'?40000:20000);
 }
 async function start(interaction,type,option){
  const ch=interaction.channel;if(!interaction.inGuild()||!ch?.isTextBased())return interaction.reply({content:'Use this game in a server text channel.',ephemeral:true});
  if(active(ch.id))return interaction.reply({content:'A learning game is already active in this channel.',ephemeral:true});
- const g={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),active:true,type,theme:type==='math'?(option||'Mixed'):null,subject:type==='academics'?(option||null):null,buttons:type==='language'?Boolean(option):false,number:0,correct:0,points:new Map(),answered:false,current:null,options:[],timer:null,next:null,seen:historyFor(type,type==='math'?(option||'Mixed'):type==='academics'?(option||'Mixed'):'all-languages')};
- games.set(ch.id,g);await interaction.reply({content:title(g)+' started — 10 questions, 40 seconds per question.',ephemeral:true});await post(ch,g);
+ const g={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),active:true,type,theme:type==='math'?(option||'Mixed'):null,subject:type==='academics'?(option||null):null,buttons:type==='language'?Boolean(option):false,hostId:interaction.user.id,number:0,correct:0,failures:0,points:new Map(),answered:false,current:null,options:[],timer:null,next:null,seen:historyFor(type,type==='math'?(option||'Mixed'):type==='academics'?(option||'Mixed'):'all-languages')};
+ games.set(ch.id,g);await interaction.reply({content:title(g)+' started — '+(type==='math'?'40':'20')+' seconds per question. First to answer correctly wins each question.'});await post(ch,g);
 }
-async function stop(interaction,type){const g=active(interaction.channelId);if(!g||g.type!==type)return interaction.reply({content:'No active '+title({type})+' in this channel.',ephemeral:true});stopState(interaction.channelId);return interaction.reply({content:title(g)+' stopped.',ephemeral:true});}
+async function stop(interaction,type){const g=active(interaction.channelId);if(!g||g.type!==type)return interaction.reply({content:'No active '+title({type})+' in this channel.',ephemeral:true});if(g.hostId!==interaction.user.id&&!interaction.memberPermissions?.has('ManageGuild'))return interaction.reply({content:'Only the game host or a server manager can end this game.',ephemeral:true});stopState(interaction.channelId);await interaction.reply({content:title(g)+' has been ended by <@'+interaction.user.id+'>.',allowedMentions:{parse:[]}});await interaction.channel.send({embeds:[new EmbedBuilder().setColor(0x3c3c3d).setTitle('◆ '+title(g).replace('◆ ','')+' Ended').setDescription('━━━━━━━━━━━━━━━━━━\nThe host has ended the game.\n\n'+progress(g)+'  '+(((g.number-1)%10+1)*10)+'%').addFields({name:'Correct Answers',value:String(g.correct),inline:true},{name:'Questions Failed',value:String(g.failures||0),inline:true},{name:'Players Scored',value:String(g.points.size),inline:true}).setFooter({text:'Game session ended'})]}).catch(()=>{});if(g.points.size)await interaction.channel.send({embeds:[board(g)]}).catch(()=>{});}
 async function skip(message,type){const g=active(message.channel.id);if(!g||g.type!==type)return;if(g.timer)clearTimeout(g.timer);g.timer=null;g.answered=true;await message.channel.send('⏭ Skipped. Correct answer: **'+(g.current?.a?.[0]||'—')+'**').catch(()=>{});schedule(message.channel,g,6000);}
 async function onMessage(message){
  if(!message.guild||message.author.bot||message.webhookId)return;
