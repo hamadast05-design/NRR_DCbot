@@ -46,22 +46,27 @@ function nextQuestion(g){const pool=poolFor(g),fresh=pool.filter(x=>!g.seen.has(
 function stopState(id){const g=games.get(id);if(!g)return false;g.active=false;if(g.timer)clearTimeout(g.timer);if(g.next)clearTimeout(g.next);games.delete(id);return true;}
 function schedule(channel,g,ms=6000){if(g.next)clearTimeout(g.next);g.next=setTimeout(()=>{g.next=null;post(channel,g).catch(e=>console.error('Learning game next question failed:',e));},ms);}
 function buttonRow(g){return new ActionRowBuilder().addComponents(g.options.map((o,i)=>new ButtonBuilder().setCustomId('learn:'+g.id+':'+i).setLabel(o.slice(0,80)).setStyle(ButtonStyle.Secondary)));}
+async function finish(channel,g,reason){
+ if(!g.active||games.get(channel.id)!==g)return;
+ stopState(channel.id);
+ await channel.send({embeds:[new EmbedBuilder().setColor(0x3c3c3d).setTitle('◆ '+title(g).replace('◆ ','')+' Ended').setDescription('━━━━━━━━━━━━━━━━━━\n'+reason+'\n\n'+progress(g)).addFields({name:'Correct Answers',value:String(g.correct),inline:true},{name:'Failed Questions',value:String(g.failures||0),inline:true},{name:'Players Scored',value:String(g.points.size),inline:true}).setFooter({text:'Game session ended'})]}).catch(()=>{});
+ if(g.points.size)await channel.send({embeds:[board(g)]}).catch(()=>{});
+}
 async function post(channel,g){
  if(!g.active||games.get(channel.id)!==g)return;
- if(g.number>=10){await channel.send({embeds:[new EmbedBuilder().setColor(0x3c3c3d).setTitle('◆ Round Complete').setDescription('━━━━━━━━━━━━━━━━━━\n**10 / 10 questions completed**\n'+progress(g)+'\n\nStart the game again for a fresh round.').addFields({name:'◇ Correct Answers',value:String(g.correct),inline:true},{name:'◇ Players Scored',value:String(g.points.size),inline:true})]}).catch(()=>{});if(g.points.size)await channel.send({embeds:[board(g)]}).catch(()=>{});stopState(channel.id);return;}
  g.current=nextQuestion(g);g.number++;g.answered=false;
  const payload={embeds:[embed(g)]};
  if(g.type==='language'&&g.buttons){const correct=pick(g.current.a);const wrong=[...new Set(languages.filter(x=>x.lang===g.current.lang).map(x=>x.a[0]).filter(x=>norm(x)!==norm(correct)))];const opts=[correct];while(opts.length<4&&wrong.length)opts.push(wrong.splice(Math.floor(Math.random()*wrong.length),1)[0]);g.options=opts.sort(()=>Math.random()-.5);payload.components=[buttonRow(g)];}
  await channel.send(payload);
- g.timer=setTimeout(async()=>{if(!g.active||g.answered)return;g.answered=true;await channel.send('⌛ Time is up. Correct answer: **'+g.current.a[0]+'**').catch(()=>{});schedule(channel,g,6000);},40000);
+ g.timer=setTimeout(async()=>{if(!g.active||g.answered)return;g.answered=true;g.failures=(g.failures||0)+1;await channel.send('⌛ Time is up. Correct answer: **'+g.current.a[0]+'**').catch(()=>{});if(g.failures>=3)return finish(channel,g,'The game ended automatically after **3 failed questions**.');schedule(channel,g,6000);},g.type==='math'?40000:20000);
 }
 async function start(interaction,type,option){
  const ch=interaction.channel;if(!interaction.inGuild()||!ch?.isTextBased())return interaction.reply({content:'Use this game in a server text channel.',ephemeral:true});
  if(active(ch.id))return interaction.reply({content:'A learning game is already active in this channel.',ephemeral:true});
- const g={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),active:true,type,theme:type==='math'?(option||'Mixed'):null,subject:type==='academics'?(option||null):null,buttons:type==='language'?Boolean(option):false,number:0,correct:0,points:new Map(),answered:false,current:null,options:[],timer:null,next:null,seen:historyFor(type,type==='math'?(option||'Mixed'):type==='academics'?(option||'Mixed'):'all-languages')};
- games.set(ch.id,g);await interaction.reply({content:title(g)+' started — 10 questions, 40 seconds per question.',ephemeral:true});await post(ch,g);
+ const g={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),active:true,type,theme:type==='math'?(option||'Mixed'):null,subject:type==='academics'?(option||null):null,buttons:type==='language'?Boolean(option):false,number:0,correct:0,failures:0,points:new Map(),answered:false,current:null,options:[],timer:null,next:null,seen:historyFor(type,type==='math'?(option||'Mixed'):type==='academics'?(option||'Mixed'):'all-languages')};
+ games.set(ch.id,g);await interaction.reply({content:title(g)+' has started! '+(type==='math'?'40':'20')+' seconds per question. Let the game begin!'});await post(ch,g);
 }
-async function stop(interaction,type){const g=active(interaction.channelId);if(!g||g.type!==type)return interaction.reply({content:'No active '+title({type})+' in this channel.',ephemeral:true});stopState(interaction.channelId);return interaction.reply({content:title(g)+' stopped.',ephemeral:true});}
+async function stop(interaction,type){const g=active(interaction.channelId);if(!g||g.type!==type)return interaction.reply({content:'No active '+title({type})+' in this channel.',ephemeral:true});await interaction.reply({content:'◆ '+title(g).replace('◆ ','')+' has been ended by the host.'});return finish(interaction.channel,g,'The host ended this game.');}
 async function skip(message,type){const g=active(message.channel.id);if(!g||g.type!==type)return;if(g.timer)clearTimeout(g.timer);g.timer=null;g.answered=true;await message.channel.send('⏭ Skipped. Correct answer: **'+(g.current?.a?.[0]||'—')+'**').catch(()=>{});schedule(message.channel,g,6000);}
 async function onMessage(message){
  if(!message.guild||message.author.bot||message.webhookId)return;
