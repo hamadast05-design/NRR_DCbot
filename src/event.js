@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, LabelBuilder, FileUploadBuilder, PermissionFlagsBits } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, LabelBuilder, FileUploadBuilder, PermissionFlagsBits, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize, MessageFlags } = require('discord.js');
 const db = require('./db');
 const { config } = require('./config');
 const { isSuperuser } = require('./access');
@@ -34,9 +34,39 @@ async function requireManager(i) {
 }
 
 function interfacePayload(eventId) {
+  const panel = new ContainerBuilder()
+    .setAccentColor(0x5865f2)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent('## 📤 Event Submissions')
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setDivider(true)
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        'Click the button below to submit your entry for the ongoing contest.\n\nYour image will be sent to the event managers for review before publication.'
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setDivider(true)
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(SUBMIT + eventId)
+          .setLabel('Submit Entry')
+          .setEmoji('📤')
+          .setStyle(ButtonStyle.Primary)
+      )
+    );
+
   return {
-    embeds: [new EmbedBuilder().setTitle('📤 Event Submissions').setDescription('Click the button below to submit your entry for the ongoing contest.').setColor(0x5865f2).setFooter({ text: 'Entries are reviewed before publication.' })],
-    components: [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(SUBMIT + eventId).setLabel('Submit Entry').setEmoji('📤').setStyle(ButtonStyle.Primary))],
+    components: [panel],
+    flags: MessageFlags.IsComponentsV2,
   };
 }
 
