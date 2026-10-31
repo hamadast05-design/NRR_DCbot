@@ -104,17 +104,30 @@ async function sendCustom(interaction) {
  const { config } = require('./config');
  const roleAllowed = config.eventManagerRoleIds?.some(id => interaction.member?.roles?.cache?.has(id));
  const allowed = isSuperuser(interaction.user?.id) || roleAllowed || interaction.memberPermissions?.has(require('discord.js').PermissionFlagsBits.ManageGuild);
- if (!allowed) return interaction.reply({content:'❌ You do not have permission to publish news posts.',ephemeral:true});
+ if (!allowed) return interaction.reply({content:'❌ You do not have permission to publish staff-made news posts.',ephemeral:true});
+
  const title=interaction.options.getString('topic',true).trim();
  const body=interaction.options.getString('message',true).trim();
  const image=interaction.options.getAttachment('image');
- if (image && !image.contentType?.startsWith('image/')) return interaction.reply({content:'❌ Please upload a valid image file.',ephemeral:true});
+ if (image && !image.contentType?.startsWith('image/')) {
+  return interaction.reply({content:'❌ Please upload a valid image file.',ephemeral:true});
+ }
+
  const ch=await interaction.client.channels.fetch(NEWS_CHANNEL_ID).catch(()=>null);
  if(!ch?.isTextBased()) return interaction.reply({content:'❌ The World News channel is unavailable.',ephemeral:true});
+
  const e=new EmbedBuilder()
   .setColor(0x3c3c3d)
-  .setFooter({text:'NRR • World News Coverage •'})
+  .setTitle('📰 [PARODY] '+clean(title,220))
+  .setDescription('**STAFF-MADE PARODY — NOT REAL NEWS**\\n\\n'+clean(body,3500))
+  .addFields({
+   name:'NOTICE',
+   value:'This is a fictional / edited post created for entertainment. It is not verified reporting.',
+   inline:false
+  })
+  .setFooter({text:'NRR • Staff-made parody • Not real news'})
   .setTimestamp();
+
  if(image) e.setImage(image.url);
  await ch.send({embeds:[e],allowedMentions:{parse:[]}});
  return interaction.reply({content:'✅ Your clearly labelled parody post has been published in <#'+NEWS_CHANNEL_ID+'>.',ephemeral:true});
