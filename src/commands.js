@@ -473,6 +473,7 @@ async function handleInteraction(interaction) {
 
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === 'setup_rolegiver') return setupRoleGiver(interaction);
+    if (interaction.commandName === 'send_qotd') return qotdSystem.sendPanel({guild:interaction.guild,member:interaction.member,channel:interaction.channel,reply:(content)=>interaction.reply({content,ephemeral:true}),});
     if (interaction.commandName === 'createevent') return eventSystem.createEvent(interaction);
     if (interaction.commandName === 'send') return eventSystem.send(interaction);
     if (interaction.commandName === 'stick') return eventSystem.stick(interaction);
