@@ -48,19 +48,33 @@ function reviewButtons(id, disabled = false) {
 }
 function submissionModal(id = 'new', row = null) {
   const modal = new ModalBuilder().setCustomId(PREFIX + 'submit:' + id).setTitle(row ? 'Edit QOTD Submission' : 'Submit a QOTD');
+  const answers = (row?.answers || []).join('\n');
   const fields = [
     ['question', 'Question', TextInputStyle.Paragraph, true, 300, row?.question || ''],
-    ['answer1', 'Answer option 1', TextInputStyle.Short, true, 100, row?.answers?.[0] || ''],
-    ['answer2', 'Answer option 2', TextInputStyle.Short, true, 100, row?.answers?.[1] || ''],
-    ['answer3', 'Answer option 3 (optional)', TextInputStyle.Short, false, 100, row?.answers?.[2] || ''],
-    ['emojis', 'Emojis for options 1–3 (optional)', TextInputStyle.Short, false, 100, (row?.emojis || []).join(' | ')]
+    ['answers', 'Answer options (one per line, 2–3)', TextInputStyle.Paragraph, true, 350, answers],
+    ['emoji1', 'Emoji for answer 1', TextInputStyle.Short, true, 32, row?.emojis?.[0] || ''],
+    ['emoji2', 'Emoji for answer 2', TextInputStyle.Short, true, 32, row?.emojis?.[1] || ''],
+    ['emoji3', 'Emoji for answer 3 (required if answer 3 is used)', TextInputStyle.Short, false, 32, row?.emojis?.[2] || '']
   ];
-  for (const [id, label, style, required, max, value] of fields) {
-    const input = new TextInputBuilder().setCustomId(id).setLabel(label).setStyle(style).setRequired(required).setMaxLength(max);
+  for (const [fieldId, label, style, required, max, value] of fields) {
+    const input = new TextInputBuilder().setCustomId(fieldId).setLabel(label).setStyle(style).setRequired(required).setMaxLength(max);
     if (value) input.setValue(String(value).slice(0,max));
     modal.addComponents({ type: 1, components: [input] });
   }
   return modal;
+}
+function oneEmoji(value) {
+  const v = String(value || '').trim();
+  if (!v) return false;
+  if (/^<a?:[A-Za-z0-9_]{2,32}:\d{17,22}>$/.test(v)) return true;
+  if (typeof Intl.Segmenter === 'function') {
+    return [...new Intl.Segmenter(undefined, {granularity:'grapheme'}).segment(v)].length === 1;
+  }
+  return [...v].length <= 4;
+}
+function reactionValue(value) {
+  const custom = String(value || '').trim().match(/^<a?:[A-Za-z0-9_]{2,32}:(\d{17,22})>$/);
+  return custom ? custom[1] : value;
 }
 function finalModal(row) {
   const modal = new ModalBuilder().setCustomId(PREFIX + 'finalsubmit:' + row.id).setTitle('Edit Final QOTD Message');
@@ -127,7 +141,7 @@ async function onButton(i) {
     const sent = await channel.send({content:'# ' + row.question + '\n<@&' + QOTD_ROLE_ID + '>\n\n' + lines,allowedMentions:{roles:[QOTD_ROLE_ID]}});
     for (let n=0;n<row.answers.length;n++) {
       const emoji = row.emojis?.[n] || ['1️⃣','2️⃣','3️⃣'][n];
-      await sent.react(emoji).catch(error=>console.error('QOTD reaction failed:',emoji,error.message));
+      await sent.react(reactionValue(emoji)).catch(error=>console.error('QOTD reaction failed:',emoji,error.message));
     }
     await db.query('UPDATE nrr_qotd_submissions SET published_channel_id=$2,published_message_id=$3 WHERE id=$1',[id,channel.id,sent.id]);
     await i.update({embeds:[reviewEmbed(row,'approved')],components:reviewButtons(id,true)});
@@ -152,11 +166,12 @@ async function onModal(i) {
   const isEdit = id !== 'new';
   if (isEdit && !isManager(i)) return i.reply({content:'❌ You do not have permission to edit this submission.',ephemeral:true});
   const question=i.fields.getTextInputValue('question').trim();
-  const answers=[1,2,3].map(n=>i.fields.getTextInputValue('answer'+n).trim()).filter(Boolean);
-  const emojiText=i.fields.getTextInputValue('emojis').trim();
-  if(!question || answers.length<2) return i.reply({content:'Please provide a question and at least two answer options.',ephemeral:true});
-  const emojis=emojiText ? emojiText.split('|').map(x=>x.trim()).slice(0,3) : [];
-  while(emojis.length<answers.length) emojis.push('');
+  const answers=i.fields.getTextInputValue('answers').split('\n').map(x=>x.trim()).filter(Boolean);
+  const emojis=[1,2,3].map(n=>i.fields.getTextInputValue('emoji'+n).trim());
+  if(!question || answers.length<2 || answers.length>3) return i.reply({content:'Please provide a question and 2–3 answer options, each on its own line.',ephemeral:true});
+  if(!oneEmoji(emojis[0]) || !oneEmoji(emojis[1])) return i.reply({content:'Please provide one valid emoji for each of the first two answers.',ephemeral:true});
+  if(answers.length===3 && !oneEmoji(emojis[2])) return i.reply({content:'Because you provided a third answer, you must also provide its emoji.',ephemeral:true});
+  while(emojis.length>answers.length) emojis.pop();
   if(isEdit) {
     await db.query(`UPDATE nrr_qotd_submissions SET question=$2,answers=$3::jsonb,emojis=$4::jsonb
       WHERE id=$1 AND status='pending'`,[id,question,JSON.stringify(answers),JSON.stringify(emojis)]);
