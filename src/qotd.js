@@ -190,7 +190,14 @@ async function onModalUnsafe(i) {
     await db.query("UPDATE nrr_qotd_submissions SET status='failed' WHERE id=$1",[row.id]);
     return i.reply({content:'❌ The QOTD review channel is unavailable. Please contact an administrator.',ephemeral:true});
   }
-  const msg=await review.send({embeds:[reviewEmbed(row)],components:reviewButtons(row.id)});
+  let msg;
+  try {
+    msg=await review.send({embeds:[reviewEmbed(row)],components:reviewButtons(row.id)});
+  } catch (error) {
+    console.error('QOTD review channel delivery failed:', {channelId:REVIEW_CHANNEL_ID,submissionId:row.id,error:error?.stack||error});
+    await db.query("UPDATE nrr_qotd_submissions SET status='failed' WHERE id=$1",[row.id]).catch(()=>{});
+    return i.reply({content:'❌ Your submission was saved, but I could not deliver it to the private review channel. Please notify an administrator to check the bot permissions there.',ephemeral:true});
+  }
   await db.query('UPDATE nrr_qotd_submissions SET review_channel_id=$2,review_message_id=$3 WHERE id=$1',[row.id,review.id,msg.id]);
   return i.reply({content:'✅ Your QOTD submission has been sent to the managers for review.',ephemeral:true});
 }
