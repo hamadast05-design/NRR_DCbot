@@ -54,7 +54,7 @@ function submissionModal(id = 'new', row = null) {
     ['answers', 'Answer options (one per line, 2–3)', TextInputStyle.Paragraph, true, 350, answers],
     ['emoji1', 'Emoji for answer 1', TextInputStyle.Short, true, 32, row?.emojis?.[0] || ''],
     ['emoji2', 'Emoji for answer 2', TextInputStyle.Short, true, 32, row?.emojis?.[1] || ''],
-    ['emoji3', 'Emoji for answer 3 (required if answer 3 is used)', TextInputStyle.Short, false, 32, row?.emojis?.[2] || '']
+    ['emoji3', 'Emoji for answer 3 (if answer 3 is used)', TextInputStyle.Short, false, 32, row?.emojis?.[2] || '']
   ];
   for (const [fieldId, label, style, required, max, value] of fields) {
     const input = new TextInputBuilder().setCustomId(fieldId).setLabel(label).setStyle(style).setRequired(required).setMaxLength(max);
@@ -149,7 +149,7 @@ async function onButton(i) {
     await submitter?.send({content:'Your QOTD submission has been approved and published in <#' + channel.id + '>.'}).catch(()=>{});
   }
 }
-async function onModal(i) {
+async function onModalUnsafe(i) {
   const [, action, id] = i.customId.split(':');
   if (action === 'finalsubmit') {
     if (!isManager(i)) return i.reply({content:'❌ You do not have permission.',ephemeral:true});
@@ -193,5 +193,20 @@ async function onModal(i) {
   const msg=await review.send({embeds:[reviewEmbed(row)],components:reviewButtons(row.id)});
   await db.query('UPDATE nrr_qotd_submissions SET review_channel_id=$2,review_message_id=$3 WHERE id=$1',[row.id,review.id,msg.id]);
   return i.reply({content:'✅ Your QOTD submission has been sent to the managers for review.',ephemeral:true});
+}
+async function onModal(i) {
+  try {
+    return await onModalUnsafe(i);
+  } catch (error) {
+    console.error('QOTD modal submission failed:', {
+      customId: i.customId,
+      guildId: i.guildId,
+      userId: i.user?.id,
+      error: error?.stack || error
+    });
+    const payload = {content:'❌ Your QOTD submission could not be processed. Please try again in a moment; the issue has been logged for administrators.',ephemeral:true};
+    if (i.replied || i.deferred) return i.followUp(payload).catch(()=>{});
+    return i.reply(payload).catch(()=>{});
+  }
 }
 module.exports = { migrate, sendPanel, setChannel, onButton, onModal, REVIEW_CHANNEL_ID };
