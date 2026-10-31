@@ -7,7 +7,7 @@ const FEEDS = ['https://feeds.bbci.co.uk/news/world/rss.xml','https://feeds.bbci
 const POLL_MS = 15 * 60 * 1000;
 const SLOT_MS = 4 * 60 * 60 * 1000;
 const MAX_DAILY = 6;
-const parser = new Parser({timeout:15000,headers:{'User-Agent':'NRR-World-News/1.0'}});
+const parser = new Parser({timeout:15000,headers:{'User-Agent':'NRR-World-News/1.0'},customFields:{item:[['media:thumbnail','mediaThumbnail',{keepArray:false}],['media:content','mediaContent',{keepArray:false}]]}});
 let queue=[],busy=false,timer=null;
 
 function clean(v,n=900){return String(v||'').replace(/<[^>]*>/g,' ').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/\s+/g,' ').trim().slice(0,n);}
@@ -27,12 +27,26 @@ function score(x){
  if(t.length<100)n--;
  return n;
 }
+function articleImage(x){
+ const candidates=[
+  x.enclosure?.url,
+  x.mediaThumbnail?.$?.url,
+  x.mediaThumbnail?.url,
+  x.mediaContent?.$?.url,
+  x.mediaContent?.url,
+  ...[x.content,x.contentSnippet,x.description].map(v=>String(v||'').match(/<img[^>]+src=["']([^"']+)["']/i)?.[1])
+ ];
+ return candidates.find(url=>typeof url==='string' && /^https:\/\//i.test(url)) || null;
+}
 function embed(x,manual=false){
- return new EmbedBuilder().setColor(0x3c3c3d).setTitle(clean(x.title,240)||'World News Update')
+ const result = new EmbedBuilder().setColor(0x3c3c3d).setTitle(clean(x.title,240)||'World News Update')
  .setDescription(clean(x.contentSnippet||x.content||x.description,900)||'Read the full report from BBC News.')
  .addFields({name:'SOURCE',value:'[Read the BBC article]('+x.link+')',inline:true},{name:'COVERAGE',value:'World News',inline:true})
  .setFooter({text:manual?'NRR • World News • Manual update':'NRR • World News • BBC'})
  .setTimestamp(x.isoDate?new Date(x.isoDate):new Date());
+ const image=articleImage(x);
+ if(image) result.setImage(image);
+ return result;
 }
 async function fetchStories(){
  const feeds=await Promise.all(FEEDS.map(u=>parser.parseURL(u).catch(e=>{console.error('BBC feed failed:',u,e.message);return null;})));
