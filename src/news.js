@@ -120,7 +120,7 @@ async function sendCustom(interaction) {
   .setColor(0x3c3c3d)
   .setTitle('📰 '+clean(title,220))
   .setDescription(clean(body,3500))
-  .setFooter({text:'NRR • Fictional staff-made report • Not real news'})
+  .setFooter({text:'NRR • World News Coverage • '})
   .setTimestamp();
 
  if(image) e.setImage(image.url);
