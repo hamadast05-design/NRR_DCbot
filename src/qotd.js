@@ -131,7 +131,8 @@ async function onButton(i) {
     }
     await db.query('UPDATE nrr_qotd_submissions SET published_channel_id=$2,published_message_id=$3 WHERE id=$1',[id,channel.id,sent.id]);
     await i.update({embeds:[reviewEmbed(row,'approved')],components:reviewButtons(id,true)});
-    await i.client.users.send(row.submitter_id,{content:'Your QOTD submission has been approved and published in <#' + channel.id + '>.'}).catch(()=>{});
+    const submitter = await i.client.users.fetch(row.submitter_id).catch(()=>null);
+    await submitter?.send({content:'Your QOTD submission has been approved and published in <#' + channel.id + '>.'}).catch(()=>{});
   }
 }
 async function onModal(i) {
