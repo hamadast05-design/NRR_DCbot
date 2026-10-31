@@ -114,7 +114,7 @@ async function sendCustom(interaction) {
  const e=new EmbedBuilder()
   .setColor(0x3c3c3d)
   .setTitle('📰 [PARODY] '+clean(title,220))
-  .setDescription('**STAFF-MADE PARODY — NOT REAL NEWS**\\n\\n'+clean(body,3500))
+  .setDescription('**STAFF-MADE PARODY — NOT REAL NEWS**\n\n'+clean(body,3500))
   .addFields({name:'NOTICE',value:'This is a fictional / edited post created for entertainment. It is not verified reporting.',inline:false})
   .setFooter({text:'NRR • Staff-made parody • Not real news'})
   .setTimestamp();
