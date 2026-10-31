@@ -63,6 +63,7 @@ const commands = [
   new SlashCommandBuilder().setName('start_chess_puzzle').setDescription('Start the Chess Puzzle minigame in this channel.'),
   new SlashCommandBuilder().setName('end_chess_puzzle').setDescription('End the active Chess Puzzle minigame in this channel.'),
 
+  new SlashCommandBuilder().setName('send_qotd').setDescription('Post the public QOTD submission panel.'),
   new SlashCommandBuilder().setName('createevent').setDescription('Create an event submission configuration.').addStringOption(o=>o.setName('channel_id').setDescription('Destination channel ID.').setRequired(true)),
   new SlashCommandBuilder().setName('send').setDescription('Send the event submission interface.').addStringOption(o=>o.setName('channel_id').setDescription('Channel for the submission interface.').setRequired(true)),
   new SlashCommandBuilder().setName('stick').setDescription('Keep the submission interface at the top of a channel.').addStringOption(o=>o.setName('channel_id').setDescription('Channel to stick the interface in.').setRequired(true)),
