@@ -118,7 +118,7 @@ client.on(Events.MessageCreate, async message => {
   try { await handlePrefixMute(message); } catch (error) { console.error('Prefix mute command failed:', error); }
   if (message.guild && !message.author.bot && !message.webhookId) {
     const raw = message.content.trim();
-    if (/^!send_news$/i.test(raw)) { try { await newsSystem.sendLatest(client, message); } catch (error) { console.error('Manual news command failed:', error); await message.reply('❌ I could not fetch or post a news story right now.'); } }
+    if (/^!send_news$/i.test(raw)) { if (!message.member?.permissions?.has(PermissionFlagsBits.ManageGuild)) return message.reply('❌ You need Manage Server permission to send manual news.'); try { await newsSystem.sendLatest(client, message); } catch (error) { console.error('Manual news command failed:', error); await message.reply('❌ I could not fetch or post a news story right now.'); } }
     else if (/^!send_qotd$/i.test(raw)) { try { await qotdSystem.sendPanel(message); } catch (error) { console.error('QOTD panel command failed:', error); await message.reply('❌ I could not post the QOTD submission panel.'); } }
     else if (/^!set_qotd_channel\s+/i.test(raw)) { try { await qotdSystem.setChannel(message, raw.split(/\s+/)[1]); } catch (error) { console.error('QOTD channel setup failed:', error); await message.reply('❌ I could not update the QOTD channel.'); } }
   }
