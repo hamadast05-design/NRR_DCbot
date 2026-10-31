@@ -46,7 +46,7 @@ function interfacePayload(eventId) {
     )
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        'Click the button below to submit your entry for the ongoing contest.\n\nYour image will be sent to the event managers for review before publication.'
+        'Click the button below to submit your entry for the ongoing contest.'
       )
     )
     .addSeparatorComponents(
