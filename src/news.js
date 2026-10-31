@@ -113,9 +113,6 @@ async function sendCustom(interaction) {
  if(!ch?.isTextBased()) return interaction.reply({content:'❌ The World News channel is unavailable.',ephemeral:true});
  const e=new EmbedBuilder()
   .setColor(0x3c3c3d)
-  .setTitle('📰 [News] '+clean(title,220))
-  .setDescription('**Major News**\\n\\n'+clean(body,3500))
-  .addFields({name:'World News',value:'Latest News Coverage',inline:false})
   .setFooter({text:'NRR • World News Coverage •'})
   .setTimestamp();
  if(image) e.setImage(image.url);
