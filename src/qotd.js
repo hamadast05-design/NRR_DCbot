@@ -75,6 +75,7 @@ async function countMessages(guildId, userId) {
 }
 async function sendPanel(message) {
   if (!message.guild) return;
+  if (!message.member?.permissions?.has(MANAGE)) return message.reply('❌ You need Manage Server permission to post the QOTD submission panel.');
   const embed = new EmbedBuilder().setColor(0x3c3c3d).setTitle('QOTD Submissions')
     .setDescription('Have a question worth sharing? Submit it for the community Question of the Day.\n\nYour submission will be reviewed by the QOTD managers before it is published.')
     .setFooter({ text: 'NRR • Community QOTD' });
