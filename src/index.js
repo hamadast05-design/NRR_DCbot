@@ -13,6 +13,7 @@ const flagRushSystem = require('./flagrush');
 const chessPuzzleSystem = require('./chess-puzzle');
 const learningGames = require('./learning-games');
 const newsSystem = require('./news');
+const qotdSystem = require('./qotd');
 const chatRevivalSystem = require('./chat-revival');
 const automationControl = require('./automation-control');
 const gameRotationSystem = require('./game-rotation');
@@ -41,6 +42,7 @@ client.once(Events.ClientReady, async readyClient => {
     await registerApplicationCommands();
     await db.migrate();
     await staffAnalytics.migrate();
+    await qotdSystem.migrate();
     console.log('Database migrations ready.');
     await staffAnalytics.backfillAuditLogs(readyClient);
     setInterval(() => staffAnalytics.backfillAuditLogs(readyClient).catch(error => console.error('Punishment audit scan failed:', error)), 10 * 60 * 1000);
@@ -114,6 +116,12 @@ client.on(Events.MessageDelete, async message => {
 
 client.on(Events.MessageCreate, async message => {
   try { await handlePrefixMute(message); } catch (error) { console.error('Prefix mute command failed:', error); }
+  if (message.guild && !message.author.bot && !message.webhookId) {
+    const raw = message.content.trim();
+    if (/^!send_news$/i.test(raw)) { try { await newsSystem.sendLatest(client, message); } catch (error) { console.error('Manual news command failed:', error); await message.reply('❌ I could not fetch or post a news story right now.'); } }
+    else if (/^!send_qotd$/i.test(raw)) { try { await qotdSystem.sendPanel(message); } catch (error) { console.error('QOTD panel command failed:', error); await message.reply('❌ I could not post the QOTD submission panel.'); } }
+    else if (/^!set_qotd_channel\s+/i.test(raw)) { try { await qotdSystem.setChannel(message, raw.split(/\s+/)[1]); } catch (error) { console.error('QOTD channel setup failed:', error); await message.reply('❌ I could not update the QOTD channel.'); } }
+  }
   try { await handlePrefixRoleCommands(message); } catch (error) { console.error('Hoster Manager role command failed:', error); }
   // Automation controls remain inactive while Chat Revival and game invitations are paused.
   // Chat Revival is intentionally disabled; no revival prompts should be sent.
@@ -139,6 +147,8 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
 
 client.on(Events.InteractionCreate, async interaction => {
   try {
+    if (interaction.isButton() && interaction.customId.startsWith('qotd:')) return await qotdSystem.onButton(interaction);
+    if (interaction.isModalSubmit() && interaction.customId.startsWith('qotd:')) return await qotdSystem.onModal(interaction);
     await handleInteraction(interaction);
   } catch (error) {
     console.error('Interaction error:', error);
