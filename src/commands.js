@@ -9,6 +9,7 @@ const {
 const db = require('./db');
 const { config } = require('./config');
 const eventSystem = require('./event');
+const qotdSystem = require('./qotd');
 const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
 const guessPoliticianSystem = require('./guess-the-politician');
