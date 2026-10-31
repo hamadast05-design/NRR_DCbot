@@ -35,7 +35,7 @@ async function requireManager(i) {
 
 function interfacePayload(eventId) {
   const panel = new ContainerBuilder()
-    .setAccentColor(0x5865f2)
+    .setAccentColor(0x3c3c3d)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent('## 📤 Event Submissions')
     )
