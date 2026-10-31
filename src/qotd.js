@@ -111,7 +111,7 @@ async function onButton(i) {
       WHERE id=$1 AND status='pending' RETURNING id`,[id,i.user.id]);
     if (!u.rowCount) return i.reply({content:'This submission has already been reviewed.',ephemeral:true});
     await i.update({embeds:[reviewEmbed(row,'denied')],components:reviewButtons(id,true)});
-    await i.client.users.send(row.submitter_id,{content:'Your QOTD submission was not approved by the managers.'}).catch(()=>{});
+    const submitter = await i.client.users.fetch(row.submitter_id).catch(()=>null); await submitter?.send({content:'Your QOTD submission was not approved by the managers.'}).catch(()=>{});
     return;
   }
   if (action === 'approve') {
