@@ -119,17 +119,12 @@ async function sendCustom(interaction) {
  const e=new EmbedBuilder()
   .setColor(0x3c3c3d)
   .setTitle('📰 '+clean(title,220))
-  .setDescription('**-**\n\n'+clean(body,3500))
-  .addFields({
-   name:':',
-   value:'-',
-   inline:false
-  })
-  .setFooter({text:'NRR • World News Coverage • '})
+  .setDescription(clean(body,3500))
+  .setFooter({text:'NRR • Fictional staff-made report • Not real news'})
   .setTimestamp();
 
  if(image) e.setImage(image.url);
  await ch.send({embeds:[e],allowedMentions:{parse:[]}});
- return interaction.reply({content:'✅ Your clearly labelled parody post has been published in <#'+NEWS_CHANNEL_ID+'>.',ephemeral:true});
+ return interaction.reply({content:'✅ Your fictional staff-made news post has been published in <#'+NEWS_CHANNEL_ID+'>.',ephemeral:true});
 }
 module.exports={start,sendLatest,sendCustom,NEWS_CHANNEL_ID,score};
