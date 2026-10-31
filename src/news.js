@@ -113,10 +113,10 @@ async function sendCustom(interaction) {
  if(!ch?.isTextBased()) return interaction.reply({content:'❌ The World News channel is unavailable.',ephemeral:true});
  const e=new EmbedBuilder()
   .setColor(0x3c3c3d)
-  .setTitle('📰 [PARODY] '+clean(title,220))
-  .setDescription('**STAFF-MADE PARODY — NOT REAL NEWS**\n\n'+clean(body,3500))
-  .addFields({name:'NOTICE',value:'This is a fictional / edited post created for entertainment. It is not verified reporting.',inline:false})
-  .setFooter({text:'NRR • Staff-made parody • Not real news'})
+  .setTitle('📰 '+clean(title,220))
+  .setDescription('**:**\n\n'+clean(body,3500))
+  .addFields({name:':',value:'-',inline:false})
+  .setFooter({text:'NRR • World News Coverage • '})
   .setTimestamp();
  if(image) e.setImage(image.url);
  await ch.send({embeds:[e],allowedMentions:{parse:[]}});
