@@ -143,19 +143,27 @@ async function startCommand(interaction) {
     '<@' + target.id + '>, <@' + interaction.user.id + '> has challenged you to **Steal Or No Steal!**\n\nDo you accept the challenge?',
     [challengeRow(gameId)]
   );
-  await interaction.reply({ ...challenge, allowedMentions: { parse: [], users: [target.id, interaction.user.id] } });
-  const publicMessage = await interaction.fetchReply();
-  GAMES.set(gameId, {
+  const game = {
     id: gameId,
     guildId: interaction.guildId,
     channelId: interaction.channelId,
     playerA: interaction.user.id,
     playerB: target.id,
-    publicMessage,
+    publicMessage: null,
     stage: 'challenge',
     extraUsed: false,
     finished: false,
-  });
+  };
+
+  // Register the session before the challenge becomes clickable.
+  GAMES.set(gameId, game);
+  try {
+    await interaction.reply({ ...challenge, allowedMentions: { parse: [], users: [target.id, interaction.user.id] } });
+    game.publicMessage = await interaction.fetchReply();
+  } catch (error) {
+    GAMES.delete(gameId);
+    throw error;
+  }
 }
 
 async function onButton(interaction) {
@@ -180,7 +188,10 @@ async function onButton(interaction) {
     }
 
     game.stage = 'pick';
-    await interaction.update(panel(
+    // Acknowledge the component immediately; database work can take longer than Discord's 3-second window.
+    await interaction.deferUpdate();
+    game.publicMessage = interaction.message;
+    await game.publicMessage.edit(panel(
       '## 🧳 Steal Or No Steal?',
       '<@' + game.playerA + '>, your turn! Pick a suitcase. One has the good prize, and the other two have bad surprises. Choose wisely...',
     ));
