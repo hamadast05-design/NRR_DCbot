@@ -167,11 +167,24 @@ async function startCommand(interaction) {
     guildId: interaction.guildId,
     userId: interaction.user.id,
   });
-  await interaction.deferReply();
-  console.info('[StealOrNoSteal] Start command acknowledged', {
-    interactionId: interaction.id,
-    ageMs: Date.now() - interaction.createdTimestamp,
-  });
+  const acknowledgementStartedAt = Date.now();
+  try {
+    await interaction.deferReply();
+    console.info('[StealOrNoSteal] Start command acknowledged', {
+      interactionId: interaction.id,
+      ageMs: Date.now() - interaction.createdTimestamp,
+      acknowledgementMs: Date.now() - acknowledgementStartedAt,
+    });
+  } catch (error) {
+    console.error('[StealOrNoSteal] Start command acknowledgement failed', {
+      interactionId: interaction.id,
+      ageMs: Date.now() - interaction.createdTimestamp,
+      acknowledgementMs: Date.now() - acknowledgementStartedAt,
+      code: error.code,
+      message: error.message,
+    });
+    throw error;
+  }
 
   if (!interaction.guildId) return interaction.editReply({ content: '❌ This game can only be played inside a server.' });
   const target = interaction.options.getUser('user', true);
