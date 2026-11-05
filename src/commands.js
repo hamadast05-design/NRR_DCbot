@@ -497,7 +497,7 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'send') return eventSystem.send(interaction);
     if (interaction.commandName === 'stick') return eventSystem.stick(interaction);
     if (interaction.commandName === 'end') return eventSystem.end(interaction);
-    if (interaction.commandName === 'staff-ranking') return staffRanking.handleCommand(interaction);
+    if (interaction.commandName === 'staff_ranking') return staffRanking.handleCommand(interaction);
     if (interaction.commandName === 'stats_staff') return staffAnalytics.statsCommand(interaction, true);
     if (interaction.commandName === 'stats') return staffAnalytics.statsCommand(interaction, false);
     if (interaction.commandName === 'check_punishments') return staffAnalytics.checkPunishments(interaction);
