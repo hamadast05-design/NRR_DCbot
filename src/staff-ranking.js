@@ -68,7 +68,7 @@ async function getRankingData(communityGuild, category) {
   );
 
   const counts = new Map(result.rows.map(row => [row.user_id, row]));
-  return members.map(member => {
+  const rows = members.map(member => {
     const stats = counts.get(member.id) || {};
     return {
       user_id: member.id,
