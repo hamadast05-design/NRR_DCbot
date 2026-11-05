@@ -7,7 +7,27 @@ if (!process.env.DATABASE_URL) {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false },
+  max: 10,
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 10_000,
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10_000,
 });
+
+pool.on('error', error => {
+  console.error('[Database] Unexpected idle PostgreSQL client error:', error);
+});
+
+async function verifyConnection() {
+  const result = await pool.query('SELECT 1 AS connected');
+  if (result.rows[0]?.connected !== 1) {
+    throw new Error('PostgreSQL connection verification returned an unexpected result.');
+  }
+}
+
+async function close() {
+  await pool.end();
+}
 
 async function query(text, params) {
   return pool.query(text, params);
@@ -625,6 +645,8 @@ async function deleteStealNoStealGame(gameId) {
 
 module.exports = {
   query,
+  verifyConnection,
+  close,
   migrate,
   getStealNoStealGame,
   saveStealNoStealGame,
