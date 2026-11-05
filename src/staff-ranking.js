@@ -3,9 +3,11 @@ const {
   ContainerBuilder,
   MessageFlags,
   PermissionFlagsBits,
+  SectionBuilder,
   SeparatorBuilder,
   StringSelectMenuBuilder,
   TextDisplayBuilder,
+  ThumbnailBuilder,
 } = require('discord.js');
 const db = require('./db');
 const { config } = require('./config');
@@ -14,6 +16,8 @@ const { STAFF_ROLE_ID } = require('./staff-analytics');
 const TIME_ZONE = 'Asia/Riyadh';
 const COLORS = { messages: 0x3c3c3d, punishments: 0x5865f2 };
 let diagnosticTableReady = false;
+let snapshotsTableReady = false;
+const AUTHOR_IMAGE_URL = 'https://cdn.imageurlgenerator.com/uploads/be02df8f-b7f6-4d45-899b-02b5c3dcfc51.jpg';
 
 function formatCount(value) {
   return Number(value || 0).toLocaleString('en-US');
@@ -27,7 +31,7 @@ function safeName(value) {
     .slice(0, 32);
 }
 
-function renderRankingRows(rows) {
+function renderRankingRows(rows, previousRanks = {}) {
   if (!rows.length) {
     return [new TextDisplayBuilder().setContent('_No staff ranking data is available yet._')];
   }
@@ -35,183 +39,95 @@ function renderRankingRows(rows) {
   const components = [];
   rows.forEach((row, index) => {
     const rank = Number(row.rank || index + 1);
-    const marker = medals[rank - 1] || ('**' + String(rank).padStart(2, '0') + '.**');
-    const stats = '`7D  ' + formatCount(row.last_7d) + '`   ' +
-      '`14D  ' + formatCount(row.last_14d) + '`   ' +
-      '`ALL  ' + formatCount(row.all_time) + '`';
-    components.push(new TextDisplayBuilder().setContent(marker + ' **' + safeName(row.display_name) + '**\n' + stats));
+    const previousRank = Number(previousRanks[row.user_id]);
+    const movement = !Number.isFinite(previousRank) || previousRank <= 0
+      ? '●'
+      : rank < previousRank ? '▲' : rank > previousRank ? '▼' : '●';
+    const name = safeName(row.display_name);
+    const marker = medals[rank - 1];
+    const heading = marker
+      ? '### ' + marker + ' **' + name + '** ' + movement
+      : '**' + String(rank).padStart(2, '0') + '. ' + name + '** ' + movement;
+    const stats = '**' + formatCount(row.last_7d) + '**  ·  **' +
+      formatCount(row.last_14d) + '**  ·  **' + formatCount(row.all_time) + '**';
+    components.push(new TextDisplayBuilder().setContent(heading + '\n' + stats));
     if (index < rows.length - 1) components.push(new SeparatorBuilder());
   });
   return components;
 }
 
-async function ensureDiagnosticsTable() {
-  if (diagnosticTableReady) return;
+async function ensureSnapshotsTable() {
+  if (snapshotsTableReady) return;
   await db.query(`
-    CREATE TABLE IF NOT EXISTS nrr_staff_ranking_diagnostics (
+    CREATE TABLE IF NOT EXISTS nrr_staff_ranking_snapshots (
       id BIGSERIAL PRIMARY KEY,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      source TEXT NOT NULL,
-      stage TEXT NOT NULL,
-      category TEXT,
-      interaction_id TEXT,
-      guild_id TEXT,
-      channel_id TEXT,
-      user_id TEXT,
-      error_name TEXT,
-      error_code TEXT,
-      error_message TEXT,
-      stack TEXT,
-      details JSONB NOT NULL DEFAULT '{}'::jsonb
+      guild_id TEXT NOT NULL,
+      category TEXT NOT NULL CHECK (category IN ('messages', 'punishments')),
+      slot_key TEXT NOT NULL,
+      captured_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ranks JSONB NOT NULL DEFAULT '{}'::jsonb,
+      UNIQUE (guild_id, category, slot_key)
     );
-    CREATE INDEX IF NOT EXISTS idx_nrr_staff_ranking_diagnostics_created
-      ON nrr_staff_ranking_diagnostics(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_nrr_staff_ranking_snapshots_latest
+      ON nrr_staff_ranking_snapshots(guild_id, category, captured_at DESC);
   `);
-  diagnosticTableReady = true;
+  snapshotsTableReady = true;
 }
 
-function errorDetails(error) {
-  return {
-    name: error?.name || 'Error',
-    code: error?.code ?? error?.rawError?.code ?? null,
-    message: String(error?.message || error || 'Unknown error').slice(0, 1500),
-    stack: String(error?.stack || '').slice(0, 6000),
-    retryAfter: error?.data?.retry_after ?? error?.retryAfter ?? null,
-    httpStatus: error?.status ?? error?.httpStatus ?? null,
-    sqlCode: error?.code && typeof error.code === 'string' && /^[0-9A-Z]{5}$/.test(error.code) ? error.code : null,
-  };
+async function getPreviousRanks(guildId, category) {
+  await ensureSnapshotsTable();
+  const result = await db.query(`
+    SELECT ranks
+    FROM nrr_staff_ranking_snapshots
+    WHERE guild_id = $1 AND category = $2
+    ORDER BY captured_at DESC, id DESC
+    LIMIT 1
+  `, [guildId, category]);
+  return result.rows[0]?.ranks || {};
 }
 
-async function recordDiagnostic({ source, stage, category, interaction, message, error, details = {} }) {
-  const diagnostic = errorDetails(error);
-  const record = {
-    source,
-    stage,
-    category: category || null,
-    interactionId: interaction?.id || null,
-    guildId: interaction?.guildId || message?.guildId || message?.guild?.id || null,
-    channelId: interaction?.channelId || message?.channelId || message?.channel?.id || null,
-    userId: interaction?.user?.id || message?.author?.id || null,
-    ...diagnostic,
-    details,
-  };
-  console.error('[StaffRankingDiagnostic]', JSON.stringify(record));
-  try {
-    await ensureDiagnosticsTable();
-    const result = await db.query(`
-      INSERT INTO nrr_staff_ranking_diagnostics
-        (source,stage,category,interaction_id,guild_id,channel_id,user_id,
-         error_name,error_code,error_message,stack,details)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb)
-      RETURNING id
-    `, [
-      record.source, record.stage, record.category, record.interactionId,
-      record.guildId, record.channelId, record.userId, record.name,
-      record.code === null ? null : String(record.code), record.message,
-      record.stack, JSON.stringify({ ...details, retryAfter: record.retryAfter, httpStatus: record.httpStatus, sqlCode: record.sqlCode }),
-    ]);
-    return result.rows[0]?.id || null;
-  } catch (diagnosticError) {
-    console.error('[StaffRankingDiagnostic] Could not persist diagnostic:', diagnosticError);
-    return null;
-  }
-}
-
-function errorComponents(diagnosticId, category) {
-  const label = category === 'punishments' ? 'punishment' : 'message';
-  const suffix = diagnosticId ? ' Diagnostic ID: **SR-' + diagnosticId + '**.' : ' The bot could not save a diagnostic record.';
-  return [new ContainerBuilder()
-    .setAccentColor(0xed4245)
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-      '## Staff Rankings\nThe ' + label + ' ranking could not be loaded. The failure has been recorded.' + suffix + '\nPlease give the Diagnostic ID to a bot administrator.'
-    ))];
-}
-
-async function getRankingData(communityGuild, category) {
-  // The bot already synchronizes guild members during startup. Re-fetching the
-  // entire guild on every command triggers Discord Gateway opcode 8 rate limits.
-  const role = communityGuild.roles.cache.get(STAFF_ROLE_ID)
-    || await communityGuild.roles.fetch(STAFF_ROLE_ID).catch(() => null);
-  if (!role) throw Object.assign(new Error('Staff Team role not found in Community Server.'), { staffRankingStage: 'resolve_staff_role' });
-
-  const members = [...role.members.values()].filter(member => !member.user.bot);
-  if (!members.length) {
-    throw Object.assign(
-      new Error('No cached non-bot Staff Team members were available. Check startup member synchronization and the GuildMembers intent.'),
-      { staffRankingStage: 'read_staff_member_cache' }
-    );
-  }
-
-  const ids = members.map(member => member.id);
-  const table = category === 'punishments' ? 'nrr_punishments' : 'nrr_message_activity';
-  const personColumn = category === 'punishments' ? 'moderator_id' : 'user_id';
-  const dateColumn = category === 'punishments' ? 'occurred_at' : 'created_at';
-  const result = await db.query(
-    `SELECT ${personColumn} AS user_id,
-      COUNT(*) FILTER (WHERE ${dateColumn} >=
-        ((date_trunc('day', NOW() AT TIME ZONE $3) - INTERVAL '6 days') AT TIME ZONE $3)
-      )::int AS last_7d,
-      COUNT(*) FILTER (WHERE ${dateColumn} >=
-        ((date_trunc('day', NOW() AT TIME ZONE $3) - INTERVAL '13 days') AT TIME ZONE $3)
-      )::int AS last_14d,
-      COUNT(*)::int AS all_time
-    FROM ${table}
-    WHERE guild_id = $1 AND ${personColumn} = ANY($2::text[])
-    GROUP BY ${personColumn}`,
-    [communityGuild.id, ids, TIME_ZONE]
-  );
-
-  const counts = new Map(result.rows.map(row => [row.user_id, row]));
-  const rows = members.map(member => {
-    const stats = counts.get(member.id) || {};
-    return {
-      user_id: member.id,
-      display_name: member.displayName || member.user.username,
-      last_7d: Number(stats.last_7d || 0),
-      last_14d: Number(stats.last_14d || 0),
-      all_time: Number(stats.all_time || 0),
-    };
-  }).sort((a, b) =>
-    b.last_7d - a.last_7d ||
-    b.last_14d - a.last_14d ||
-    b.all_time - a.all_time ||
-    a.display_name.localeCompare(b.display_name)
-  );
-  let previousScore = null;
-  let position = 0;
-  for (let i = 0; i < rows.length; i++) {
-    const score = [rows[i].last_7d, rows[i].last_14d, rows[i].all_time].join(':');
-    if (score !== previousScore) position = i + 1;
-    rows[i].rank = position;
-    previousScore = score;
-  }
-  const cutoffRank = rows[Math.min(9, rows.length - 1)]?.rank;
-  return rows.filter(row => row.rank <= cutoffRank);
-}
-
-async function buildComponents(client, category, onStage = () => {}) {
-  onStage('resolve_community_guild');
+async function saveRankingSnapshots(client, slotKey) {
+  await ensureSnapshotsTable();
   const communityGuild = client.guilds.cache.get(config.guildId)
     || await client.guilds.fetch(config.guildId);
-  onStage('read_staff_role_and_members');
-  const rows = await getRankingData(communityGuild, category);
+  for (const category of ['messages', 'punishments']) {
+    const rows = await getRankingData(communityGuild, category);
+  const previousRanks = await getPreviousRanks(communityGuild.id, category);
   onStage('render_components');
 
   const title = category === 'punishments'
     ? '# NR:R Staff Punishments Ranking'
     : '# NR:R Staff Messages Ranking';
-
+  const cutoffRank = rows[Math.min(9, rows.length - 1)]?.rank;
+  const visibleRows = rows.filter(row => row.rank <= cutoffRank);
   const container = new ContainerBuilder()
     .setAccentColor(COLORS[category])
+    .addSectionComponents(new SectionBuilder()
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent('**NR:C Staff Hub**'))
+      .setThumbnailAccessory(new ThumbnailBuilder().setURL(AUTHOR_IMAGE_URL)))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(title))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      '**LAST 7 DAYS**  ·  **LAST 14 DAYS**  ·  **ALL TIME**'
+    ))
     .addSeparatorComponents(new SeparatorBuilder());
 
-  for (const component of renderRankingRows(rows)) {
+  for (const component of renderRankingRows(visibleRows, previousRanks)) {
     if (component instanceof SeparatorBuilder) container.addSeparatorComponents(component);
     else container.addTextDisplayComponents(component);
   }
 
-  const selector = new StringSelectMenuBuilder()
+  if (category === 'messages') {
+    const totalWeeklyMessages = rows.reduce((sum, row) => sum + row.last_7d, 0);
+    const weeklyAverage = rows.length ? totalWeeklyMessages / rows.length : 0;
+    container.addSeparatorComponents(new SeparatorBuilder());
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      'Team weekly average: **' + weeklyAverage.toLocaleString('en-US', { maximumFractionDigits: 1 }) +
+      '** messages per staff member'
+    ));
+  }
+
+  const selector = new StringSelectMenuBuilder()  const selector = new StringSelectMenuBuilder()
     .setCustomId('staff-ranking:category')
     .setPlaceholder('Switch ranking category')
     .addOptions(
@@ -358,6 +274,9 @@ async function startScheduler(client) {
     const components = await buildComponents(client, 'messages');
     await channel.send({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
     await db.query('INSERT INTO nrr_staff_ranking_schedule(slot_key) VALUES($1) ON CONFLICT DO NOTHING', [slot]);
+    await saveRankingSnapshots(client, slot).catch(error => {
+      console.error('Could not save Staff Ranking trend snapshots for slot ' + slot + ':', error);
+    });
     console.log('Posted scheduled Staff Ranking for Saudi time slot ' + slot + '.');
   };
   await checkAndPost().catch(error => console.error('Initial staff ranking schedule check failed:', error));
