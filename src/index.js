@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Events, REST, Routes, PermissionFlagsBits } = require('discord.js');
+const { Client, GatewayIntentBits, Events, PermissionFlagsBits } = require('discord.js');
 const { config, validate } = require('./config');
 const db = require('./db');
 const { handleInteraction, handlePrefixMute } = require('./commands');
@@ -18,19 +18,10 @@ const chatRevivalSystem = require('./chat-revival');
 const automationControl = require('./automation-control');
 const gameRotationSystem = require('./game-rotation');
 const staffAnalytics = require('./staff-analytics');
+const { registerApplicationCommands } = require('./command-registration');
 
 validate();
 
-async function registerApplicationCommands() {
-  const rest = new REST({ version: '10' }).setToken(config.token);
-  const route = config.guildId
-    ? Routes.applicationGuildCommands(config.clientId, config.guildId)
-    : Routes.applicationCommands(config.clientId);
-  const commandList = require('./commands').commands;
-  console.log(`Registering ${commandList.length} application commands...`);
-  await rest.put(route, { body: commandList.map(command => command.toJSON()) });
-  console.log('Application commands registered successfully.');
-}
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions],
