@@ -10,6 +10,7 @@ const db = require('./db');
 const { config } = require('./config');
 const { STAFF_ROLE_ID } = require('./staff-analytics');
 
+// Ranking windows and scheduled posts use Saudi Arabia local time.
 const TIME_ZONE = 'Asia/Riyadh';
 const COLORS = { messages: 0x3c3c3d, punishments: 0x5865f2 };
 
