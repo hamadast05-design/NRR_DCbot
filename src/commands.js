@@ -27,6 +27,13 @@ const COLORS = {
 };
 
 const staffAnalytics = require('./staff-analytics');
+const staffRanking = require('./staff-ranking');
+
+const staffRankingCommand = new SlashCommandBuilder()
+  .setName('staff-ranking')
+  .setDescription('View the public Staff Team message and punishment rankings.')
+  .addStringOption(o => o.setName('category').setDescription('Initial ranking category.')
+    .addChoices({ name: 'Messages', value: 'messages' }, { name: 'Punishments', value: 'punishments' }));
 
 const commands = [
   new SlashCommandBuilder()
@@ -475,6 +482,7 @@ async function handleRoleGiverButton(interaction) {
 }
 
 async function handleInteraction(interaction) {
+  if (interaction.isStringSelectMenu() && interaction.customId === 'staff-ranking:category') return staffRanking.handleSelect(interaction);
   if (interaction.isButton() && interaction.customId.startsWith('stealno:')) return stealOrNoSteal.onButton(interaction);
   if (interaction.isButton() && interaction.customId.startsWith('learn:')) return learningGames.onButton(interaction);
   if (interaction.isButton() && interaction.customId.startsWith('staffstats:punishments:')) return staffAnalytics.handleButton(interaction);
@@ -489,6 +497,7 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'send') return eventSystem.send(interaction);
     if (interaction.commandName === 'stick') return eventSystem.stick(interaction);
     if (interaction.commandName === 'end') return eventSystem.end(interaction);
+    if (interaction.commandName === 'staff-ranking') return staffRanking.handleCommand(interaction);
     if (interaction.commandName === 'stats_staff') return staffAnalytics.statsCommand(interaction, true);
     if (interaction.commandName === 'stats') return staffAnalytics.statsCommand(interaction, false);
     if (interaction.commandName === 'check_punishments') return staffAnalytics.checkPunishments(interaction);
@@ -545,4 +554,4 @@ async function handleInteraction(interaction) {
   }
 }
 
-module.exports = { commands, handleInteraction, handlePrefixMute };
+module.exports = { commands, staffRankingCommand, handleInteraction, handlePrefixMute };
