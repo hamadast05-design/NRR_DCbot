@@ -42,8 +42,8 @@ function renderRankingRows(rows, previousRanks = {}) {
       : '**' + String(rank).padStart(2, '0') + '. ' + name + '** ' + movement;
     const stats = '**' + formatCount(row.last_7d) + '**  ·  **' +
       formatCount(row.last_14d) + '**  ·  **' + formatCount(row.all_time) + '**';
-    return heading + '\\n' + stats;
-  }).join('\\n');
+    return heading + '\n' + stats;
+  }).join('\n');
 }
 
 async function ensureSnapshotsTable() {
@@ -162,7 +162,7 @@ async function buildComponents(client, category, onStage = () => {}) {
     '**LAST 7 DAYS**  ·  **LAST 14 DAYS**  ·  **ALL TIME**',
     '',
     renderRankingRows(rows, previousRanks),
-  ].join('\\n');
+  ].join('\n');
 
   const embed = new EmbedBuilder()
     .setColor(COLORS[category])
