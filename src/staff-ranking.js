@@ -1,8 +1,11 @@
 const {
   ActionRowBuilder,
-  EmbedBuilder,
+  ContainerBuilder,
+  MessageFlags,
   PermissionFlagsBits,
+  SeparatorBuilder,
   StringSelectMenuBuilder,
+  TextDisplayBuilder,
 } = require('discord.js');
 const db = require('./db');
 const { config } = require('./config');
@@ -11,9 +14,6 @@ const { STAFF_ROLE_ID } = require('./staff-analytics');
 const TIME_ZONE = 'Asia/Riyadh';
 const COLORS = { messages: 0x3c3c3d, punishments: 0x5865f2 };
 let diagnosticTableReady = false;
-let snapshotsTableReady = false;
-let memberCacheSyncPromise = null;
-const AUTHOR_IMAGE_URL = 'https://cdn.imageurlgenerator.com/uploads/be02df8f-b7f6-4d45-899b-02b5c3dcfc51.jpg';
 
 function formatCount(value) {
   return Number(value || 0).toLocaleString('en-US');
@@ -27,67 +27,109 @@ function safeName(value) {
     .slice(0, 32);
 }
 
-function renderRankingRows(rows, previousRanks = {}) {
-  if (!rows.length) return '_No staff members were found for this ranking._';
+function renderRankingRows(rows) {
+  if (!rows.length) {
+    return [new TextDisplayBuilder().setContent('_No staff ranking data is available yet._')];
+  }
   const medals = ['🥇', '🥈', '🥉'];
-  return rows.map((row, index) => {
+  const components = [];
+  rows.forEach((row, index) => {
     const rank = Number(row.rank || index + 1);
-    const previousRank = Number(previousRanks[row.user_id]);
-    const movement = !Number.isFinite(previousRank) || previousRank <= 0
-      ? '●'
-      : rank < previousRank ? '▲' : rank > previousRank ? '▼' : '●';
-    const name = safeName(row.display_name);
-    const heading = medals[rank - 1]
-      ? '### ' + medals[rank - 1] + ' **' + name + '** ' + movement
-      : '**' + String(rank).padStart(2, '0') + '. ' + name + '** ' + movement;
-    const stats = '**' + formatCount(row.last_7d) + '**  ·  **' +
-      formatCount(row.last_14d) + '**  ·  **' + formatCount(row.all_time) + '**';
-    return heading + '\n' + stats;
-  }).join('\n');
+    const marker = medals[rank - 1] || ('**' + String(rank).padStart(2, '0') + '.**');
+    const stats = '`7D  ' + formatCount(row.last_7d) + '`   ' +
+      '`14D  ' + formatCount(row.last_14d) + '`   ' +
+      '`ALL  ' + formatCount(row.all_time) + '`';
+    components.push(new TextDisplayBuilder().setContent(marker + ' **' + safeName(row.display_name) + '**\n' + stats));
+    if (index < rows.length - 1) components.push(new SeparatorBuilder());
+  });
+  return components;
 }
 
-async function ensureSnapshotsTable() {
-  if (snapshotsTableReady) return;
+async function ensureDiagnosticsTable() {
+  if (diagnosticTableReady) return;
   await db.query(`
-    CREATE TABLE IF NOT EXISTS nrr_staff_ranking_snapshots (
+    CREATE TABLE IF NOT EXISTS nrr_staff_ranking_diagnostics (
       id BIGSERIAL PRIMARY KEY,
-      guild_id TEXT NOT NULL,
-      category TEXT NOT NULL CHECK (category IN ('messages', 'punishments')),
-      slot_key TEXT NOT NULL,
-      captured_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      ranks JSONB NOT NULL DEFAULT '{}'::jsonb,
-      UNIQUE (guild_id, category, slot_key)
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      source TEXT NOT NULL,
+      stage TEXT NOT NULL,
+      category TEXT,
+      interaction_id TEXT,
+      guild_id TEXT,
+      channel_id TEXT,
+      user_id TEXT,
+      error_name TEXT,
+      error_code TEXT,
+      error_message TEXT,
+      stack TEXT,
+      details JSONB NOT NULL DEFAULT '{}'::jsonb
     );
-    CREATE INDEX IF NOT EXISTS idx_nrr_staff_ranking_snapshots_latest
-      ON nrr_staff_ranking_snapshots(guild_id, category, captured_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_nrr_staff_ranking_diagnostics_created
+      ON nrr_staff_ranking_diagnostics(created_at DESC);
   `);
-  snapshotsTableReady = true;
+  diagnosticTableReady = true;
 }
 
-async function getPreviousRanks(guildId, category) {
-  await ensureSnapshotsTable();
-  const result = await db.query(`
-    SELECT ranks
-    FROM nrr_staff_ranking_snapshots
-    WHERE guild_id = $1 AND category = $2
-    ORDER BY captured_at DESC, id DESC
-    LIMIT 1
-  `, [guildId, category]);
-  return result.rows[0]?.ranks || {};
+function errorDetails(error) {
+  return {
+    name: error?.name || 'Error',
+    code: error?.code ?? error?.rawError?.code ?? null,
+    message: String(error?.message || error || 'Unknown error').slice(0, 1500),
+    stack: String(error?.stack || '').slice(0, 6000),
+    retryAfter: error?.data?.retry_after ?? error?.retryAfter ?? null,
+    httpStatus: error?.status ?? error?.httpStatus ?? null,
+    sqlCode: error?.code && typeof error.code === 'string' && /^[0-9A-Z]{5}$/.test(error.code) ? error.code : null,
+  };
+}
+
+async function recordDiagnostic({ source, stage, category, interaction, message, error, details = {} }) {
+  const diagnostic = errorDetails(error);
+  const record = {
+    source,
+    stage,
+    category: category || null,
+    interactionId: interaction?.id || null,
+    guildId: interaction?.guildId || message?.guildId || message?.guild?.id || null,
+    channelId: interaction?.channelId || message?.channelId || message?.channel?.id || null,
+    userId: interaction?.user?.id || message?.author?.id || null,
+    ...diagnostic,
+    details,
+  };
+  console.error('[StaffRankingDiagnostic]', JSON.stringify(record));
+  try {
+    await ensureDiagnosticsTable();
+    const result = await db.query(`
+      INSERT INTO nrr_staff_ranking_diagnostics
+        (source,stage,category,interaction_id,guild_id,channel_id,user_id,
+         error_name,error_code,error_message,stack,details)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb)
+      RETURNING id
+    `, [
+      record.source, record.stage, record.category, record.interactionId,
+      record.guildId, record.channelId, record.userId, record.name,
+      record.code === null ? null : String(record.code), record.message,
+      record.stack, JSON.stringify({ ...details, retryAfter: record.retryAfter, httpStatus: record.httpStatus, sqlCode: record.sqlCode }),
+    ]);
+    return result.rows[0]?.id || null;
+  } catch (diagnosticError) {
+    console.error('[StaffRankingDiagnostic] Could not persist diagnostic:', diagnosticError);
+    return null;
+  }
+}
+
+function errorComponents(diagnosticId, category) {
+  const label = category === 'punishments' ? 'punishment' : 'message';
+  const suffix = diagnosticId ? ' Diagnostic ID: **SR-' + diagnosticId + '**.' : ' The bot could not save a diagnostic record.';
+  return [new ContainerBuilder()
+    .setAccentColor(0xed4245)
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      '## Staff Rankings\nThe ' + label + ' ranking could not be loaded. The failure has been recorded.' + suffix + '\nPlease give the Diagnostic ID to a bot administrator.'
+    ))];
 }
 
 async function getRankingData(communityGuild, category) {
-  // Fetch the full member list once per process, not once per interaction.
-  // This avoids incomplete role.members caches while preventing repeated
-  // Gateway member-request bursts.
-  if (!memberCacheSyncPromise) {
-    memberCacheSyncPromise = communityGuild.members.fetch().catch(error => {
-      memberCacheSyncPromise = null;
-      throw Object.assign(error, { staffRankingStage: 'sync_staff_member_cache' });
-    });
-  }
-  await memberCacheSyncPromise;
-
+  // The bot already synchronizes guild members during startup. Re-fetching the
+  // entire guild on every command triggers Discord Gateway opcode 8 rate limits.
   const role = communityGuild.roles.cache.get(STAFF_ROLE_ID)
     || await communityGuild.roles.fetch(STAFF_ROLE_ID).catch(() => null);
   if (!role) throw Object.assign(new Error('Staff Team role not found in Community Server.'), { staffRankingStage: 'resolve_staff_role' });
@@ -143,43 +185,30 @@ async function getRankingData(communityGuild, category) {
     rows[i].rank = position;
     previousScore = score;
   }
-  return rows;
+  const cutoffRank = rows[Math.min(9, rows.length - 1)]?.rank;
+  return rows.filter(row => row.rank <= cutoffRank);
 }
 
 async function buildComponents(client, category, onStage = () => {}) {
   onStage('resolve_community_guild');
   const communityGuild = client.guilds.cache.get(config.guildId)
     || await client.guilds.fetch(config.guildId);
-  onStage('sync_staff_member_cache');
+  onStage('read_staff_role_and_members');
   const rows = await getRankingData(communityGuild, category);
-  const previousRanks = await getPreviousRanks(communityGuild.id, category);
-  onStage('render_ranking');
+  onStage('render_components');
 
   const title = category === 'punishments'
-    ? 'NR:R Staff Punishments Ranking'
-    : 'NR:R Staff Messages Ranking';
-  const description = [
-    '**LAST 7 DAYS**  ·  **LAST 14 DAYS**  ·  **ALL TIME**',
-    '',
-    renderRankingRows(rows, previousRanks),
-  ].join('\n');
+    ? '# NR:R Staff Punishments Ranking'
+    : '# NR:R Staff Messages Ranking';
 
-  const embed = new EmbedBuilder()
-    .setColor(COLORS[category])
-    .setAuthor({ name: 'NR:C Staff Hub', iconURL: AUTHOR_IMAGE_URL })
-    .setTitle(title)
-    .setDescription(description);
+  const container = new ContainerBuilder()
+    .setAccentColor(COLORS[category])
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(title))
+    .addSeparatorComponents(new SeparatorBuilder());
 
-  if (category === 'messages') {
-    const totalWeeklyMessages = rows.reduce((sum, row) => sum + row.last_7d, 0);
-    const weeklyAverage = rows.length ? totalWeeklyMessages / rows.length : 0;
-    embed.setFooter({
-      text: 'Team weekly average: ' +
-        weeklyAverage.toLocaleString('en-US', { maximumFractionDigits: 1 }) +
-        ' messages per staff member',
-    });
-  } else {
-    embed.setFooter({ text: 'NR:R Staff Rankings' });
+  for (const component of renderRankingRows(rows)) {
+    if (component instanceof SeparatorBuilder) container.addSeparatorComponents(component);
+    else container.addTextDisplayComponents(component);
   }
 
   const selector = new StringSelectMenuBuilder()
@@ -189,23 +218,9 @@ async function buildComponents(client, category, onStage = () => {}) {
       { label: 'Messages', value: 'messages', description: 'View staff message rankings', default: category === 'messages' },
       { label: 'Punishments', value: 'punishments', description: 'View staff punishment rankings', default: category === 'punishments' },
     );
-  const row = new ActionRowBuilder().addComponents(selector);
-  return { embeds: [embed], components: [row], allowedMentions: { parse: [] } };
-}
-
-async function saveRankingSnapshots(client, slotKey) {
-  await ensureSnapshotsTable();
-  const communityGuild = client.guilds.cache.get(config.guildId)
-    || await client.guilds.fetch(config.guildId);
-  for (const category of ['messages', 'punishments']) {
-    const rows = await getRankingData(communityGuild, category);
-    const ranks = Object.fromEntries(rows.map(row => [row.user_id, row.rank]));
-    await db.query(`
-      INSERT INTO nrr_staff_ranking_snapshots (guild_id, category, slot_key, ranks)
-      VALUES ($1, $2, $3, $4::jsonb)
-      ON CONFLICT (guild_id, category, slot_key) DO NOTHING
-    `, [communityGuild.id, category, slotKey, JSON.stringify(ranks)]);
-  }
+  container.addSeparatorComponents(new SeparatorBuilder());
+  container.addActionRowComponents(new ActionRowBuilder().addComponents(selector));
+  return [container];
 }
 
 async function handleCommand(interaction) {
@@ -219,23 +234,19 @@ async function handleCommand(interaction) {
   const category = interaction.options.getString('category') || 'messages';
   let stage = 'defer_initial_response';
   try {
-    await interaction.deferReply();
+    await interaction.deferReply({ flags: MessageFlags.IsComponentsV2 });
     stage = 'build_ranking';
     const components = await buildComponents(interaction.client, category, next => { stage = next; });
     stage = 'send_ranking_response';
-    return await interaction.editReply(components);
+    return await interaction.editReply({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
   } catch (error) {
     const diagnosticId = await recordDiagnostic({
       source: 'slash_command', stage: error.staffRankingStage || stage, category, interaction, error,
-      details: { command: 'staff_ranking', deferred: interaction.deferred },
+      details: { command: 'staff_ranking', deferred: interaction.deferred, responseFlags: 'IsComponentsV2' },
     });
-    const errorEmbed = new EmbedBuilder()
-      .setColor(0xed4245)
-      .setTitle('Staff Ranking could not be loaded')
-      .setDescription('Diagnostic ID: **' + (diagnosticId ? 'SR-' + diagnosticId : 'not saved') + '**');
     return interaction.editReply({
-      embeds: [errorEmbed],
-      components: [],
+      components: errorComponents(diagnosticId, category),
+      flags: MessageFlags.IsComponentsV2,
       allowedMentions: { parse: [] },
     }).catch(editError => {
       console.error('[StaffRankingDiagnostic] Could not send V2 failure response:', editError);
@@ -253,7 +264,7 @@ async function handleSelect(interaction) {
   try {
     const components = await buildComponents(interaction.client, category, next => { stage = next; });
     stage = 'update_original_ranking_message';
-    await interaction.update(components);
+    await interaction.update({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
   } catch (error) {
     const diagnosticId = await recordDiagnostic({
       source: 'category_select', stage: error.staffRankingStage || stage, category, interaction, error,
@@ -274,7 +285,7 @@ async function handlePrefixMessage(message) {
   const category = (match[1] || 'messages').toLowerCase();
   try {
     const components = await buildComponents(message.client, category);
-    await message.channel.send(components);
+    await message.channel.send({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
   } catch (error) {
     const diagnosticId = await recordDiagnostic({
       source: 'prefix_command', stage: error.staffRankingStage || 'build_or_send', category, message, error,
@@ -345,11 +356,8 @@ async function startScheduler(client) {
       return;
     }
     const components = await buildComponents(client, 'messages');
-    await channel.send(components);
+    await channel.send({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
     await db.query('INSERT INTO nrr_staff_ranking_schedule(slot_key) VALUES($1) ON CONFLICT DO NOTHING', [slot]);
-    await saveRankingSnapshots(client, slot).catch(error => {
-      console.error('Could not save Staff Ranking trend snapshots for slot ' + slot + ':', error);
-    });
     console.log('Posted scheduled Staff Ranking for Saudi time slot ' + slot + '.');
   };
   await checkAndPost().catch(error => console.error('Initial staff ranking schedule check failed:', error));
