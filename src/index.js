@@ -28,20 +28,52 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions],
 });
 
+let auditBackfillTimer = null;
+let eventAutoApproveTimer = null;
+let shuttingDown = false;
+
+async function shutdown(reason = 'shutdown') {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`Shutting down NRR bot: ${reason}`);
+
+  if (auditBackfillTimer) clearInterval(auditBackfillTimer);
+  if (eventAutoApproveTimer) clearInterval(eventAutoApproveTimer);
+  auditBackfillTimer = null;
+  eventAutoApproveTimer = null;
+
+  // Stop every owned scheduler before closing the database pool.
+  newsSystem.stop();
+  staffRanking.stopScheduler();
+  client.destroy();
+
+  try {
+    await db.close();
+    console.log('NRR Discord client and PostgreSQL pool closed.');
+  } catch (error) {
+    console.error('Error while closing PostgreSQL pool:', error);
+    process.exitCode = 1;
+  }
+}
+
 client.once(Events.ClientReady, async readyClient => {
   console.log(`Logged in as ${readyClient.user.tag}`);
   try {
     await registerApplicationCommands();
-    await db.migrate();
-    await staffAnalytics.migrate();
     await staffRanking.startScheduler(readyClient);
-    await qotdSystem.migrate();
-    console.log('Database migrations ready.');
+    console.log('Database migrations and startup verification complete.');
     await staffAnalytics.backfillAuditLogs(readyClient);
-    setInterval(() => staffAnalytics.backfillAuditLogs(readyClient).catch(error => console.error('Punishment audit scan failed:', error)), 10 * 60 * 1000);
 
-    setInterval(() => eventSystem.autoApprove(readyClient).catch(error => console.error('Event auto-approval failed:', error)), 30 * 1000);
+    auditBackfillTimer = setInterval(
+      () => staffAnalytics.backfillAuditLogs(readyClient).catch(error => console.error('Punishment audit scan failed:', error)),
+      10 * 60 * 1000,
+    );
+    eventAutoApproveTimer = setInterval(
+      () => eventSystem.autoApprove(readyClient).catch(error => console.error('Event auto-approval failed:', error)),
+      30 * 1000,
+    );
     newsSystem.start(readyClient);
+
     // Temporarily disabled by administrator request: no Chat Revival or automatic game-invitation messages.
     console.log('Chat Revival and automatic game invitations are disabled.');
 
@@ -55,7 +87,9 @@ client.once(Events.ClientReady, async readyClient => {
       console.log(`Synced ${members.size} members for ${guild.name}.`);
     }
   } catch (error) {
-    console.error('Startup database sync failed:', error);
+    console.error('NRR startup synchronization failed; the bot will remain offline:', error);
+    await shutdown('startup synchronization failure');
+    process.exitCode = 1;
   }
 });
 
@@ -153,7 +187,38 @@ client.on(Events.InteractionCreate, async interaction => {
   }
 });
 
-process.on('unhandledRejection', error => console.error('Unhandled rejection:', error));
-process.on('uncaughtException', error => console.error('Uncaught exception:', error));
+process.once('SIGTERM', () => {
+  void shutdown('SIGTERM');
+});
+process.once('SIGINT', () => {
+  void shutdown('SIGINT');
+});
 
-client.login(config.token);
+process.on('unhandledRejection', error => {
+  console.error('Unhandled rejection; shutting down to avoid running in an unknown state:', error);
+  void shutdown('unhandled rejection').finally(() => process.exit(1));
+});
+process.on('uncaughtException', error => {
+  console.error('Uncaught exception; shutting down:', error);
+  void shutdown('uncaught exception').finally(() => process.exit(1));
+});
+
+async function main() {
+  // PostgreSQL must be reachable and all required migrations must finish before
+  // the bot logs into Discord or starts receiving commands/events.
+  await db.verifyConnection();
+  console.log('PostgreSQL connection verified.');
+  await db.migrate();
+  await staffAnalytics.migrate();
+  await qotdSystem.migrate();
+  await db.verifyConnection();
+  console.log('All required database migrations verified.');
+
+  await client.login(config.token);
+}
+
+main().catch(async error => {
+  console.error('NRR startup failed; Discord login was not completed:', error);
+  await shutdown('startup failure');
+  process.exitCode = 1;
+});
