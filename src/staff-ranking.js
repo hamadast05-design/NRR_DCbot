@@ -26,7 +26,7 @@ function safeName(value) {
 
 function makeTable(rows) {
   const heading = [
-    '`#  STAFF MEMBER          LAST 7D   LAST 14D   ALL TIME`',
+    '`#  STAFF MEMBER          LAST 7 DAYS   LAST 14 DAYS   ALL TIME`',
     '`────────────────────────────────────────────────────────`',
   ];
   if (!rows.length) return 'No staff members with the Staff Team role were found.';
@@ -178,7 +178,7 @@ async function handleSelect(interaction) {
 
 async function handlePrefixMessage(message) {
   if (!message.guild || message.guild.id !== config.staffGuildId || message.author.bot || message.webhookId) return false;
-  const match = message.content.trim().match(/^!staff_ranking(?:\\s+(messages|punishments))?$/i);
+  const match = message.content.trim().match(/^!staff_ranking(?:\s+(messages|punishments))?$/i);
   if (!match) return false;
   const category = (match[1] || 'messages').toLowerCase();
   try {
