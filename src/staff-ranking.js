@@ -21,26 +21,28 @@ function formatCount(value) {
 
 function safeName(value) {
   return String(value || 'Unknown')
-    .replace(/[\\r\\n\\t`]/g, ' ')
-    .replace(/\\s+/g, ' ')
-    .slice(0, 19);
+    .replace(/[\r\n\t`]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 32);
 }
 
-function makeTable(rows) {
-  const heading = [
-    '`#  STAFF MEMBER          LAST 7 DAYS   LAST 14 DAYS   ALL TIME`',
-    '`────────────────────────────────────────────────────────`',
-  ];
-  if (!rows.length) return 'No staff members with the Staff Team role were found.';
-  const lines = rows.map((row, index) => {
-    const rank = String(row.rank || index + 1).padStart(2, ' ');
-    const name = safeName(row.display_name).padEnd(19, ' ');
-    const seven = formatCount(row.last_7d).padStart(7, ' ');
-    const fourteen = formatCount(row.last_14d).padStart(7, ' ');
-    const all = formatCount(row.all_time).padStart(9, ' ');
-    return '`' + rank + '  ' + name + '  ' + seven + '  ' + fourteen + '  ' + all + '`';
+function renderRankingRows(rows) {
+  if (!rows.length) {
+    return [new TextDisplayBuilder().setContent('_No staff ranking data is available yet._')];
+  }
+  const medals = ['🥇', '🥈', '🥉'];
+  const components = [];
+  rows.forEach((row, index) => {
+    const rank = Number(row.rank || index + 1);
+    const marker = medals[rank - 1] || ('**' + String(rank).padStart(2, '0') + '.**');
+    const stats = '`7D  ' + formatCount(row.last_7d) + '`   ' +
+      '`14D  ' + formatCount(row.last_14d) + '`   ' +
+      '`ALL  ' + formatCount(row.all_time) + '`';
+    components.push(new TextDisplayBuilder().setContent(marker + ' **' + safeName(row.display_name) + '**\n' + stats));
+    if (index < rows.length - 1) components.push(new SeparatorBuilder());
   });
-  return heading.concat(lines).join('\\n');
+  return components;
 }
 
 async function ensureDiagnosticsTable() {
@@ -194,41 +196,30 @@ async function buildComponents(client, category, onStage = () => {}) {
   onStage('read_staff_role_and_members');
   const rows = await getRankingData(communityGuild, category);
   onStage('render_components');
-  const description = category === 'punishments'
-    ? 'Counts bans, kicks and timeouts recorded against staff moderators.'
-    : 'Counts messages sent by staff members. Bot and webhook messages are excluded.';
-  const title = category === 'punishments' ? '## NR:R Staff Punishment Rankings' : '## NR:R Staff Message Rankings';
-  const table = makeTable(rows);
-  const chunks = [];
-  let current = '';
-  for (const line of table.split('\\n')) {
-    if (current.length + line.length + 1 > 3800) {
-      chunks.push(current);
-      current = '';
-    }
-    current += (current ? '\\n' : '') + line;
-  }
-  if (current) chunks.push(current);
+
+  const title = category === 'punishments'
+    ? '# NR:R Staff Punishments Ranking'
+    : '# NR:R Staff Messages Ranking';
 
   const container = new ContainerBuilder()
     .setAccentColor(COLORS[category])
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(title + '\\n' + description))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(title))
     .addSeparatorComponents(new SeparatorBuilder());
 
-  for (const chunk of chunks) container.addTextDisplayComponents(new TextDisplayBuilder().setContent(chunk));
+  for (const component of renderRankingRows(rows)) {
+    if (component instanceof SeparatorBuilder) container.addSeparatorComponents(component);
+    else container.addTextDisplayComponents(component);
+  }
 
   const selector = new StringSelectMenuBuilder()
     .setCustomId('staff-ranking:category')
     .setPlaceholder('Switch ranking category')
     .addOptions(
-      { label: 'Messages', value: 'messages', description: 'Rank staff by messages sent', default: category === 'messages' },
-      { label: 'Punishments', value: 'punishments', description: 'Rank staff by punishments issued', default: category === 'punishments' },
+      { label: 'Messages', value: 'messages', description: 'View staff message rankings', default: category === 'messages' },
+      { label: 'Punishments', value: 'punishments', description: 'View staff punishment rankings', default: category === 'punishments' },
     );
-  container.addActionRowComponents(new ActionRowBuilder().addComponents(selector));
   container.addSeparatorComponents(new SeparatorBuilder());
-  container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
-    '`Last 7d` and `Last 14d` use Saudi Arabia calendar days (Asia/Riyadh). All Time covers every recorded entry. Sorted by Last 7d, with longer periods used to break ties.'
-  ));
+  container.addActionRowComponents(new ActionRowBuilder().addComponents(selector));
   return [container];
 }
 
