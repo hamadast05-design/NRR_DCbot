@@ -39,7 +39,7 @@ function renderRankingRows(rows) {
     const stats = '`7D  ' + formatCount(row.last_7d) + '`   ' +
       '`14D  ' + formatCount(row.last_14d) + '`   ' +
       '`ALL  ' + formatCount(row.all_time) + '`';
-    components.push(new TextDisplayBuilder().setContent(marker + ' **' + safeName(row.display_name) + '**\\n' + stats));
+    components.push(new TextDisplayBuilder().setContent(marker + ' **' + safeName(row.display_name) + '**\n' + stats));
     if (index < rows.length - 1) components.push(new SeparatorBuilder());
   });
   return components;
