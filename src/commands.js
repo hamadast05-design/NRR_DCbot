@@ -30,7 +30,7 @@ const staffAnalytics = require('./staff-analytics');
 const staffRanking = require('./staff-ranking');
 
 const staffRankingCommand = new SlashCommandBuilder()
-  .setName('staff-ranking')
+  .setName('staff_ranking')
   .setDescription('View the public Staff Team message and punishment rankings.')
   .addStringOption(o => o.setName('category').setDescription('Initial ranking category.')
     .addChoices({ name: 'Messages', value: 'messages' }, { name: 'Punishments', value: 'punishments' }));
