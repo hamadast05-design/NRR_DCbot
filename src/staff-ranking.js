@@ -1,13 +1,8 @@
 const {
   ActionRowBuilder,
-  ContainerBuilder,
-  MessageFlags,
+  EmbedBuilder,
   PermissionFlagsBits,
-  SectionBuilder,
-  SeparatorBuilder,
   StringSelectMenuBuilder,
-  TextDisplayBuilder,
-  ThumbnailBuilder,
 } = require('discord.js');
 const db = require('./db');
 const { config } = require('./config');
@@ -17,7 +12,39 @@ const TIME_ZONE = 'Asia/Riyadh';
 const COLORS = { messages: 0x3c3c3d, punishments: 0x5865f2 };
 let diagnosticTableReady = false;
 let snapshotsTableReady = false;
+let memberCacheSyncPromise = null;
 const AUTHOR_IMAGE_URL = 'https://cdn.imageurlgenerator.com/uploads/be02df8f-b7f6-4d45-899b-02b5c3dcfc51.jpg';
+
+function formatCount(value) {
+  return Number(value || 0).toLocaleString('en-US');
+}
+
+function safeName(value) {
+  return String(value || 'Unknown')
+    .replace(/[\r\n\t`]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 32);
+}
+
+function renderRankingRows(rows, previousRanks = {}) {
+  if (!rows.length) return '_No staff members were found for this ranking._';
+  const medals = ['🥇', '🥈', '🥉'];
+  return rows.map((row, index) => {
+    const rank = Number(row.rank || index + 1);
+    const previousRank = Number(previousRanks[row.user_id]);
+    const movement = !Number.isFinite(previousRank) || previousRank <= 0
+      ? '●'
+      : rank < previousRank ? '▲' : rank > previousRank ? '▼' : '●';
+    const name = safeName(row.display_name);
+    const heading = medals[rank - 1]
+      ? '### ' + medals[rank - 1] + ' **' + name + '** ' + movement
+      : '**' + String(rank).padStart(2, '0') + '. ' + name + '** ' + movement;
+    const stats = '**' + formatCount(row.last_7d) + '**  ·  **' +
+      formatCount(row.last_14d) + '**  ·  **' + formatCount(row.all_time) + '**';
+    return heading + '\\n' + stats;
+  }).join('\\n');
+}
 
 function formatCount(value) {
   return Number(value || 0).toLocaleString('en-US');
@@ -87,8 +114,17 @@ async function getPreviousRanks(guildId, category) {
 }
 
 async function getRankingData(communityGuild, category) {
-  // Use the startup member cache; fetching the full guild on every ranking
-  // interaction can trigger Discord Gateway opcode 8 rate limits.
+  // Fetch the full member list once per process, not once per interaction.
+  // This avoids incomplete role.members caches while preventing repeated
+  // Gateway member-request bursts.
+  if (!memberCacheSyncPromise) {
+    memberCacheSyncPromise = communityGuild.members.fetch().catch(error => {
+      memberCacheSyncPromise = null;
+      throw Object.assign(error, { staffRankingStage: 'sync_staff_member_cache' });
+    });
+  }
+  await memberCacheSyncPromise;
+
   const role = communityGuild.roles.cache.get(STAFF_ROLE_ID)
     || await communityGuild.roles.fetch(STAFF_ROLE_ID).catch(() => null);
   if (!role) throw Object.assign(new Error('Staff Team role not found in Community Server.'), { staffRankingStage: 'resolve_staff_role' });
@@ -151,41 +187,36 @@ async function buildComponents(client, category, onStage = () => {}) {
   onStage('resolve_community_guild');
   const communityGuild = client.guilds.cache.get(config.guildId)
     || await client.guilds.fetch(config.guildId);
-  onStage('read_staff_role_and_members');
+  onStage('sync_staff_member_cache');
   const rows = await getRankingData(communityGuild, category);
   const previousRanks = await getPreviousRanks(communityGuild.id, category);
-  onStage('render_components');
+  onStage('render_ranking');
 
   const title = category === 'punishments'
-    ? '# NR:R Staff Punishments Ranking'
-    : '# NR:R Staff Messages Ranking';
-  const cutoffRank = rows[Math.min(9, rows.length - 1)]?.rank;
-  const visibleRows = rows.filter(row => row.rank <= cutoffRank);
-  const container = new ContainerBuilder()
-    .setAccentColor(COLORS[category])
-    .addSectionComponents(new SectionBuilder()
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent('**NR:C Staff Hub**'))
-      .setThumbnailAccessory(new ThumbnailBuilder().setURL(AUTHOR_IMAGE_URL)))
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(title))
-    .addSeparatorComponents(new SeparatorBuilder())
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-      '**LAST 7 DAYS**  ·  **LAST 14 DAYS**  ·  **ALL TIME**'
-    ))
-    .addSeparatorComponents(new SeparatorBuilder());
+    ? 'NR:R Staff Punishments Ranking'
+    : 'NR:R Staff Messages Ranking';
+  const description = [
+    '**LAST 7 DAYS**  ·  **LAST 14 DAYS**  ·  **ALL TIME**',
+    '',
+    renderRankingRows(rows, previousRanks),
+  ].join('\\n');
 
-  for (const component of renderRankingRows(visibleRows, previousRanks)) {
-    if (component instanceof SeparatorBuilder) container.addSeparatorComponents(component);
-    else container.addTextDisplayComponents(component);
-  }
+  const embed = new EmbedBuilder()
+    .setColor(COLORS[category])
+    .setAuthor({ name: 'NR:C Staff Hub', iconURL: AUTHOR_IMAGE_URL })
+    .setTitle(title)
+    .setDescription(description);
 
   if (category === 'messages') {
     const totalWeeklyMessages = rows.reduce((sum, row) => sum + row.last_7d, 0);
     const weeklyAverage = rows.length ? totalWeeklyMessages / rows.length : 0;
-    container.addSeparatorComponents(new SeparatorBuilder());
-    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
-      'Team weekly average: **' + weeklyAverage.toLocaleString('en-US', { maximumFractionDigits: 1 }) +
-      '** messages per staff member'
-    ));
+    embed.setFooter({
+      text: 'Team weekly average: ' +
+        weeklyAverage.toLocaleString('en-US', { maximumFractionDigits: 1 }) +
+        ' messages per staff member',
+    });
+  } else {
+    embed.setFooter({ text: 'NR:R Staff Rankings' });
   }
 
   const selector = new StringSelectMenuBuilder()
@@ -195,9 +226,8 @@ async function buildComponents(client, category, onStage = () => {}) {
       { label: 'Messages', value: 'messages', description: 'View staff message rankings', default: category === 'messages' },
       { label: 'Punishments', value: 'punishments', description: 'View staff punishment rankings', default: category === 'punishments' },
     );
-  container.addSeparatorComponents(new SeparatorBuilder());
-  container.addActionRowComponents(new ActionRowBuilder().addComponents(selector));
-  return [container];
+  const row = new ActionRowBuilder().addComponents(selector);
+  return { embeds: [embed], components: [row], allowedMentions: { parse: [] } };
 }
 
 async function saveRankingSnapshots(client, slotKey) {
@@ -226,19 +256,23 @@ async function handleCommand(interaction) {
   const category = interaction.options.getString('category') || 'messages';
   let stage = 'defer_initial_response';
   try {
-    await interaction.deferReply({ flags: MessageFlags.IsComponentsV2 });
+    await interaction.deferReply();
     stage = 'build_ranking';
     const components = await buildComponents(interaction.client, category, next => { stage = next; });
     stage = 'send_ranking_response';
-    return await interaction.editReply({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
+    return await interaction.editReply(components);
   } catch (error) {
     const diagnosticId = await recordDiagnostic({
       source: 'slash_command', stage: error.staffRankingStage || stage, category, interaction, error,
-      details: { command: 'staff_ranking', deferred: interaction.deferred, responseFlags: 'IsComponentsV2' },
+      details: { command: 'staff_ranking', deferred: interaction.deferred },
     });
+    const errorEmbed = new EmbedBuilder()
+      .setColor(0xed4245)
+      .setTitle('Staff Ranking could not be loaded')
+      .setDescription('Diagnostic ID: **' + (diagnosticId ? 'SR-' + diagnosticId : 'not saved') + '**');
     return interaction.editReply({
-      components: errorComponents(diagnosticId, category),
-      flags: MessageFlags.IsComponentsV2,
+      embeds: [errorEmbed],
+      components: [],
       allowedMentions: { parse: [] },
     }).catch(editError => {
       console.error('[StaffRankingDiagnostic] Could not send V2 failure response:', editError);
@@ -256,7 +290,7 @@ async function handleSelect(interaction) {
   try {
     const components = await buildComponents(interaction.client, category, next => { stage = next; });
     stage = 'update_original_ranking_message';
-    await interaction.update({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
+    await interaction.update(components);
   } catch (error) {
     const diagnosticId = await recordDiagnostic({
       source: 'category_select', stage: error.staffRankingStage || stage, category, interaction, error,
@@ -277,7 +311,7 @@ async function handlePrefixMessage(message) {
   const category = (match[1] || 'messages').toLowerCase();
   try {
     const components = await buildComponents(message.client, category);
-    await message.channel.send({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
+    await message.channel.send(components);
   } catch (error) {
     const diagnosticId = await recordDiagnostic({
       source: 'prefix_command', stage: error.staffRankingStage || 'build_or_send', category, message, error,
@@ -348,7 +382,7 @@ async function startScheduler(client) {
       return;
     }
     const components = await buildComponents(client, 'messages');
-    await channel.send({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
+    await channel.send(components);
     await db.query('INSERT INTO nrr_staff_ranking_schedule(slot_key) VALUES($1) ON CONFLICT DO NOTHING', [slot]);
     await saveRankingSnapshots(client, slot).catch(error => {
       console.error('Could not save Staff Ranking trend snapshots for slot ' + slot + ':', error);
