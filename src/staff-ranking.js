@@ -24,14 +24,14 @@ function safeName(value) {
     .slice(0, 19);
 }
 
-function makeTable(rows, category) {
+function makeTable(rows) {
   const heading = [
-    '`#  STAFF MEMBER          7D       14D    ALL TIME`',
-    '`────────────────────────────────────────────────`',
+    '`#  STAFF MEMBER          LAST 7D   LAST 14D   ALL TIME`',
+    '`────────────────────────────────────────────────────────`',
   ];
   if (!rows.length) return 'No staff members with the Staff Team role were found.';
   const lines = rows.map((row, index) => {
-    const rank = String(index + 1).padStart(2, ' ');
+    const rank = String(row.rank || index + 1).padStart(2, ' ');
     const name = safeName(row.display_name).padEnd(19, ' ');
     const seven = formatCount(row.last_7d).padStart(7, ' ');
     const fourteen = formatCount(row.last_14d).padStart(7, ' ');
@@ -83,17 +83,25 @@ async function getRankingData(communityGuild, category) {
     b.all_time - a.all_time ||
     a.display_name.localeCompare(b.display_name)
   );
+  let previousScore = null;
+  let position = 0;
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].last_7d !== previousScore) position = i + 1;
+    rows[i].rank = position;
+    previousScore = rows[i].last_7d;
+  }
+  const cutoffRank = rows[Math.min(9, rows.length - 1)]?.rank;
+  return rows.filter(row => row.rank <= cutoffRank);
 }
 
 async function buildComponents(client, category) {
   const communityGuild = await client.guilds.fetch(config.guildId);
   const rows = await getRankingData(communityGuild, category);
-  const label = category === 'punishments' ? 'Punishments Issued' : 'Messages Sent';
   const description = category === 'punishments'
     ? 'Counts bans, kicks and timeouts recorded against staff moderators.'
     : 'Counts messages sent by staff members. Bot and webhook messages are excluded.';
   const title = category === 'punishments' ? '## NR:R Staff Punishment Rankings' : '## NR:R Staff Message Rankings';
-  const table = makeTable(rows, category);
+  const table = makeTable(rows);
   const chunks = [];
   let current = '';
   for (const line of table.split('\n')) {
@@ -167,4 +175,53 @@ async function handleSelect(interaction) {
   return true;
 }
 
-module.exports = { buildComponents, handleCommand, handleSelect };
+
+async function handlePrefixMessage(message) {
+  if (!message.guild || message.guild.id !== config.staffGuildId || message.author.bot || message.webhookId) return false;
+  const match = message.content.trim().match(/^!staff_ranking(?:\\s+(messages|punishments))?$/i);
+  if (!match) return false;
+  const category = (match[1] || 'messages').toLowerCase();
+  try {
+    const components = await buildComponents(message.client, category);
+    await message.channel.send({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
+  } catch (error) {
+    console.error('Staff ranking prefix command failed:', error);
+    await message.reply('I could not load the staff rankings right now.').catch(() => {});
+  }
+  return true;
+}
+
+async function startScheduler(client) {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS nrr_staff_ranking_schedule (
+      slot_key TEXT PRIMARY KEY,
+      posted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  const checkAndPost = async () => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+    }).formatToParts(new Date()).reduce((out, part) => {
+      out[part.type] = part.value;
+      return out;
+    }, {});
+    if (!['00', '12'].includes(parts.hour)) return;
+    const slot = parts.year + '-' + parts.month + '-' + parts.day + '-' + parts.hour;
+    const existing = await db.query('SELECT 1 FROM nrr_staff_ranking_schedule WHERE slot_key = $1', [slot]);
+    if (existing.rowCount) return;
+    const channel = await client.channels.fetch(config.staffRankingChannelId).catch(() => null);
+    if (!channel?.isTextBased() || !channel.send) {
+      console.error('Staff ranking schedule: configured channel is unavailable.');
+      return;
+    }
+    const components = await buildComponents(client, 'messages');
+    await channel.send({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
+    await db.query('INSERT INTO nrr_staff_ranking_schedule(slot_key) VALUES($1) ON CONFLICT DO NOTHING', [slot]);
+    console.log('Posted scheduled Staff Ranking for Saudi time slot ' + slot + '.');
+  };
+  await checkAndPost().catch(error => console.error('Initial staff ranking schedule check failed:', error));
+  setInterval(() => checkAndPost().catch(error => console.error('Staff ranking schedule failed:', error)), 60 * 1000);
+}
+
+module.exports = { buildComponents, handleCommand, handleSelect, handlePrefixMessage, startScheduler };
