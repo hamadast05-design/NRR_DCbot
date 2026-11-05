@@ -242,12 +242,12 @@ async function handleCommand(interaction) {
 
   const category = interaction.options.getString('category') || 'messages';
   let stage = 'defer_initial_response';
-  await interaction.deferReply({ flags: MessageFlags.IsComponentsV2 });
   try {
+    await interaction.deferReply({ flags: MessageFlags.IsComponentsV2 });
     stage = 'build_ranking';
     const components = await buildComponents(interaction.client, category, next => { stage = next; });
     stage = 'send_ranking_response';
-    return await interaction.editReply({ components, allowedMentions: { parse: [] } });
+    return await interaction.editReply({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
   } catch (error) {
     const diagnosticId = await recordDiagnostic({
       source: 'slash_command', stage: error.staffRankingStage || stage, category, interaction, error,
@@ -255,6 +255,7 @@ async function handleCommand(interaction) {
     });
     return interaction.editReply({
       components: errorComponents(diagnosticId, category),
+      flags: MessageFlags.IsComponentsV2,
       allowedMentions: { parse: [] },
     }).catch(editError => {
       console.error('[StaffRankingDiagnostic] Could not send V2 failure response:', editError);
@@ -272,7 +273,7 @@ async function handleSelect(interaction) {
   try {
     const components = await buildComponents(interaction.client, category, next => { stage = next; });
     stage = 'update_original_ranking_message';
-    await interaction.update({ components, allowedMentions: { parse: [] } });
+    await interaction.update({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
   } catch (error) {
     const diagnosticId = await recordDiagnostic({
       source: 'category_select', stage: error.staffRankingStage || stage, category, interaction, error,
@@ -329,7 +330,7 @@ async function handleDiagnosticsMessage(message) {
         '`' + String(row.error_code || row.error_name || 'Error') + '` ' +
         String(row.error_message || '').replace(/[\\r\\n`]/g, ' ').slice(0, 220);
     });
-    await message.reply({ content: '**Latest Staff Ranking diagnostics**\\n\\n' + lines.join('\\n\\n'), allowedMentions: { parse: [] } }).catch(() => {});
+    const report = ('**Latest Staff Ranking diagnostics**\\n\\n' + lines.join('\\n\\n')).slice(0, 1850);\n    await message.reply({ content: report, allowedMentions: { parse: [] } }).catch(() => {});
   } catch (error) {
     console.error('[StaffRankingDiagnostic] Diagnostics command failed:', error);
     await message.reply('Could not read Staff Ranking diagnostics. Check Railway logs.').catch(() => {});
