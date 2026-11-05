@@ -34,10 +34,14 @@ async function registerApplicationCommands() {
     : Routes.applicationCommands(config.clientId);
   const communityPayload = commands.map(command => command.toJSON());
 
-  if (!config.staffGuildId && config.staffRankingChannelId) {
+  if (config.staffRankingChannelId) {
     const rankingChannel = await rest.get(Routes.channel(config.staffRankingChannelId));
-    config.staffGuildId = rankingChannel.guild_id || null;
-    if (!config.staffGuildId) throw new Error('Could not resolve STAFF_GUILD_ID from STAFF_RANKING_CHANNEL_ID.');
+    const channelGuildId = rankingChannel.guild_id || null;
+    if (!channelGuildId) throw new Error('Could not resolve the Staff Server from STAFF_RANKING_CHANNEL_ID.');
+    if (config.staffGuildId && config.staffGuildId !== channelGuildId) {
+      throw new Error('STAFF_GUILD_ID does not match the guild that contains STAFF_RANKING_CHANNEL_ID.');
+    }
+    config.staffGuildId = channelGuildId;
   }
   if (config.staffGuildId && config.staffGuildId === config.guildId) {
     throw new Error('STAFF_GUILD_ID must be different from DISCORD_GUILD_ID.');
