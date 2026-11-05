@@ -14,6 +14,7 @@ const config = {
   token: process.env.DISCORD_TOKEN,
   clientId: process.env.DISCORD_CLIENT_ID,
   guildId: process.env.DISCORD_GUILD_ID || null,
+  staffGuildId: process.env.STAFF_GUILD_ID || null,
   cooldownMs: positiveNumber(process.env.REPUTATION_COOLDOWN_MINUTES, 5) * 60 * 1000,
   allowBotTargets: bool(process.env.ALLOW_BOT_TARGETS, false),
   showDeparted: bool(process.env.SHOW_DEPARTED_ON_LEADERBOARDS, false),
