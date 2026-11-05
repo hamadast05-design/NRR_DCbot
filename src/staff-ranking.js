@@ -46,43 +46,6 @@ function renderRankingRows(rows, previousRanks = {}) {
   }).join('\\n');
 }
 
-function formatCount(value) {
-  return Number(value || 0).toLocaleString('en-US');
-}
-
-function safeName(value) {
-  return String(value || 'Unknown')
-    .replace(/[\r\n\t`]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 32);
-}
-
-function renderRankingRows(rows, previousRanks = {}) {
-  if (!rows.length) {
-    return [new TextDisplayBuilder().setContent('_No staff ranking data is available yet._')];
-  }
-  const medals = ['🥇', '🥈', '🥉'];
-  const components = [];
-  rows.forEach((row, index) => {
-    const rank = Number(row.rank || index + 1);
-    const previousRank = Number(previousRanks[row.user_id]);
-    const movement = !Number.isFinite(previousRank) || previousRank <= 0
-      ? '●'
-      : rank < previousRank ? '▲' : rank > previousRank ? '▼' : '●';
-    const name = safeName(row.display_name);
-    const marker = medals[rank - 1];
-    const heading = marker
-      ? '### ' + marker + ' **' + name + '** ' + movement
-      : '**' + String(rank).padStart(2, '0') + '. ' + name + '** ' + movement;
-    const stats = '**' + formatCount(row.last_7d) + '**  ·  **' +
-      formatCount(row.last_14d) + '**  ·  **' + formatCount(row.all_time) + '**';
-    components.push(new TextDisplayBuilder().setContent(heading + '\n' + stats));
-    if (index < rows.length - 1) components.push(new SeparatorBuilder());
-  });
-  return components;
-}
-
 async function ensureSnapshotsTable() {
   if (snapshotsTableReady) return;
   await db.query(`
