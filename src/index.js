@@ -18,6 +18,7 @@ const chatRevivalSystem = require('./chat-revival');
 const automationControl = require('./automation-control');
 const gameRotationSystem = require('./game-rotation');
 const staffAnalytics = require('./staff-analytics');
+const staffRanking = require('./staff-ranking');
 const { registerApplicationCommands } = require('./command-registration');
 
 validate();
@@ -33,6 +34,7 @@ client.once(Events.ClientReady, async readyClient => {
     await registerApplicationCommands();
     await db.migrate();
     await staffAnalytics.migrate();
+    await staffRanking.startScheduler(readyClient);
     await qotdSystem.migrate();
     console.log('Database migrations ready.');
     await staffAnalytics.backfillAuditLogs(readyClient);
@@ -107,6 +109,7 @@ client.on(Events.MessageDelete, async message => {
 
 client.on(Events.MessageCreate, async message => {
   try { await handlePrefixMute(message); } catch (error) { console.error('Prefix mute command failed:', error); }
+  try { await staffRanking.handlePrefixMessage(message); } catch (error) { console.error('Staff ranking prefix command failed:', error); }
   if (message.guild && !message.author.bot && !message.webhookId) {
     const raw = message.content.trim();
     if (/^!send_news$/i.test(raw)) { if (!message.member?.permissions?.has(PermissionFlagsBits.ManageGuild)) return message.reply('❌ You need Manage Server permission to send manual news.'); try { await newsSystem.sendLatest(client, message); } catch (error) { console.error('Manual news command failed:', error); await message.reply('❌ I could not fetch or post a news story right now.'); } }
