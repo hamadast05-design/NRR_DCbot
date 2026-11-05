@@ -14,6 +14,7 @@ const { STAFF_ROLE_ID } = require('./staff-analytics');
 const TIME_ZONE = 'Asia/Riyadh';
 const COLORS = { messages: 0x3c3c3d, punishments: 0x5865f2 };
 let diagnosticTableReady = false;
+let schedulerTimer = null;
 
 function formatCount(value) {
   return Number(value || 0).toLocaleString('en-US');
@@ -362,10 +363,16 @@ async function startScheduler(client) {
     console.log('Posted scheduled Staff Ranking for Saudi time slot ' + slot + '.');
   };
   await checkAndPost().catch(error => console.error('Initial staff ranking schedule check failed:', error));
-  setInterval(() => checkAndPost().catch(error => console.error('Staff ranking schedule failed:', error)), 60 * 1000);
+  if (schedulerTimer) clearInterval(schedulerTimer);
+  schedulerTimer = setInterval(() => checkAndPost().catch(error => console.error('Staff ranking schedule failed:', error)), 60 * 1000);
+}
+
+function stopScheduler() {
+  if (schedulerTimer) clearInterval(schedulerTimer);
+  schedulerTimer = null;
 }
 
 module.exports = {
   buildComponents, handleCommand, handleSelect, handlePrefixMessage,
-  handleDiagnosticsMessage, startScheduler,
+  handleDiagnosticsMessage, startScheduler, stopScheduler,
 };
