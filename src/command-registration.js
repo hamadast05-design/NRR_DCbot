@@ -42,14 +42,20 @@ async function registerApplicationCommands() {
   await rest.put(communityRoute, { body: communityPayload });
   console.log('Community Server application commands registered successfully.');
 
+  if (!config.staffGuildId && config.staffRankingChannelId) {
+    const rankingChannel = await rest.get(Routes.channel(config.staffRankingChannelId));
+    config.staffGuildId = rankingChannel.guild_id || null;
+    if (!config.staffGuildId) throw new Error('Could not resolve STAFF_GUILD_ID from STAFF_RANKING_CHANNEL_ID.');
+  }
+
   if (config.staffGuildId) {
     if (config.staffGuildId === config.guildId) {
       throw new Error('STAFF_GUILD_ID must be different from DISCORD_GUILD_ID.');
     }
     const staffRoute = Routes.applicationGuildCommands(config.clientId, config.staffGuildId);
-    console.log('Registering only /staff-ranking in the Staff Server...');
+    console.log('Registering only /staff_ranking in the Staff Server...');
     await rest.put(staffRoute, { body: [staffRankingCommand.toJSON()] });
-    console.log('Staff Server /staff-ranking command registered successfully.');
+    console.log('Staff Server /staff_ranking command registered successfully.');
   } else {
     console.warn('STAFF_GUILD_ID is not configured; skipping Staff Server command registration.');
   }
