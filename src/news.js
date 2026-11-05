@@ -94,6 +94,10 @@ async function start(client){
  },POLL_MS);
  console.log('World News scheduler active: BBC feeds checked every 15 minutes.');
 }
+function stop() {
+ if (timer) clearInterval(timer);
+ timer = null;
+}
 async function sendLatest(client,message){
  const r=await publishNext(client,true);
  if(r.ok)await message.reply('✅ Posted the latest available BBC news story.');
@@ -127,4 +131,4 @@ async function sendCustom(interaction) {
  await ch.send({embeds:[e],allowedMentions:{parse:[]}});
  return interaction.reply({content:'✅ Your fictional staff-made news post has been published in <#'+NEWS_CHANNEL_ID+'>.',ephemeral:true});
 }
-module.exports={start,sendLatest,sendCustom,NEWS_CHANNEL_ID,score};
+module.exports={start,stop,sendLatest,sendCustom,NEWS_CHANNEL_ID,score};
