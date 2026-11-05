@@ -1,4 +1,4 @@
-name: Node syntax check
+name: Node syntax and Components V2 check
 
 on:
   push:
@@ -20,3 +20,34 @@ jobs:
           for file in src/*.js; do
             node --check "$file"
           done
+      - name: Verify Discord Components V2 builders
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+          node <<'NODE'
+          const {
+            ActionRowBuilder,
+            ContainerBuilder,
+            MessageFlags,
+            SeparatorBuilder,
+            StringSelectMenuBuilder,
+            TextDisplayBuilder,
+            SlashCommandBuilder
+          } = require('discord.js');
+          const menu = new StringSelectMenuBuilder()
+            .setCustomId('staff-ranking:category')
+            .setPlaceholder('Switch ranking category')
+            .addOptions(
+              { label: 'Messages', value: 'messages', default: true },
+              { label: 'Punishments', value: 'punishments' }
+            );
+          const container = new ContainerBuilder()
+            .setAccentColor(0x3c3c3d)
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent('## Staff Rankings'))
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addActionRowComponents(new ActionRowBuilder().addComponents(menu));
+          new SlashCommandBuilder().setName('staff_ranking').setDescription('View staff rankings.');
+          if (!MessageFlags.IsComponentsV2 || !container.toJSON().components.length) {
+            throw new Error('Discord Components V2 builders are unavailable.');
+          }
+          console.log('Components V2 builders and slash command builder verified.');
+          NODE
