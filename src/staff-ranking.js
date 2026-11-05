@@ -330,7 +330,8 @@ async function handleDiagnosticsMessage(message) {
         '`' + String(row.error_code || row.error_name || 'Error') + '` ' +
         String(row.error_message || '').replace(/[\\r\\n`]/g, ' ').slice(0, 220);
     });
-    const report = ('**Latest Staff Ranking diagnostics**\\n\\n' + lines.join('\\n\\n')).slice(0, 1850);\n    await message.reply({ content: report, allowedMentions: { parse: [] } }).catch(() => {});
+    const report = ('**Latest Staff Ranking diagnostics**\\n\\n' + lines.join('\\n\\n')).slice(0, 1850);
+    await message.reply({ content: report, allowedMentions: { parse: [] } }).catch(() => {});
   } catch (error) {
     console.error('[StaffRankingDiagnostic] Diagnostics command failed:', error);
     await message.reply('Could not read Staff Ranking diagnostics. Check Railway logs.').catch(() => {});
