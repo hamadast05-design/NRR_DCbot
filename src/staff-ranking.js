@@ -36,15 +36,16 @@ function renderRankingRows(rows) {
   rows.forEach((row, index) => {
     const rank = Number(row.rank || index + 1);
     const marker = medals[rank - 1] || ('**' + String(rank).padStart(2, '0') + '.**');
-    const stats = '`7D  ' + formatCount(row.last_7d) + '`   ' +
-      '`14D  ' + formatCount(row.last_14d) + '`   ' +
-      '`ALL  ' + formatCount(row.all_time) + '`';
-    components.push(new TextDisplayBuilder().setContent(marker + ' **' + safeName(row.display_name) + '**\n' + stats));
+    const name = safeName(row.display_name);
+    const highlightedName = rank <= 3 ? '**' + name + '**' : name;
+    const stats = '\`7D\`: **' + formatCount(row.last_7d) + '** | ' +
+      '\`14D\`: **' + formatCount(row.last_14d) + '** | ' +
+      '\`Total\`: **' + formatCount(row.all_time) + '**';
+    components.push(new TextDisplayBuilder().setContent(marker + ' ' + highlightedName + ' • ' + stats));
     if (index < rows.length - 1) components.push(new SeparatorBuilder());
   });
   return components;
 }
-
 async function ensureDiagnosticsTable() {
   if (diagnosticTableReady) return;
   await db.query(`
