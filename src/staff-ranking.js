@@ -86,12 +86,73 @@ async function getPreviousRanks(guildId, category) {
   return result.rows[0]?.ranks || {};
 }
 
-async function saveRankingSnapshots(client, slotKey) {
-  await ensureSnapshotsTable();
+async function getRankingData(communityGuild, category) {
+  // Use the startup member cache; fetching the full guild on every ranking
+  // interaction can trigger Discord Gateway opcode 8 rate limits.
+  const role = communityGuild.roles.cache.get(STAFF_ROLE_ID)
+    || await communityGuild.roles.fetch(STAFF_ROLE_ID).catch(() => null);
+  if (!role) throw Object.assign(new Error('Staff Team role not found in Community Server.'), { staffRankingStage: 'resolve_staff_role' });
+
+  const members = [...role.members.values()].filter(member => !member.user.bot);
+  if (!members.length) {
+    throw Object.assign(
+      new Error('No cached non-bot Staff Team members were available. Check startup member synchronization and the GuildMembers intent.'),
+      { staffRankingStage: 'read_staff_member_cache' }
+    );
+  }
+
+  const ids = members.map(member => member.id);
+  const table = category === 'punishments' ? 'nrr_punishments' : 'nrr_message_activity';
+  const personColumn = category === 'punishments' ? 'moderator_id' : 'user_id';
+  const dateColumn = category === 'punishments' ? 'occurred_at' : 'created_at';
+  const result = await db.query(
+    `SELECT ${personColumn} AS user_id,
+      COUNT(*) FILTER (WHERE ${dateColumn} >=
+        ((date_trunc('day', NOW() AT TIME ZONE $3) - INTERVAL '6 days') AT TIME ZONE $3)
+      )::int AS last_7d,
+      COUNT(*) FILTER (WHERE ${dateColumn} >=
+        ((date_trunc('day', NOW() AT TIME ZONE $3) - INTERVAL '13 days') AT TIME ZONE $3)
+      )::int AS last_14d,
+      COUNT(*)::int AS all_time
+    FROM ${table}
+    WHERE guild_id = $1 AND ${personColumn} = ANY($2::text[])
+    GROUP BY ${personColumn}`,
+    [communityGuild.id, ids, TIME_ZONE]
+  );
+
+  const counts = new Map(result.rows.map(row => [row.user_id, row]));
+  const rows = members.map(member => {
+    const stats = counts.get(member.id) || {};
+    return {
+      user_id: member.id,
+      display_name: member.displayName || member.user.username,
+      last_7d: Number(stats.last_7d || 0),
+      last_14d: Number(stats.last_14d || 0),
+      all_time: Number(stats.all_time || 0),
+    };
+  }).sort((a, b) =>
+    b.last_7d - a.last_7d ||
+    b.last_14d - a.last_14d ||
+    b.all_time - a.all_time ||
+    a.display_name.localeCompare(b.display_name)
+  );
+  let previousScore = null;
+  let position = 0;
+  for (let i = 0; i < rows.length; i++) {
+    const score = [rows[i].last_7d, rows[i].last_14d, rows[i].all_time].join(':');
+    if (score !== previousScore) position = i + 1;
+    rows[i].rank = position;
+    previousScore = score;
+  }
+  return rows;
+}
+
+async function buildComponents(client, category, onStage = () => {}) {
+  onStage('resolve_community_guild');
   const communityGuild = client.guilds.cache.get(config.guildId)
     || await client.guilds.fetch(config.guildId);
-  for (const category of ['messages', 'punishments']) {
-    const rows = await getRankingData(communityGuild, category);
+  onStage('read_staff_role_and_members');
+  const rows = await getRankingData(communityGuild, category);
   const previousRanks = await getPreviousRanks(communityGuild.id, category);
   onStage('render_components');
 
@@ -127,7 +188,7 @@ async function saveRankingSnapshots(client, slotKey) {
     ));
   }
 
-  const selector = new StringSelectMenuBuilder()  const selector = new StringSelectMenuBuilder()
+  const selector = new StringSelectMenuBuilder()
     .setCustomId('staff-ranking:category')
     .setPlaceholder('Switch ranking category')
     .addOptions(
@@ -137,6 +198,21 @@ async function saveRankingSnapshots(client, slotKey) {
   container.addSeparatorComponents(new SeparatorBuilder());
   container.addActionRowComponents(new ActionRowBuilder().addComponents(selector));
   return [container];
+}
+
+async function saveRankingSnapshots(client, slotKey) {
+  await ensureSnapshotsTable();
+  const communityGuild = client.guilds.cache.get(config.guildId)
+    || await client.guilds.fetch(config.guildId);
+  for (const category of ['messages', 'punishments']) {
+    const rows = await getRankingData(communityGuild, category);
+    const ranks = Object.fromEntries(rows.map(row => [row.user_id, row.rank]));
+    await db.query(`
+      INSERT INTO nrr_staff_ranking_snapshots (guild_id, category, slot_key, ranks)
+      VALUES ($1, $2, $3, $4::jsonb)
+      ON CONFLICT (guild_id, category, slot_key) DO NOTHING
+    `, [communityGuild.id, category, slotKey, JSON.stringify(ranks)]);
+  }
 }
 
 async function handleCommand(interaction) {
