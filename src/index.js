@@ -72,7 +72,7 @@ client.once(Events.ClientReady, async readyClient => {
       () => eventSystem.autoApprove(readyClient).catch(error => console.error('Event auto-approval failed:', error)),
       30 * 1000,
     );
-    newsSystem.start(readyClient);
+    await newsSystem.start(readyClient);
 
     // Temporarily disabled by administrator request: no Chat Revival or automatic game-invitation messages.
     console.log('Chat Revival and automatic game invitations are disabled.');
