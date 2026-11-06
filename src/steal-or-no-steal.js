@@ -128,9 +128,11 @@ async function getPublicMessage(client, game) {
 
 async function finishGame(game, decision, interaction = null, client = null) {
   if (game.finished) return;
-  game.finished = true;
-  game.stage = 'finished';
-  await saveGame(game);
+  // Claim the decision atomically so a button click and timeout cannot finish
+  // the same game with conflicting outcomes.
+  const claimedGame = await db.claimStealNoStealDecision(game.id);
+  if (!claimedGame) return;
+  game = claimedGame;
   clearTimeout(game.decisionTimer);
   const playerB = '<@' + game.playerB + '>';
   const playerA = '<@' + game.playerA + '>';
@@ -154,6 +156,17 @@ async function finishGame(game, decision, interaction = null, client = null) {
   await removeGame(game.id);
 }
 
+async function scheduleDecisionTimeout(game, client) {
+  const latest = await getGame(game.id);
+  if (!latest || latest.finished || latest.stage !== 'decision') return;
+  const remaining = Number(latest.decisionDeadline || 0) - Date.now();
+  if (remaining > 0) {
+    setTimeout(() => scheduleDecisionTimeout(latest, client).catch(error => console.error('Steal Or No Steal timeout check failed:', error)), remaining + 1_000);
+    return;
+  }
+  await finishGame(latest, 'nosteal', null, client);
+}
+
 async function showDecision(game, client) {
   if (game.finished) return;
   game.stage = 'decision';
@@ -171,7 +184,11 @@ async function showDecision(game, client) {
   });
   game.decisionMessageId = decisionMessage.id;
   await saveGame(game);
-  game.decisionTimer = setTimeout(() => finishGame(game, 'nosteal', null, client).catch(error => console.error('Steal Or No Steal timeout failed:', error)), 30_000);
+  // Give interactions received before the deadline a brief processing window.
+  game.decisionTimer = setTimeout(
+    () => scheduleDecisionTimeout(game, client).catch(error => console.error('Steal Or No Steal timeout failed:', error)),
+    31_000
+  );
 }
 
 async function startCommand(interaction) {
@@ -357,6 +374,9 @@ async function onButton(interaction) {
       return interaction.reply({ content: 'Only Player B can make this decision.', ephemeral: true });
     }
     if (game.stage !== 'decision') return interaction.reply({ content: 'It is not time to make that decision yet.', ephemeral: true });
+    if (Number(game.decisionDeadline || 0) && interaction.createdTimestamp > Number(game.decisionDeadline)) {
+      return interaction.reply({ content: 'The decision time has expired.', ephemeral: true });
+    }
     return finishGame(game, action, interaction);
   }
 
