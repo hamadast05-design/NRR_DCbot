@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Events, PermissionFlagsBits } = require('discord.js');
+const { Client, GatewayIntentBits, Events, PermissionFlagsBits, ActivityType } = require('discord.js');
 const { config, validate } = require('./config');
 const db = require('./db');
 const { handleInteraction, handlePrefixMute } = require('./commands');
@@ -30,6 +30,14 @@ const client = new Client({
 
 client.once(Events.ClientReady, async readyClient => {
   console.log(`Logged in as ${readyClient.user.tag}`);
+  readyClient.user.setPresence({
+    status: 'online',
+    activities: [{
+      name: 'Custom Status',
+      type: ActivityType.Custom,
+      state: 'PLAY /STEAL_OR_NOSTEAL RIGHT NOW IN NRR!'
+    }]
+  });
   try {
     await registerApplicationCommands();
     await db.migrate();
