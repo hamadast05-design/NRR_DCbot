@@ -14,6 +14,19 @@ const { STAFF_ROLE_ID } = require('./staff-analytics');
 const TIME_ZONE = 'Asia/Riyadh';
 const COLORS = { messages: 0x3c3c3d, punishments: 0x5865f2 };
 let diagnosticTableReady = false;
+let resetTableReady = false;
+
+async function ensureResetTable() {
+  if (resetTableReady) return;
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS nrr_staff_ranking_resets (
+      guild_id TEXT PRIMARY KEY,
+      reset_7d_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      reset_by TEXT
+    )
+  `);
+  resetTableReady = true;
+}
 
 function formatCount(value) {
   return Number(value || 0).toLocaleString('en-US');
@@ -149,9 +162,13 @@ async function getRankingData(communityGuild, category) {
   const dateColumn = category === 'punishments' ? 'occurred_at' : 'created_at';
   const result = await db.query(
     `SELECT ${personColumn} AS user_id,
-      COUNT(*) FILTER (WHERE ${dateColumn} >=
-        ((date_trunc('day', NOW() AT TIME ZONE $3) - INTERVAL '6 days') AT TIME ZONE $3)
-      )::int AS last_7d,
+      COUNT(*) FILTER (WHERE ${dateColumn} >= GREATEST(
+        ((date_trunc('day', NOW() AT TIME ZONE $3) - INTERVAL '6 days') AT TIME ZONE $3),
+        COALESCE(
+          (SELECT reset_7d_at FROM nrr_staff_ranking_resets WHERE guild_id = $1),
+          '-infinity'::timestamptz
+        )
+      ))::int AS last_7d,
       COUNT(*) FILTER (WHERE ${dateColumn} >=
         ((date_trunc('day', NOW() AT TIME ZONE $3) - INTERVAL '13 days') AT TIME ZONE $3)
       )::int AS last_14d,
@@ -294,6 +311,37 @@ async function handleSelect(interaction) {
 
 async function handlePrefixMessage(message) {
   if (!message.guild || message.guild.id !== config.staffGuildId || message.author.bot || message.webhookId) return false;
+
+  if (/^!reset7d$/i.test(message.content.trim())) {
+    if (!message.member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
+      await message.reply({
+        content: 'You need Manage Server permission to reset the 7D staff ranking period.',
+        allowedMentions: { parse: [] },
+      }).catch(() => {});
+      return true;
+    }
+    try {
+      await ensureResetTable();
+      await db.query(`
+        INSERT INTO nrr_staff_ranking_resets (guild_id, reset_7d_at, reset_by)
+        VALUES ($1, NOW(), $2)
+        ON CONFLICT (guild_id)
+        DO UPDATE SET reset_7d_at = NOW(), reset_by = EXCLUDED.reset_by
+      `, [config.guildId, message.author.id]);
+      await message.reply({
+        content: '✅ The 7D staff ranking period has been reset. New messages will count from now on. The 14D and Total counts are unchanged.',
+        allowedMentions: { parse: [] },
+      }).catch(() => {});
+    } catch (error) {
+      console.error('[StaffRanking] !reset7D failed:', error);
+      await message.reply({
+        content: '❌ I could not reset the 7D staff ranking period. Check Railway logs.',
+        allowedMentions: { parse: [] },
+      }).catch(() => {});
+    }
+    return true;
+  }
+
   const match = message.content.trim().match(/^!staff_ranking(?:\\s+(messages|punishments))?$/i);
   if (!match) return false;
   const category = (match[1] || 'messages').toLowerCase();
@@ -346,6 +394,7 @@ async function handleDiagnosticsMessage(message) {
 
 async function startScheduler(client) {
   await ensureDiagnosticsTable();
+  await ensureResetTable();
   await db.query(`
     CREATE TABLE IF NOT EXISTS nrr_staff_ranking_schedule (
       slot_key TEXT PRIMARY KEY,
