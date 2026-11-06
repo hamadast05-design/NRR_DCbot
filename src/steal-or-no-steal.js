@@ -141,8 +141,12 @@ async function finishGame(game, decision, interaction = null, client = null) {
   try {
     if (interaction) await interaction.update(reveal);
     else {
-      const message = await getPublicMessage(client || interaction?.client, game);
-      await message.edit(reveal);
+      const activeClient = client || interaction?.client;
+      const channel = await activeClient.channels.fetch(game.channelId).catch(() => null);
+      const message = channel?.isTextBased() && game.decisionMessageId
+        ? await channel.messages.fetch(game.decisionMessageId).catch(() => null)
+        : await getPublicMessage(activeClient, game);
+      if (message) await message.edit(reveal);
     }
   } catch (error) {
     console.error('Steal Or No Steal reveal failed:', error);
@@ -155,12 +159,18 @@ async function showDecision(game, client) {
   game.stage = 'decision';
   game.decisionDeadline = Date.now() + 30_000;
   await saveGame(game);
-  const message = await getPublicMessage(client, game);
-  await message.edit(panel(
-    '## 🧳 Steal Or No Steal?',
-    '<@' + game.playerB + '>, it is time to decide! Do you want to steal the suitcase or leave it with ' + '<@' + game.playerA + '>?\n\nYou have **30 seconds** to decide.',
-    [decisionRow(game.id, true)]
-  ));
+  const channel = await client.channels.fetch(game.channelId).catch(() => null);
+  if (!channel?.isTextBased()) throw new Error('Game channel is unavailable.');
+  const decisionMessage = await channel.send({
+    ...panel(
+      '## 🧳 Steal Or No Steal?',
+      '<@' + game.playerB + '>, negotiation time is over! It is time to decide. Do you want to steal the suitcase or leave it with ' + '<@' + game.playerA + '>?\n\nYou have **30 seconds** to decide.',
+      [decisionRow(game.id, true)]
+    ),
+    allowedMentions: { parse: [], users: [game.playerB] },
+  });
+  game.decisionMessageId = decisionMessage.id;
+  await saveGame(game);
   game.decisionTimer = setTimeout(() => finishGame(game, 'nosteal', null, client).catch(error => console.error('Steal Or No Steal timeout failed:', error)), 30_000);
 }
 
