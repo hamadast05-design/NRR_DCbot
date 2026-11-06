@@ -32,11 +32,17 @@ client.once(Events.ClientReady, async readyClient => {
   console.log(`Logged in as ${readyClient.user.tag}`);
   readyClient.user.setPresence({
     status: 'online',
-    activities: [{
-      name: 'Custom Status',
-      type: ActivityType.Custom,
-      state: 'PLAY /STEAL_OR_NOSTEAL RIGHT NOW IN NRR!'
-    }]
+    activities: [
+      {
+        name: 'Initiating Orbital Strike on NR3.. 🚀',
+        type: ActivityType.Playing
+      },
+      {
+        name: 'Custom Status',
+        type: ActivityType.Custom,
+        state: 'PLAY /STEAL_OR_NOSTEAL RIGHT NOW IN NRR!'
+      }
+    ]
   });
   try {
     await registerApplicationCommands();
