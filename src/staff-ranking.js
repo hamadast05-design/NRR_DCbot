@@ -12,7 +12,7 @@ const { config } = require('./config');
 const { STAFF_ROLE_ID } = require('./staff-analytics');
 
 const TIME_ZONE = 'Asia/Riyadh';
-const COLORS = { messages: 0x3c3c3d, punishments: 0x5865f2 };
+const COLORS = { messages: 0x3c3c3d, punishments: 0x3c3c3d };
 let diagnosticTableReady = false;
 let resetTableReady = false;
 
@@ -30,6 +30,10 @@ async function ensureResetTable() {
 
 function formatCount(value) {
   return Number(value || 0).toLocaleString('en-US');
+}
+
+function formatAverage(value) {
+  return Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
 }
 
 function safeName(value) {
@@ -203,8 +207,9 @@ async function getRankingData(communityGuild, category) {
     rows[i].rank = position;
     previousScore = score;
   }
+  // Arithmetic mean across every non-bot Staff Team member, including members with zero messages.
   const averageMessages = rows.length
-    ? Math.round(rows.reduce((total, row) => total + row.last_7d, 0) / rows.length)
+    ? rows.reduce((total, row) => total + row.last_7d, 0) / rows.length
     : 0;
   const cutoffRank = rows[Math.min(9, rows.length - 1)]?.rank;
   return {
@@ -238,7 +243,7 @@ async function buildComponents(client, category, onStage = () => {}) {
   if (category === 'messages') {
     container.addSeparatorComponents(new SeparatorBuilder());
     container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
-      '**Weekly average:** ' + formatCount(averageMessages) + ' messages per staff member'
+      '**Weekly average:** `' + formatAverage(averageMessages) + '` messages per staff member'
     ));
   }
 
