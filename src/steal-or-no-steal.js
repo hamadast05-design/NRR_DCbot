@@ -76,6 +76,12 @@ function suitcaseRow(gameId) {
   );
 }
 
+function openPickerRow(gameId) {
+  return new ActionRowBuilder().addComponents(
+    button(PREFIX + 'openpick:' + gameId, 'Open Suitcase Selection', '🧳', ButtonStyle.Primary),
+  );
+}
+
 function challengeRow(gameId) {
   return new ActionRowBuilder().addComponents(
     button(PREFIX + 'accept:' + gameId, 'Yes', '✅', ButtonStyle.Success),
@@ -245,6 +251,10 @@ async function onButton(interaction) {
       ));
     }
 
+    // Acknowledge acceptance and let Player A open their private picker in-channel.
+    // Discord ephemeral responses can only be delivered to the user who clicks.
+    await interaction.deferUpdate();
+
     game.stage = 'pick';
     const counts = await db.query(
       'SELECT position, good_count FROM steal_no_steal_positions WHERE guild_id = $1',
@@ -256,24 +266,45 @@ async function onButton(interaction) {
     game.contents = [pick(BAD_THINGS), pick(BAD_THINGS), pick(BAD_THINGS)];
     game.contents[goodPosition] = pick(GOOD_THINGS);
     game.goodPosition = goodPosition;
-    await db.query(`
-      INSERT INTO steal_no_steal_positions (guild_id, position, good_count)
-      VALUES ($1, $2, 1)
-      ON CONFLICT (guild_id, position)
-      DO UPDATE SET good_count = steal_no_steal_positions.good_count + 1
-    `, [game.guildId, goodPosition]);
     await saveGame(game);
-    await interaction.update(panel(
-      '## 🧳 Steal Or No Steal?',
-      '<@' + game.playerA + '>, your turn! Pick a suitcase. One has the good prize, and the other two have bad surprises. Choose wisely...'
-    ));
-    return interaction.followUp({
+
+    try {
+      await db.query(`
+        INSERT INTO steal_no_steal_positions (guild_id, position, good_count)
+        VALUES ($1, $2, 1)
+        ON CONFLICT (guild_id, position)
+        DO UPDATE SET good_count = steal_no_steal_positions.good_count + 1
+      `, [game.guildId, goodPosition]);
+    } catch (error) {
+      console.error('[StealOrNoSteal] Failed to update suitcase position statistics', error);
+    }
+
+    await interaction.editReply({
+      ...panel(
+        '## 🧳 Steal Or No Steal?',
+        '<@' + game.playerA + '> is now selecting a suitcase..',
+        [openPickerRow(gameId)]
+      ),
+      allowedMentions: { parse: [], users: [game.playerA] },
+    });
+    return;
+  }
+
+  if (action === 'openpick') {
+    if (!isPlayer(interaction, game.playerA)) {
+      return interaction.reply({ content: 'Only Player A can open the private suitcase selection.', ephemeral: true });
+    }
+    if (game.stage !== 'pick') {
+      return interaction.reply({ content: 'The suitcase selection is no longer available.', ephemeral: true });
+    }
+    return interaction.reply({
       ...panel(
         '## 🧳 Pick Your Suitcase',
         'Pick one of the three suitcases below. One contains a good thing; the other two contain bad things.',
         [suitcaseRow(gameId)]
       ),
       ephemeral: true,
+      allowedMentions: { parse: [] },
     });
   }
 
