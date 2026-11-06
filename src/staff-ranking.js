@@ -186,8 +186,14 @@ async function getRankingData(communityGuild, category) {
     rows[i].rank = position;
     previousScore = score;
   }
+  const averageMessages = rows.length
+    ? Math.round(rows.reduce((total, row) => total + row.last_7d, 0) / rows.length)
+    : 0;
   const cutoffRank = rows[Math.min(9, rows.length - 1)]?.rank;
-  return rows.filter(row => row.rank <= cutoffRank);
+  return {
+    rows: rows.filter(row => row.rank <= cutoffRank),
+    averageMessages,
+  };
 }
 
 async function buildComponents(client, category, onStage = () => {}) {
@@ -195,7 +201,7 @@ async function buildComponents(client, category, onStage = () => {}) {
   const communityGuild = client.guilds.cache.get(config.guildId)
     || await client.guilds.fetch(config.guildId);
   onStage('read_staff_role_and_members');
-  const rows = await getRankingData(communityGuild, category);
+  const { rows, averageMessages } = await getRankingData(communityGuild, category);
   onStage('render_components');
 
   const title = category === 'punishments'
@@ -210,6 +216,13 @@ async function buildComponents(client, category, onStage = () => {}) {
   for (const component of renderRankingRows(rows)) {
     if (component instanceof SeparatorBuilder) container.addSeparatorComponents(component);
     else container.addTextDisplayComponents(component);
+  }
+
+  if (category === 'messages') {
+    container.addSeparatorComponents(new SeparatorBuilder());
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      '**Weekly average:** ' + formatCount(averageMessages) + ' messages per staff member'
+    ));
   }
 
   const selector = new StringSelectMenuBuilder()
