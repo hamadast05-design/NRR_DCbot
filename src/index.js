@@ -36,6 +36,11 @@ client.once(Events.ClientReady, async readyClient => {
       {
         name: 'Initiating Orbital Strike on NR3.. 🚀',
         type: ActivityType.Playing
+      },
+      {
+        name: 'Custom Status',
+        type: ActivityType.Custom,
+        state: 'PLAY /STEAL_OR_NOSTEAL RIGHT NOW IN NRR!'
       }
     ]
   });
