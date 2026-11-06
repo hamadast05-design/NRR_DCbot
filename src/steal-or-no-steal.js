@@ -390,8 +390,8 @@ async function onButton(interaction) {
     game.decisionDeadline = Date.now() + 15_000;
     clearTimeout(game.decisionTimer);
     game.decisionTimer = setTimeout(
-      () => finishGame(game, 'nosteal', null, interaction.client).catch(error => console.error('Steal Or No Steal extra-time timeout failed:', error)),
-      15_000
+      () => scheduleDecisionTimeout(game, interaction.client).catch(error => console.error('Steal Or No Steal extra-time timeout failed:', error)),
+      16_000
     );
     await saveGame(game);
     return interaction.update(panel(
