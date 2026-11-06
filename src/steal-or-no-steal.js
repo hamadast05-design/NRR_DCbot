@@ -76,6 +76,12 @@ function suitcaseRow(gameId) {
   );
 }
 
+function openPickerRow(gameId) {
+  return new ActionRowBuilder().addComponents(
+    button(PREFIX + 'openpick:' + gameId, 'Open Suitcase Selection', '🧳', ButtonStyle.Primary),
+  );
+}
+
 function challengeRow(gameId) {
   return new ActionRowBuilder().addComponents(
     button(PREFIX + 'accept:' + gameId, 'Yes', '✅', ButtonStyle.Success),
@@ -245,8 +251,8 @@ async function onButton(interaction) {
       ));
     }
 
-    // Acknowledge the button immediately. The accepting player (Player B) is
-    // not the person who must receive the private suitcase picker.
+    // Player B accepts, but only Player A can receive an ephemeral response.
+    // Keep the prompt public and let Player A open their private picker in-channel.
     await interaction.deferUpdate();
 
     game.stage = 'pick';
@@ -262,41 +268,6 @@ async function onButton(interaction) {
     game.goodPosition = goodPosition;
     await saveGame(game);
 
-    // Ephemeral interaction responses always belong to the button clicker.
-    // Send the picker directly to Player A instead of following up to Player B.
-    let selectionMessage;
-    try {
-      const playerA = await interaction.client.users.fetch(game.playerA);
-      selectionMessage = await playerA.send({
-        ...panel(
-          '## 🧳 Pick Your Suitcase',
-          'Pick one of the three suitcases below. One contains a good thing; the other two contain bad things.',
-          [suitcaseRow(gameId)]
-        ),
-        allowedMentions: { parse: [] },
-      });
-    } catch (error) {
-      console.warn('[StealOrNoSteal] Could not deliver private suitcase picker to Player A', {
-        gameId,
-        playerA: game.playerA,
-        code: error.code,
-        message: error.message,
-      });
-      game.stage = 'challenge';
-      delete game.contents;
-      delete game.goodPosition;
-      await saveGame(game);
-      return interaction.followUp({
-        content: 'I could not send Player A the private suitcase selection. Player A needs to allow DMs from server members. The challenge is still open; you can try accepting again once their DMs are available.',
-        ephemeral: true,
-      });
-    }
-
-    game.selectionMessageId = selectionMessage.id;
-    await saveGame(game);
-
-    // Position balancing is updated only after Player A successfully receives
-    // the picker, so failed DM delivery does not affect the distribution.
     try {
       await db.query(`
         INSERT INTO steal_no_steal_positions (guild_id, position, good_count)
@@ -311,11 +282,30 @@ async function onButton(interaction) {
     await interaction.editReply({
       ...panel(
         '## 🧳 Steal Or No Steal?',
-        '<@' + game.playerA + '> is now selecting a suitcase..'
+        '<@' + game.playerA + '> is now selecting a suitcase..',
+        [openPickerRow(gameId)]
       ),
       allowedMentions: { parse: [], users: [game.playerA] },
     });
     return;
+  }
+
+  if (action === 'openpick') {
+    if (!isPlayer(interaction, game.playerA)) {
+      return interaction.reply({ content: 'Only Player A can open the private suitcase selection.', ephemeral: true });
+    }
+    if (game.stage !== 'pick') {
+      return interaction.reply({ content: 'The suitcase selection is no longer available.', ephemeral: true });
+    }
+    return interaction.reply({
+      ...panel(
+        '## 🧳 Pick Your Suitcase',
+        'Pick one of the three suitcases below. One contains a good thing; the other two contain bad things.',
+        [suitcaseRow(gameId)]
+      ),
+      ephemeral: true,
+      allowedMentions: { parse: [] },
+    });
   }
 
   if (action === 'pick') {
