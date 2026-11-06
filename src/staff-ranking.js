@@ -243,7 +243,7 @@ async function buildComponents(client, category, onStage = () => {}) {
   if (category === 'messages') {
     container.addSeparatorComponents(new SeparatorBuilder());
     container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
-      '**Weekly average:** `' + formatAverage(averageMessages) + '` messages per staff member'
+      '**Weekly average:** `' + formatAverage(averageMessages) + '`'
     ));
   }
 
