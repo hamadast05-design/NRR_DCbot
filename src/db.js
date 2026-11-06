@@ -618,6 +618,22 @@ async function saveStealNoStealGame(game) {
   console.info('[StealOrNoSteal][DB] Saved', { gameId: game.id, guildId: game.guildId, stage: game.stage });
 }
 
+async function claimStealNoStealDecision(gameId) {
+  const result = await query(`
+    UPDATE steal_no_steal_games
+    SET game_data = jsonb_set(
+      jsonb_set(game_data, '{finished}', 'true'::jsonb),
+      '{stage}', '"finished"'::jsonb
+    ),
+    updated_at = NOW()
+    WHERE game_id = $1
+      AND game_data->>'stage' = 'decision'
+      AND COALESCE((game_data->>'finished')::boolean, false) = false
+    RETURNING game_data
+  `, [gameId]);
+  return result.rows[0]?.game_data || null;
+}
+
 async function deleteStealNoStealGame(gameId) {
   const result = await query('DELETE FROM steal_no_steal_games WHERE game_id = $1', [gameId]);
   console.info('[StealOrNoSteal][DB] Deleted', { gameId, rowCount: result.rowCount });
@@ -629,6 +645,7 @@ module.exports = {
   getStealNoStealGame,
   saveStealNoStealGame,
   deleteStealNoStealGame,
+  claimStealNoStealDecision,
   ensureMember,
   setMemberActive,
   getStats,
