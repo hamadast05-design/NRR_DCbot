@@ -359,9 +359,9 @@ async function onButton(interaction) {
         const message = await getPublicMessage(interaction.client, latest);
         await message.edit(panel(
           '## 🧳 Steal Or No Steal?',
-          '<@' + latest.playerA + '> has picked their suitcase! <@' + latest.playerB + '> will now have **30 seconds** to decide.'
+          '<@' + latest.playerA + '> has picked their suitcase! <@' + latest.playerB + '> will now have **40 seconds** to negotiate.'
         ));
-        setTimeout(() => showDecision(latest, interaction.client).catch(error => console.error('Steal Or No Steal decision prompt failed:', error)), 30_000);
+        setTimeout(() => showDecision(latest, interaction.client).catch(error => console.error('Steal Or No Steal decision prompt failed:', error)), 40_000);
       } catch (error) {
         console.error('Steal Or No Steal reveal delay failed:', error);
       }
@@ -386,17 +386,22 @@ async function onButton(interaction) {
     }
     if (game.stage !== 'decision') return interaction.reply({ content: 'The decision period is not active.', ephemeral: true });
     if (game.extraUsed) return interaction.reply({ content: 'The extra 15 seconds have already been used.', ephemeral: true });
+    if (Number(game.decisionDeadline || 0) && interaction.createdTimestamp > Number(game.decisionDeadline)) {
+      return interaction.reply({ content: 'The decision time has expired.', ephemeral: true });
+    }
+    // Acknowledge the component interaction before waiting on the database.
+    await interaction.deferUpdate();
     game.extraUsed = true;
-    game.decisionDeadline = Date.now() + 15_000;
+    game.decisionDeadline = Math.max(Date.now(), Number(game.decisionDeadline || 0)) + 15_000;
+    await saveGame(game);
     clearTimeout(game.decisionTimer);
     game.decisionTimer = setTimeout(
       () => scheduleDecisionTimeout(game, interaction.client).catch(error => console.error('Steal Or No Steal extra-time timeout failed:', error)),
-      16_000
+      Math.max(1_000, game.decisionDeadline - Date.now() + 1_000)
     );
-    await saveGame(game);
-    return interaction.update(panel(
+    return interaction.editReply(panel(
       '## 🧳 Steal Or No Steal?',
-      '<@' + game.playerB + '>, you have **15 extra seconds** to decide!',
+      '<@' + game.playerB + '>, **15 seconds have been added** to your decision time!',
       [decisionRow(game.id, false)]
     ));
   }
