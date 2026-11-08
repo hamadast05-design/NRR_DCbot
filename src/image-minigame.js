@@ -67,6 +67,19 @@ function createGame(channel, config) {
 }
 
 function questionEmbed(game) {
+  if (game.key === 'triviagen') {
+    return new EmbedBuilder()
+      .setTitle(game.config.questionTitle || 'TRIVIAGEN | ITEM IDENTIFICATION')
+      .setColor(game.color)
+      .setDescription('## What everyday item is shown?\n\n> Type your answer in chat.\n\n───')
+      .addFields(
+        { name: 'TIME LIMIT', value: '[ 30s ]', inline: true },
+        { name: 'REWARD', value: '+1 point', inline: true },
+        { name: 'HINT', value: 'Category revealed at 15s', inline: true }
+      )
+      .setImage(game.current.resolvedImage || game.current.image || game.current.fallbackImage)
+      .setFooter({ text: 'ROUND ' + (game.question_counter + 1) + ' • ' + game.bank.length + ' ITEMS IN BANK' });
+  }
   const title = game.config.questionTitle || (game.key === 'gtp' ? '🏛️ GUESS THE POLITICIAN' : '🌍 FLAGRUSH');
   const prompt = game.config.questionPrompt || (game.key === 'gtp' ? '**Who is this political figure?**' : '**Which country does this flag represent?**');
   return new EmbedBuilder().setTitle(title).setColor(game.color).setDescription(prompt)
@@ -121,9 +134,33 @@ async function requestCommons(params) {
   return response.json();
 }
 
+function commonsImageScore(page, info, name) {
+  const title = String(page.title || '').replace(/^File:/i, '').replace(/_/g, ' ').toLowerCase();
+  const normalizedTitle = normalize(title);
+  const target = normalize(name);
+  const targetTokens = target.split(' ').filter(token => token.length > 1);
+  const titleTokens = new Set(normalizedTitle.split(' '));
+  const matched = targetTokens.filter(token => titleTokens.has(token) || normalizedTitle.includes(token));
+  if (!matched.length) return -Infinity;
+
+  let score = matched.length * 30;
+  if (normalizedTitle === target) score += 100;
+  if (normalizedTitle.startsWith(target) || normalizedTitle.includes(target)) score += 55;
+  if (targetTokens.length > 1 && matched.length === targetTokens.length) score += 35;
+  if (/isolated|white background|product photo|studio|front view/i.test(title)) score += 18;
+  if (info.width >= 600 && info.height >= 600) score += 12;
+  if (info.width && info.height) {
+    const ratio = info.width / info.height;
+    if (ratio >= 0.65 && ratio <= 1.6) score += 12;
+    else if (ratio > 2.5 || ratio < 0.4) score -= 25;
+  }
+  if (/collection|assortment|various|different types|set of|group of|many |collage|diagram|drawing|illustration|icon|logo|symbol|screenshot|poster|advertisement|catalogue|catalog|infographic|schematic|blueprint|person|portrait|politician|building/i.test(title)) score -= 100;
+  if (/in use|being used|holding|wearing|on a person|with people/i.test(title)) score -= 35;
+  return score;
+}
+
 async function findCommonsImage(url, name, searchTerms) {
-  // First resolve the exact configured filename through the Commons API.
-  // This avoids relying on Special:FilePath redirects inside Discord embeds.
+  // Resolve configured Commons filenames directly when an entry has one.
   if (url && url.includes('Special:FilePath/')) {
     try {
       const raw = url.split('Special:FilePath/')[1].split(/[?#]/)[0];
@@ -142,46 +179,43 @@ async function findCommonsImage(url, name, searchTerms) {
     }
   }
 
-  // Several entries in the curated bank point to outdated or nonexistent
-  // filenames. Search Commons by the politician's name and select a real
-  // raster image URL instead of returning a broken redirect.
-  const searches = searchTerms ? [name + ' ' + searchTerms, name + ' object', name] : [name + ' official portrait', name + ' politician portrait', name];
+  // Search for the specific object, not its broad category. Prefer a clean,
+  // close-up/product-style image whose file title actually names the object.
+  const searches = [
+    '"' + name + '"',
+    name + ' isolated on white background',
+    name + ' product photograph'
+  ];
+  if (searchTerms && !searchTerms.toLowerCase().includes(name.toLowerCase())) {
+    searches.push(name + ' ' + searchTerms);
+  }
+
   for (const query of searches) {
     try {
       const data = await requestCommons({
         generator: 'search',
         gsrsearch: query,
         gsrnamespace: '6',
-        gsrlimit: '12',
+        gsrlimit: '30',
         prop: 'imageinfo',
         iiprop: 'url|mime|size',
         iiurlwidth: '900'
       });
-      const pages = Object.values(data.query?.pages || {}).sort((a, b) => {
-        const titleA = String(a.title || '').toLowerCase();
-        const titleB = String(b.title || '').toLowerCase();
-        const target = name.toLowerCase();
-        const score = title => (title.includes(target) ? 0 : title.includes('object') || title.includes('product') ? 1 : 2);
-        return score(titleA) - score(titleB);
-      });
-      for (const page of pages) {
-        const info = page.imageinfo?.[0];
-        const direct = imageInfoUrl(info);
-        if (!direct || !/^image\/(jpeg|png|webp|gif)$/i.test(info.mime || '')) continue;
-        if (info.width && info.width < 250) continue;
-        if (/coat of arms|flag of|logo|signature|map of|diagram|drawing|icon|symbol|screenshot|poster|advertisement/i.test(page.title || '')) continue;
-        if (searchTerms && /person|portrait|politician|building|brand/i.test(page.title || '')) continue;
-        return direct;
-      }
+      const candidates = Object.values(data.query?.pages || {})
+        .map(page => ({ page, info: page.imageinfo?.[0] }))
+        .filter(({ info }) => info && /^image\/(jpeg|png|webp|gif)$/i.test(info.mime || '') && (!info.width || info.width >= 350))
+        .map(({ page, info }) => ({ page, info, score: commonsImageScore(page, info, name) }))
+        .filter(candidate => candidate.score >= 45)
+        .sort((a, b) => b.score - a.score);
+
+      if (candidates.length) return imageInfoUrl(candidates[0].info);
     } catch (error) {
       console.warn('Commons search failed for ' + name + ' (' + query + '):', error.message);
     }
   }
 
-  // Never let a temporary Commons API failure invalidate the entire bank.
-  // Special:FilePath URLs are redirect URLs, but Discord can render them directly;
-  // they are the final fallback after trying to resolve a direct raster URL.
-  if (url && /^https:\/\//i.test(url)) return url;
+  // Do not silently fall back to a broad category image. A missing image is
+  // safer than presenting an unrelated object as the answer.
   return null;
 }
 
