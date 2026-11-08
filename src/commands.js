@@ -15,6 +15,7 @@ const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
 const guessPoliticianSystem = require('./guess-the-politician');
 const flagRushSystem = require('./flagrush');
+const triviaGenSystem = require('./triviagen');
 const chessPuzzleSystem = require('./chess-puzzle');
 const learningGames = require('./learning-games');
 const stealOrNoSteal = require('./steal-or-no-steal');
@@ -49,6 +50,8 @@ const commands = [
   new SlashCommandBuilder().setName('end_guess_politician').setDescription('End Guess The Politician in this channel.'),
   new SlashCommandBuilder().setName('start_flagrush').setDescription('Start FlagRush in this channel.'),
   new SlashCommandBuilder().setName('end_flagrush').setDescription('End FlagRush in this channel.'),
+  new SlashCommandBuilder().setName('start_triviagen').setDescription('Start TriviaGen: identify everyday items from images.') ,
+  new SlashCommandBuilder().setName('end_triviagen').setDescription('End TriviaGen in this channel.'),
   new SlashCommandBuilder().setName('stats_staff').setDescription('View activity and moderation statistics for a staff member.')
     .addUserOption(o=>o.setName('user').setDescription('Staff member to inspect.')),
   new SlashCommandBuilder().setName('stats').setDescription('View message activity statistics for a regular member.')
@@ -518,6 +521,8 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'end_guess_politician') return guessPoliticianSystem.endCommand(interaction);
     if (interaction.commandName === 'start_flagrush') return flagRushSystem.startCommand(interaction);
     if (interaction.commandName === 'end_flagrush') return flagRushSystem.endCommand(interaction);
+    if (interaction.commandName === 'start_triviagen') return triviaGenSystem.startCommand(interaction);
+    if (interaction.commandName === 'end_triviagen') return triviaGenSystem.endCommand(interaction);
     if (interaction.commandName === 'start_math') return learningGames.startMath(interaction);
     if (interaction.commandName === 'stop_math') return learningGames.stopMath(interaction);
     if (interaction.commandName === 'start_language_game') return learningGames.startLanguage(interaction);
