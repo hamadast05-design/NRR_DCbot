@@ -140,12 +140,12 @@ function commonsImageScore(page, info, name) {
   const target = normalize(name);
   const targetTokens = target.split(' ').filter(token => token.length > 1);
   const titleTokens = new Set(normalizedTitle.split(' '));
-  const matched = targetTokens.filter(token => titleTokens.has(token) || normalizedTitle.includes(token));
+  const matched = targetTokens.filter(token => titleTokens.has(token));
   if (!matched.length) return -Infinity;
 
   let score = matched.length * 30;
   if (normalizedTitle === target) score += 100;
-  if (normalizedTitle.startsWith(target) || normalizedTitle.includes(target)) score += 55;
+  if (normalizedTitle === target || normalizedTitle.startsWith(target + ' ') || normalizedTitle.includes(' ' + target + ' ')) score += 55;
   if (targetTokens.length > 1 && matched.length === targetTokens.length) score += 35;
   if (/isolated|white background|product photo|studio|front view/i.test(title)) score += 18;
   if (info.width >= 600 && info.height >= 600) score += 12;
