@@ -61,7 +61,7 @@ function finalEmbed(game, reason) {
 }
 
 function createGame(channel, config) {
-  const game = { key: config.key, title: config.title, color: config.color, bank: config.bank, config, hintEnabled: config.hintEnabled, infoEnabled: config.infoEnabled, active: true, current: null, question_counter: 0, points: new Map(), currentStreak: new Map(), bestStreak: new Map(), unansweredStreak: 0, used: new Set(), timeout: null, hintTimeout: null, cooldown: null };
+  const game = { key: config.key, title: config.title, color: config.color, bank: config.bank, config, hintEnabled: config.hintEnabled, infoEnabled: config.infoEnabled, active: true, current: null, question_counter: 0, points: new Map(), currentStreak: new Map(), bestStreak: new Map(), unansweredStreak: 0, used: new Set(), imageFailures: 0, timeout: null, hintTimeout: null, cooldown: null };
   games.set(gameId(config.key, channel.id), game);
   return game;
 }
@@ -217,13 +217,15 @@ async function sendQuestion(channel, game) {
     }
   }
   if (!q.resolvedImage) {
+    game.imageFailures++;
     console.error('No usable image found for ' + q.name + '; skipping this question to avoid a broken image.');
-    if (game.used.size >= game.bank.length) {
+    if (game.imageFailures >= 5 || game.used.size >= game.bank.length) {
       await finishGame(channel, game, 'No usable images could be found for this question bank. Please notify a bot administrator.');
       return;
     }
     return sendQuestion(channel, game);
   }
+  game.imageFailures = 0;
   try {
     await channel.send({ embeds: [questionEmbed(game)] });
   } catch (error) {
