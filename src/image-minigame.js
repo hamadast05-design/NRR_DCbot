@@ -216,6 +216,7 @@ async function sendQuestion(channel, game) {
       q.resolvedImage = q.fallbackImage;
     }
   }
+  if (!game.active || games.get(gameId(game.key, channel.id)) !== game) return;
   if (!q.resolvedImage) {
     game.imageFailures++;
     console.error('No usable image found for ' + q.name + '; skipping this question to avoid a broken image.');
