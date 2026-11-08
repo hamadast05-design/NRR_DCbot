@@ -9,7 +9,7 @@ const config = {
   hintEnabled: true,
   infoEnabled: true,
   hintDelayMs: 15_000,
-  questionTitle: '🧩 TRIVIAGEN',
+  questionTitle: 'TRIVIAGEN | ITEM IDENTIFICATION',
   questionPrompt: '**What everyday item is shown in this image?**\nType your answer in chat. You have 30 seconds.',
 };
 
