@@ -61,7 +61,7 @@ function finalEmbed(game, reason) {
 }
 
 function createGame(channel, config) {
-  const game = { key: config.key, title: config.title, color: config.color, bank: config.bank, config, hintEnabled: config.hintEnabled, infoEnabled: config.infoEnabled, active: true, current: null, question_counter: 0, points: new Map(), currentStreak: new Map(), bestStreak: new Map(), unansweredStreak: 0, used: new Set(), imageFailures: 0, timeout: null, hintTimeout: null, cooldown: null };
+  const game = { key: config.key, title: config.title, color: config.color, bank: config.bank, config, hintEnabled: config.hintEnabled, infoEnabled: config.infoEnabled, active: true, current: null, question_counter: 0, round_counter: 0, points: new Map(), currentStreak: new Map(), bestStreak: new Map(), unansweredStreak: 0, used: new Set(), imageFailures: 0, timeout: null, hintTimeout: null, cooldown: null };
   games.set(gameId(config.key, channel.id), game);
   return game;
 }
@@ -75,10 +75,10 @@ function questionEmbed(game) {
       .addFields(
         { name: 'TIME LIMIT', value: '[ 30s ]', inline: true },
         { name: 'REWARD', value: '+1 point', inline: true },
-        { name: 'HINT', value: 'Category revealed at 15s', inline: true }
+        { name: 'CATEGORY', value: 'Revealed at 15s', inline: true }
       )
       .setImage(game.current.resolvedImage || game.current.image || game.current.fallbackImage)
-      .setFooter({ text: 'ROUND ' + (game.question_counter + 1) + ' • ' + game.bank.length + ' ITEMS IN BANK' });
+      .setFooter({ text: 'ROUND ' + game.round_counter + ' • ' + game.bank.length + ' ITEMS IN BANK' });
   }
   const title = game.config.questionTitle || (game.key === 'gtp' ? '🏛️ GUESS THE POLITICIAN' : '🌍 FLAGRUSH');
   const prompt = game.config.questionPrompt || (game.key === 'gtp' ? '**Who is this political figure?**' : '**Which country does this flag represent?**');
@@ -233,6 +233,7 @@ async function resolveImageUrl(url, name, searchTerms) {
 async function sendQuestion(channel, game) {
   if (!game.active || games.get(gameId(game.key, channel.id)) !== game) return;
   game.current = pickQuestion(game);
+  game.round_counter++;
   const q = game.current;
   // Guess The Politician needs Commons lookup because some configured filenames
   // are stale. FlagRush already uses direct FlagCDN URLs; searching Commons by a
