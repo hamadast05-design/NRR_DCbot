@@ -8,7 +8,7 @@ const items = [
     "aliases": [
       "Broom"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Broom isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -18,7 +18,7 @@ const items = [
     "aliases": [
       "Mop"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Mop isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -28,7 +28,7 @@ const items = [
     "aliases": [
       "Vacuum Cleaner"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Vacuum Cleaner isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -38,7 +38,7 @@ const items = [
     "aliases": [
       "Dustpan"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Dustpan isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -48,7 +48,7 @@ const items = [
     "aliases": [
       "Bucket"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Bucket isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -58,7 +58,7 @@ const items = [
     "aliases": [
       "Clothes Hanger"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Clothes Hanger isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -68,7 +68,7 @@ const items = [
     "aliases": [
       "Laundry Basket"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Laundry Basket isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -78,7 +78,7 @@ const items = [
     "aliases": [
       "Ironing Board"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Ironing Board isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -88,7 +88,7 @@ const items = [
     "aliases": [
       "Desk Lamp"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Desk Lamp isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -98,7 +98,7 @@ const items = [
     "aliases": [
       "Table Lamp"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Table Lamp isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -108,7 +108,7 @@ const items = [
     "aliases": [
       "Wall Clock"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Wall Clock isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -118,7 +118,7 @@ const items = [
     "aliases": [
       "Alarm Clock"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Alarm Clock isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -128,7 +128,7 @@ const items = [
     "aliases": [
       "Mirror"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Mirror isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -138,7 +138,7 @@ const items = [
     "aliases": [
       "Door Mat"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Door Mat isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -148,7 +148,7 @@ const items = [
     "aliases": [
       "Curtain"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Curtain isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -158,7 +158,7 @@ const items = [
     "aliases": [
       "Pillow"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Pillow isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -168,7 +168,7 @@ const items = [
     "aliases": [
       "Blanket"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Blanket isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -178,7 +178,7 @@ const items = [
     "aliases": [
       "Bedsheet"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Bedsheet isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -188,7 +188,7 @@ const items = [
     "aliases": [
       "Mattress"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Mattress isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -198,7 +198,7 @@ const items = [
     "aliases": [
       "Bookshelf"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Bookshelf isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -208,7 +208,7 @@ const items = [
     "aliases": [
       "Shoe Rack"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Shoe Rack isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -218,7 +218,7 @@ const items = [
     "aliases": [
       "Coat Rack"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Coat Rack isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -230,7 +230,7 @@ const items = [
       "Rubbish Bin",
       "Garbage Can"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Trash Can isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -240,7 +240,7 @@ const items = [
     "aliases": [
       "Storage Box"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Storage Box isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -251,7 +251,7 @@ const items = [
       "Flashlight",
       "Torch"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Flashlight isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -261,7 +261,7 @@ const items = [
     "aliases": [
       "Extension Cord"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Extension Cord isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -271,7 +271,7 @@ const items = [
     "aliases": [
       "Power Strip"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Power Strip isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -281,7 +281,7 @@ const items = [
     "aliases": [
       "Fan"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Fan isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -291,7 +291,7 @@ const items = [
     "aliases": [
       "Heater"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Heater isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -301,7 +301,7 @@ const items = [
     "aliases": [
       "Air Freshener"
     ],
-    "imageSearch": "household items everyday object photograph",
+    "imageSearch": "Air Freshener isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -312,7 +312,7 @@ const items = [
       "Electric Kettle",
       "Kettle"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Electric Kettle isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -322,7 +322,7 @@ const items = [
     "aliases": [
       "Toaster"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Toaster isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -332,7 +332,7 @@ const items = [
     "aliases": [
       "Blender"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Blender isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -343,7 +343,7 @@ const items = [
       "Microwave Oven",
       "Microwave"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Microwave Oven isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -354,7 +354,7 @@ const items = [
       "Refrigerator",
       "Fridge"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Refrigerator isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -364,7 +364,7 @@ const items = [
     "aliases": [
       "Freezer"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Freezer isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -374,7 +374,7 @@ const items = [
     "aliases": [
       "Rice Cooker"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Rice Cooker isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -384,7 +384,7 @@ const items = [
     "aliases": [
       "Coffee Maker"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Coffee Maker isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -395,7 +395,7 @@ const items = [
       "Frying Pan",
       "Pan"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Frying Pan isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -405,7 +405,7 @@ const items = [
     "aliases": [
       "Saucepan"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Saucepan isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -415,7 +415,7 @@ const items = [
     "aliases": [
       "Cooking Pot"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Cooking Pot isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -425,7 +425,7 @@ const items = [
     "aliases": [
       "Baking Tray"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Baking Tray isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -435,7 +435,7 @@ const items = [
     "aliases": [
       "Cutting Board"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Cutting Board isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -446,7 +446,7 @@ const items = [
       "Chef Knife",
       "Kitchen Knife"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Chef Knife isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -456,7 +456,7 @@ const items = [
     "aliases": [
       "Peeler"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Peeler isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -466,7 +466,7 @@ const items = [
     "aliases": [
       "Can Opener"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Can Opener isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -476,7 +476,7 @@ const items = [
     "aliases": [
       "Bottle Opener"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Bottle Opener isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -486,7 +486,7 @@ const items = [
     "aliases": [
       "Whisk"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Whisk isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -496,7 +496,7 @@ const items = [
     "aliases": [
       "Spatula"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Spatula isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -506,7 +506,7 @@ const items = [
     "aliases": [
       "Ladle"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Ladle isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -516,7 +516,7 @@ const items = [
     "aliases": [
       "Tongs"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Tongs isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -526,7 +526,7 @@ const items = [
     "aliases": [
       "Colander"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Colander isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -536,7 +536,7 @@ const items = [
     "aliases": [
       "Measuring Cup"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Measuring Cup isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -546,7 +546,7 @@ const items = [
     "aliases": [
       "Rolling Pin"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Rolling Pin isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -556,7 +556,7 @@ const items = [
     "aliases": [
       "Grater"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Grater isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -566,7 +566,7 @@ const items = [
     "aliases": [
       "Garlic Press"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Garlic Press isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -576,7 +576,7 @@ const items = [
     "aliases": [
       "Tea Strainer"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Tea Strainer isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -586,7 +586,7 @@ const items = [
     "aliases": [
       "Thermos Flask"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Thermos Flask isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -596,7 +596,7 @@ const items = [
     "aliases": [
       "Food Container"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Food Container isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -606,7 +606,7 @@ const items = [
     "aliases": [
       "Dish Rack"
     ],
-    "imageSearch": "kitchen items everyday object photograph",
+    "imageSearch": "Dish Rack isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -616,7 +616,7 @@ const items = [
     "aliases": [
       "Keyboard"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Keyboard isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -627,7 +627,7 @@ const items = [
       "Computer Mouse",
       "Mouse"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Computer Mouse isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -638,7 +638,7 @@ const items = [
       "Computer Monitor",
       "Monitor"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Computer Monitor isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -648,7 +648,7 @@ const items = [
     "aliases": [
       "Laptop"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Laptop isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -658,7 +658,7 @@ const items = [
     "aliases": [
       "Tablet"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Tablet isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -670,7 +670,7 @@ const items = [
       "Mobile Phone",
       "Cell Phone"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Smartphone isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -681,7 +681,7 @@ const items = [
       "Headphones",
       "Headset"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Headphones isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -691,7 +691,7 @@ const items = [
     "aliases": [
       "Earbuds"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Earbuds isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -701,7 +701,7 @@ const items = [
     "aliases": [
       "Bluetooth Speaker"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Bluetooth Speaker isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -711,7 +711,7 @@ const items = [
     "aliases": [
       "Television"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Television isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -721,7 +721,7 @@ const items = [
     "aliases": [
       "Remote Control"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Remote Control isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -731,7 +731,7 @@ const items = [
     "aliases": [
       "Router"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Router isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -741,7 +741,7 @@ const items = [
     "aliases": [
       "Modem"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Modem isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -751,7 +751,7 @@ const items = [
     "aliases": [
       "Webcam"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Webcam isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -761,7 +761,7 @@ const items = [
     "aliases": [
       "Microphone"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Microphone isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -771,7 +771,7 @@ const items = [
     "aliases": [
       "Printer"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Printer isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -781,7 +781,7 @@ const items = [
     "aliases": [
       "Scanner"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Scanner isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -791,7 +791,7 @@ const items = [
     "aliases": [
       "USB Flash Drive"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "USB Flash Drive isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -801,7 +801,7 @@ const items = [
     "aliases": [
       "External Hard Drive"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "External Hard Drive isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -811,7 +811,7 @@ const items = [
     "aliases": [
       "Power Bank"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Power Bank isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -821,7 +821,7 @@ const items = [
     "aliases": [
       "Phone Charger"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Phone Charger isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -831,7 +831,7 @@ const items = [
     "aliases": [
       "HDMI Cable"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "HDMI Cable isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -841,7 +841,7 @@ const items = [
     "aliases": [
       "Game Controller"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Game Controller isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -851,7 +851,7 @@ const items = [
     "aliases": [
       "Digital Camera"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Digital Camera isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -861,7 +861,7 @@ const items = [
     "aliases": [
       "Tripod"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Tripod isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -871,7 +871,7 @@ const items = [
     "aliases": [
       "Smartwatch"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Smartwatch isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -881,7 +881,7 @@ const items = [
     "aliases": [
       "Calculator"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Calculator isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -891,7 +891,7 @@ const items = [
     "aliases": [
       "Projector"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Projector isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -901,7 +901,7 @@ const items = [
     "aliases": [
       "Memory Card"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Memory Card isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -911,7 +911,7 @@ const items = [
     "aliases": [
       "Portable SSD"
     ],
-    "imageSearch": "electronics everyday object photograph",
+    "imageSearch": "Portable SSD isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -921,7 +921,7 @@ const items = [
     "aliases": [
       "Hammer"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Hammer isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -932,7 +932,7 @@ const items = [
       "Screwdriver",
       "Screw Driver"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Screwdriver isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -943,7 +943,7 @@ const items = [
       "Adjustable Wrench",
       "Wrench"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Adjustable Wrench isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -953,7 +953,7 @@ const items = [
     "aliases": [
       "Pliers"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Pliers isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -963,7 +963,7 @@ const items = [
     "aliases": [
       "Allen Key"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Allen Key isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -973,7 +973,7 @@ const items = [
     "aliases": [
       "Measuring Tape"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Measuring Tape isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -983,7 +983,7 @@ const items = [
     "aliases": [
       "Spirit Level"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Spirit Level isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -993,7 +993,7 @@ const items = [
     "aliases": [
       "Hand Saw"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Hand Saw isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1003,7 +1003,7 @@ const items = [
     "aliases": [
       "Utility Knife"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Utility Knife isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1013,7 +1013,7 @@ const items = [
     "aliases": [
       "Drill"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Drill isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -1023,7 +1023,7 @@ const items = [
     "aliases": [
       "Electric Screwdriver"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Electric Screwdriver isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1033,7 +1033,7 @@ const items = [
     "aliases": [
       "Chisel"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Chisel isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1043,7 +1043,7 @@ const items = [
     "aliases": [
       "Paintbrush"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Paintbrush isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1053,7 +1053,7 @@ const items = [
     "aliases": [
       "Paint Roller"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Paint Roller isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1063,7 +1063,7 @@ const items = [
     "aliases": [
       "Ladder"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Ladder isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1073,7 +1073,7 @@ const items = [
     "aliases": [
       "Shovel"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Shovel isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1083,7 +1083,7 @@ const items = [
     "aliases": [
       "Rake"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Rake isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1093,7 +1093,7 @@ const items = [
     "aliases": [
       "Wheelbarrow"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Wheelbarrow isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1103,7 +1103,7 @@ const items = [
     "aliases": [
       "Garden Hose"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Garden Hose isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1113,7 +1113,7 @@ const items = [
     "aliases": [
       "Pruning Shears"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Pruning Shears isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -1123,7 +1123,7 @@ const items = [
     "aliases": [
       "Clamp"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Clamp isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1133,7 +1133,7 @@ const items = [
     "aliases": [
       "Workbench Vise"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Workbench Vise isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1143,7 +1143,7 @@ const items = [
     "aliases": [
       "Socket Wrench"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Socket Wrench isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1153,7 +1153,7 @@ const items = [
     "aliases": [
       "Hacksaw"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Hacksaw isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1163,7 +1163,7 @@ const items = [
     "aliases": [
       "Crowbar"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Crowbar isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1173,7 +1173,7 @@ const items = [
     "aliases": [
       "Sandpaper"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Sandpaper isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1183,7 +1183,7 @@ const items = [
     "aliases": [
       "Staple Gun"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Staple Gun isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1193,7 +1193,7 @@ const items = [
     "aliases": [
       "Toolbox"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Toolbox isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1203,7 +1203,7 @@ const items = [
     "aliases": [
       "Safety Goggles"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Safety Goggles isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1213,7 +1213,7 @@ const items = [
     "aliases": [
       "Work Gloves"
     ],
-    "imageSearch": "tools & equipment everyday object photograph",
+    "imageSearch": "Work Gloves isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -1224,7 +1224,7 @@ const items = [
       "Ballpoint Pen",
       "Pen"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Ballpoint Pen isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1234,7 +1234,7 @@ const items = [
     "aliases": [
       "Pencil"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Pencil isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1244,7 +1244,7 @@ const items = [
     "aliases": [
       "Eraser"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Eraser isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1255,7 +1255,7 @@ const items = [
       "Pencil Sharpener",
       "Sharpener"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Pencil Sharpener isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1265,7 +1265,7 @@ const items = [
     "aliases": [
       "Ruler"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Ruler isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1276,7 +1276,7 @@ const items = [
       "Notebook",
       "Exercise Book"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Notebook isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1288,7 +1288,7 @@ const items = [
       "Post It Notes",
       "Post-it Notes"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Sticky Notes isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1298,7 +1298,7 @@ const items = [
     "aliases": [
       "Stapler"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Stapler isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1308,7 +1308,7 @@ const items = [
     "aliases": [
       "Staple Remover"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Staple Remover isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1318,7 +1318,7 @@ const items = [
     "aliases": [
       "Paper Clips"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Paper Clips isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -1328,7 +1328,7 @@ const items = [
     "aliases": [
       "Binder Clips"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Binder Clips isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1338,7 +1338,7 @@ const items = [
     "aliases": [
       "Highlighter"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Highlighter isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1348,7 +1348,7 @@ const items = [
     "aliases": [
       "Marker Pen"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Marker Pen isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1358,7 +1358,7 @@ const items = [
     "aliases": [
       "Whiteboard Marker"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Whiteboard Marker isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1368,7 +1368,7 @@ const items = [
     "aliases": [
       "Whiteboard"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Whiteboard isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1378,7 +1378,7 @@ const items = [
     "aliases": [
       "Scissors"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Scissors isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1388,7 +1388,7 @@ const items = [
     "aliases": [
       "Glue Stick"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Glue Stick isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1398,7 +1398,7 @@ const items = [
     "aliases": [
       "Tape Dispenser"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Tape Dispenser isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1408,7 +1408,7 @@ const items = [
     "aliases": [
       "Adhesive Tape"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Adhesive Tape isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1418,7 +1418,7 @@ const items = [
     "aliases": [
       "Correction Tape"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Correction Tape isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -1428,7 +1428,7 @@ const items = [
     "aliases": [
       "Protractor"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Protractor isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1438,7 +1438,7 @@ const items = [
     "aliases": [
       "Compass"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Compass isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1449,7 +1449,7 @@ const items = [
       "Desk Calendar",
       "Desktop Calendar"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Desk Calendar isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1459,7 +1459,7 @@ const items = [
     "aliases": [
       "Folder"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Folder isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1469,7 +1469,7 @@ const items = [
     "aliases": [
       "Ring Binder"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Ring Binder isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1479,7 +1479,7 @@ const items = [
     "aliases": [
       "Envelope"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Envelope isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1489,7 +1489,7 @@ const items = [
     "aliases": [
       "Printer Paper"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Printer Paper isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1499,7 +1499,7 @@ const items = [
     "aliases": [
       "Index Cards"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Index Cards isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1509,7 +1509,7 @@ const items = [
     "aliases": [
       "Hole Punch"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Hole Punch isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1519,7 +1519,7 @@ const items = [
     "aliases": [
       "Desk Organizer"
     ],
-    "imageSearch": "stationery everyday object photograph",
+    "imageSearch": "Desk Organizer isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -1531,7 +1531,7 @@ const items = [
       "T Shirt",
       "Tee Shirt"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "T-Shirt isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1541,7 +1541,7 @@ const items = [
     "aliases": [
       "Hoodie"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Hoodie isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1551,7 +1551,7 @@ const items = [
     "aliases": [
       "Jacket"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Jacket isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1561,7 +1561,7 @@ const items = [
     "aliases": [
       "Coat"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Coat isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1571,7 +1571,7 @@ const items = [
     "aliases": [
       "Jeans"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Jeans isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1581,7 +1581,7 @@ const items = [
     "aliases": [
       "Trousers"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Trousers isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1591,7 +1591,7 @@ const items = [
     "aliases": [
       "Shorts"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Shorts isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1601,7 +1601,7 @@ const items = [
     "aliases": [
       "Socks"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Socks isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1612,7 +1612,7 @@ const items = [
       "Sneakers",
       "Trainers"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Sneakers isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1622,7 +1622,7 @@ const items = [
     "aliases": [
       "Boots"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Boots isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -1632,7 +1632,7 @@ const items = [
     "aliases": [
       "Sandals"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Sandals isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1642,7 +1642,7 @@ const items = [
     "aliases": [
       "Belt"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Belt isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1653,7 +1653,7 @@ const items = [
       "Baseball Cap",
       "Cap"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Baseball Cap isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1663,7 +1663,7 @@ const items = [
     "aliases": [
       "Beanie"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Beanie isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1673,7 +1673,7 @@ const items = [
     "aliases": [
       "Scarf"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Scarf isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1683,7 +1683,7 @@ const items = [
     "aliases": [
       "Gloves"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Gloves isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1693,7 +1693,7 @@ const items = [
     "aliases": [
       "Wristwatch"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Wristwatch isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1703,7 +1703,7 @@ const items = [
     "aliases": [
       "Sunglasses"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Sunglasses isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1713,7 +1713,7 @@ const items = [
     "aliases": [
       "Backpack"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Backpack isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1723,7 +1723,7 @@ const items = [
     "aliases": [
       "Wallet"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Wallet isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -1733,7 +1733,7 @@ const items = [
     "aliases": [
       "Handbag"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Handbag isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1743,7 +1743,7 @@ const items = [
     "aliases": [
       "Tie"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Tie isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1753,7 +1753,7 @@ const items = [
     "aliases": [
       "Bow Tie"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Bow Tie isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1763,7 +1763,7 @@ const items = [
     "aliases": [
       "Raincoat"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Raincoat isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1773,7 +1773,7 @@ const items = [
     "aliases": [
       "Pajamas"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Pajamas isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1783,7 +1783,7 @@ const items = [
     "aliases": [
       "Sports Jersey"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Sports Jersey isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1793,7 +1793,7 @@ const items = [
     "aliases": [
       "Slippers"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Slippers isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1803,7 +1803,7 @@ const items = [
     "aliases": [
       "Umbrella"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Umbrella isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1813,7 +1813,7 @@ const items = [
     "aliases": [
       "Necklace"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Necklace isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1823,7 +1823,7 @@ const items = [
     "aliases": [
       "Bracelet"
     ],
-    "imageSearch": "clothing & accessories everyday object photograph",
+    "imageSearch": "Bracelet isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -1833,7 +1833,7 @@ const items = [
     "aliases": [
       "Toothbrush"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Toothbrush isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1843,7 +1843,7 @@ const items = [
     "aliases": [
       "Toothpaste"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Toothpaste isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1853,7 +1853,7 @@ const items = [
     "aliases": [
       "Dental Floss"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Dental Floss isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1863,7 +1863,7 @@ const items = [
     "aliases": [
       "Hairbrush"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Hairbrush isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1873,7 +1873,7 @@ const items = [
     "aliases": [
       "Comb"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Comb isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1883,7 +1883,7 @@ const items = [
     "aliases": [
       "Shampoo Bottle"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Shampoo Bottle isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1893,7 +1893,7 @@ const items = [
     "aliases": [
       "Conditioner Bottle"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Conditioner Bottle isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1903,7 +1903,7 @@ const items = [
     "aliases": [
       "Bar Soap"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Bar Soap isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1913,7 +1913,7 @@ const items = [
     "aliases": [
       "Soap Dispenser"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Soap Dispenser isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1923,7 +1923,7 @@ const items = [
     "aliases": [
       "Hand Sanitizer"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Hand Sanitizer isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -1933,7 +1933,7 @@ const items = [
     "aliases": [
       "Deodorant Stick"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Deodorant Stick isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1943,7 +1943,7 @@ const items = [
     "aliases": [
       "Perfume Bottle"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Perfume Bottle isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1954,7 +1954,7 @@ const items = [
       "Hair Dryer",
       "Blow Dryer"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Hair Dryer isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1964,7 +1964,7 @@ const items = [
     "aliases": [
       "Hair Straightener"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Hair Straightener isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1974,7 +1974,7 @@ const items = [
     "aliases": [
       "Electric Shaver"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Electric Shaver isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -1984,7 +1984,7 @@ const items = [
     "aliases": [
       "Razor"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Razor isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -1994,7 +1994,7 @@ const items = [
     "aliases": [
       "Nail Clippers"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Nail Clippers isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2004,7 +2004,7 @@ const items = [
     "aliases": [
       "Nail File"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Nail File isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2014,7 +2014,7 @@ const items = [
     "aliases": [
       "Tweezers"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Tweezers isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2024,7 +2024,7 @@ const items = [
     "aliases": [
       "Cotton Swabs"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Cotton Swabs isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -2034,7 +2034,7 @@ const items = [
     "aliases": [
       "Cotton Pads"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Cotton Pads isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2044,7 +2044,7 @@ const items = [
     "aliases": [
       "Face Towel"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Face Towel isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2054,7 +2054,7 @@ const items = [
     "aliases": [
       "Bath Towel"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Bath Towel isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2064,7 +2064,7 @@ const items = [
     "aliases": [
       "Loofah"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Loofah isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2074,7 +2074,7 @@ const items = [
     "aliases": [
       "Shower Cap"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Shower Cap isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2084,7 +2084,7 @@ const items = [
     "aliases": [
       "Makeup Brush"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Makeup Brush isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2094,7 +2094,7 @@ const items = [
     "aliases": [
       "Lip Balm"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Lip Balm isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2104,7 +2104,7 @@ const items = [
     "aliases": [
       "Moisturizer Bottle"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Moisturizer Bottle isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2114,7 +2114,7 @@ const items = [
     "aliases": [
       "Tissue Box"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "Tissue Box isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2124,7 +2124,7 @@ const items = [
     "aliases": [
       "First Aid Kit"
     ],
-    "imageSearch": "personal care everyday object photograph",
+    "imageSearch": "First Aid Kit isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -2135,7 +2135,7 @@ const items = [
       "Football",
       "Soccer Ball"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Football isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2145,7 +2145,7 @@ const items = [
     "aliases": [
       "Basketball"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Basketball isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2155,7 +2155,7 @@ const items = [
     "aliases": [
       "Tennis Racket"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Tennis Racket isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2165,7 +2165,7 @@ const items = [
     "aliases": [
       "Badminton Racket"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Badminton Racket isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2175,7 +2175,7 @@ const items = [
     "aliases": [
       "Volleyball"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Volleyball isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2185,7 +2185,7 @@ const items = [
     "aliases": [
       "Baseball Bat"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Baseball Bat isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2195,7 +2195,7 @@ const items = [
     "aliases": [
       "Baseball Glove"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Baseball Glove isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2205,7 +2205,7 @@ const items = [
     "aliases": [
       "Cricket Bat"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Cricket Bat isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2215,7 +2215,7 @@ const items = [
     "aliases": [
       "Hockey Stick"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Hockey Stick isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2225,7 +2225,7 @@ const items = [
     "aliases": [
       "Golf Club"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Golf Club isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -2235,7 +2235,7 @@ const items = [
     "aliases": [
       "Golf Ball"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Golf Ball isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2245,7 +2245,7 @@ const items = [
     "aliases": [
       "Table Tennis Paddle"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Table Tennis Paddle isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2255,7 +2255,7 @@ const items = [
     "aliases": [
       "Table Tennis Ball"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Table Tennis Ball isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2265,7 +2265,7 @@ const items = [
     "aliases": [
       "Jump Rope"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Jump Rope isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2275,7 +2275,7 @@ const items = [
     "aliases": [
       "Yoga Mat"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Yoga Mat isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2285,7 +2285,7 @@ const items = [
     "aliases": [
       "Dumbbell"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Dumbbell isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2295,7 +2295,7 @@ const items = [
     "aliases": [
       "Kettlebell"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Kettlebell isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2305,7 +2305,7 @@ const items = [
     "aliases": [
       "Barbell"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Barbell isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2315,7 +2315,7 @@ const items = [
     "aliases": [
       "Resistance Band"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Resistance Band isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2325,7 +2325,7 @@ const items = [
     "aliases": [
       "Exercise Ball"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Exercise Ball isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -2335,7 +2335,7 @@ const items = [
     "aliases": [
       "Boxing Gloves"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Boxing Gloves isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2345,7 +2345,7 @@ const items = [
     "aliases": [
       "Shin Guards"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Shin Guards isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2356,7 +2356,7 @@ const items = [
       "Soccer Cleats",
       "Football Boots"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Soccer Cleats isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2366,7 +2366,7 @@ const items = [
     "aliases": [
       "Whistle"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Whistle isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2376,7 +2376,7 @@ const items = [
     "aliases": [
       "Stopwatch"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Stopwatch isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2386,7 +2386,7 @@ const items = [
     "aliases": [
       "Swimming Goggles"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Swimming Goggles isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2396,7 +2396,7 @@ const items = [
     "aliases": [
       "Swim Cap"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Swim Cap isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2407,7 +2407,7 @@ const items = [
       "Inline Skates",
       "Rollerblades"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Inline Skates isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2417,7 +2417,7 @@ const items = [
     "aliases": [
       "Bicycle Helmet"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Bicycle Helmet isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2427,7 +2427,7 @@ const items = [
     "aliases": [
       "Tennis Ball"
     ],
-    "imageSearch": "sports equipment everyday object photograph",
+    "imageSearch": "Tennis Ball isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -2438,7 +2438,7 @@ const items = [
       "Bicycle",
       "Bike"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Bicycle isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2448,7 +2448,7 @@ const items = [
     "aliases": [
       "Bicycle Pump"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Bicycle Pump isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2458,7 +2458,7 @@ const items = [
     "aliases": [
       "Bicycle Bell"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Bicycle Bell isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2468,7 +2468,7 @@ const items = [
     "aliases": [
       "Bicycle Lock"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Bicycle Lock isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2478,7 +2478,7 @@ const items = [
     "aliases": [
       "Car Steering Wheel"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Car Steering Wheel isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2489,7 +2489,7 @@ const items = [
       "Car Tire",
       "Tire"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Car Tire isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2499,7 +2499,7 @@ const items = [
     "aliases": [
       "Car Wheel"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Car Wheel isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2509,7 +2509,7 @@ const items = [
     "aliases": [
       "Car Battery"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Car Battery isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2519,7 +2519,7 @@ const items = [
     "aliases": [
       "Car Jack"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Car Jack isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2529,7 +2529,7 @@ const items = [
     "aliases": [
       "Seat Belt"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Seat Belt isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -2539,7 +2539,7 @@ const items = [
     "aliases": [
       "Car Seat"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Car Seat isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2549,7 +2549,7 @@ const items = [
     "aliases": [
       "Rearview Mirror"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Rearview Mirror isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2559,7 +2559,7 @@ const items = [
     "aliases": [
       "Side Mirror"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Side Mirror isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2569,7 +2569,7 @@ const items = [
     "aliases": [
       "Windshield Wiper"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Windshield Wiper isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2579,7 +2579,7 @@ const items = [
     "aliases": [
       "License Plate"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "License Plate isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2589,7 +2589,7 @@ const items = [
     "aliases": [
       "Traffic Cone"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Traffic Cone isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2599,7 +2599,7 @@ const items = [
     "aliases": [
       "Road Sign"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Road Sign isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2609,7 +2609,7 @@ const items = [
     "aliases": [
       "Train Ticket"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Train Ticket isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2619,7 +2619,7 @@ const items = [
     "aliases": [
       "Bus Pass"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Bus Pass isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2629,7 +2629,7 @@ const items = [
     "aliases": [
       "Suitcase"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Suitcase isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -2639,7 +2639,7 @@ const items = [
     "aliases": [
       "Luggage Tag"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Luggage Tag isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2649,7 +2649,7 @@ const items = [
     "aliases": [
       "Car Key"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Car Key isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2659,7 +2659,7 @@ const items = [
     "aliases": [
       "Motorcycle Helmet"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Motorcycle Helmet isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2669,7 +2669,7 @@ const items = [
     "aliases": [
       "Skateboard"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Skateboard isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2679,7 +2679,7 @@ const items = [
     "aliases": [
       "Scooter"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Scooter isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2689,7 +2689,7 @@ const items = [
     "aliases": [
       "Paddle"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Paddle isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2699,7 +2699,7 @@ const items = [
     "aliases": [
       "Life Jacket"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Life Jacket isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2709,7 +2709,7 @@ const items = [
     "aliases": [
       "Oar"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Oar isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2719,7 +2719,7 @@ const items = [
     "aliases": [
       "Fuel Can"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Fuel Can isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2729,7 +2729,7 @@ const items = [
     "aliases": [
       "Charging Cable"
     ],
-    "imageSearch": "transportation items everyday object photograph",
+    "imageSearch": "Charging Cable isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -2740,7 +2740,7 @@ const items = [
       "Milk Carton",
       "Milk"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Milk Carton isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2750,7 +2750,7 @@ const items = [
     "aliases": [
       "Juice Box"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Juice Box isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2761,7 +2761,7 @@ const items = [
       "Water Bottle",
       "Bottle"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Water Bottle isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2771,7 +2771,7 @@ const items = [
     "aliases": [
       "Cereal Box"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Cereal Box isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2781,7 +2781,7 @@ const items = [
     "aliases": [
       "Bread Loaf"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Bread Loaf isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2791,7 +2791,7 @@ const items = [
     "aliases": [
       "Egg Carton"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Egg Carton isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2801,7 +2801,7 @@ const items = [
     "aliases": [
       "Butter Dish"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Butter Dish isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2811,7 +2811,7 @@ const items = [
     "aliases": [
       "Yogurt Cup"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Yogurt Cup isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2821,7 +2821,7 @@ const items = [
     "aliases": [
       "Honey Jar"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Honey Jar isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2831,7 +2831,7 @@ const items = [
     "aliases": [
       "Jam Jar"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Jam Jar isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -2841,7 +2841,7 @@ const items = [
     "aliases": [
       "Peanut Butter Jar"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Peanut Butter Jar isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2851,7 +2851,7 @@ const items = [
     "aliases": [
       "Pasta Package"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Pasta Package isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2861,7 +2861,7 @@ const items = [
     "aliases": [
       "Rice Bag"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Rice Bag isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2871,7 +2871,7 @@ const items = [
     "aliases": [
       "Flour Bag"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Flour Bag isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2881,7 +2881,7 @@ const items = [
     "aliases": [
       "Sugar Bowl"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Sugar Bowl isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2891,7 +2891,7 @@ const items = [
     "aliases": [
       "Salt Shaker"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Salt Shaker isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2901,7 +2901,7 @@ const items = [
     "aliases": [
       "Pepper Grinder"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Pepper Grinder isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2911,7 +2911,7 @@ const items = [
     "aliases": [
       "Cooking Oil Bottle"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Cooking Oil Bottle isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2921,7 +2921,7 @@ const items = [
     "aliases": [
       "Vinegar Bottle"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Vinegar Bottle isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -2931,7 +2931,7 @@ const items = [
     "aliases": [
       "Ketchup Bottle"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Ketchup Bottle isolated product photograph",
     "difficulty": "Hard"
   },
   {
@@ -2941,7 +2941,7 @@ const items = [
     "aliases": [
       "Mustard Bottle"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Mustard Bottle isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2951,7 +2951,7 @@ const items = [
     "aliases": [
       "Mayonnaise Jar"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Mayonnaise Jar isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2961,7 +2961,7 @@ const items = [
     "aliases": [
       "Tea Box"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Tea Box isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2971,7 +2971,7 @@ const items = [
     "aliases": [
       "Coffee Jar"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Coffee Jar isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2981,7 +2981,7 @@ const items = [
     "aliases": [
       "Chocolate Bar"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Chocolate Bar isolated product photograph",
     "difficulty": "Easy"
   },
   {
@@ -2991,7 +2991,7 @@ const items = [
     "aliases": [
       "Potato Chips Bag"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Potato Chips Bag isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -3001,7 +3001,7 @@ const items = [
     "aliases": [
       "Cookie Tin"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Cookie Tin isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -3011,7 +3011,7 @@ const items = [
     "aliases": [
       "Canned Beans"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Canned Beans isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -3021,7 +3021,7 @@ const items = [
     "aliases": [
       "Soup Can"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Soup Can isolated product photograph",
     "difficulty": "Medium"
   },
   {
@@ -3031,7 +3031,7 @@ const items = [
     "aliases": [
       "Toothpick Holder"
     ],
-    "imageSearch": "food & everyday products everyday object photograph",
+    "imageSearch": "Toothpick Holder isolated product photograph",
     "difficulty": "Hard"
   }
 ];
