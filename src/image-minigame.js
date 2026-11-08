@@ -270,7 +270,6 @@ async function resolveImageUrl(url, name, searchTerms) {
 async function sendQuestion(channel, game) {
   if (!game.active || games.get(gameId(game.key, channel.id)) !== game) return;
   game.current = pickQuestion(game);
-  game.round_counter++;
   const q = game.current;
   // Guess The Politician needs Commons lookup because some configured filenames
   // are stale. FlagRush already uses direct FlagCDN URLs; searching Commons by a
@@ -299,6 +298,7 @@ async function sendQuestion(channel, game) {
     return sendQuestion(channel, game);
   }
   game.imageFailures = 0;
+  game.round_counter++;
   try {
     await channel.send({ embeds: [questionEmbed(game)] });
   } catch (error) {
