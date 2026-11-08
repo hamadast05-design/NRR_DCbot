@@ -134,32 +134,37 @@ async function requestCommons(params) {
   return response.json();
 }
 
-function commonsImageScore(page, info, name) {
+function commonsImageScore(page, info, name, aliases = []) {
   const title = String(page.title || '').replace(/^File:/i, '').replace(/_/g, ' ').toLowerCase();
   const normalizedTitle = normalize(title);
-  const target = normalize(name);
-  const targetTokens = target.split(' ').filter(token => token.length > 1);
   const titleTokens = new Set(normalizedTitle.split(' '));
-  const matched = targetTokens.filter(token => titleTokens.has(token));
-  if (!matched.length) return -Infinity;
+  const targets = [...new Set([name, ...aliases].map(normalize).filter(Boolean))];
+  let best = -Infinity;
 
-  let score = matched.length * 30;
-  if (normalizedTitle === target) score += 100;
-  if (normalizedTitle === target || normalizedTitle.startsWith(target + ' ') || normalizedTitle.includes(' ' + target + ' ')) score += 55;
-  if (targetTokens.length > 1 && matched.length === targetTokens.length) score += 35;
-  if (/isolated|white background|product photo|studio|front view/i.test(title)) score += 18;
-  if (info.width >= 600 && info.height >= 600) score += 12;
-  if (info.width && info.height) {
-    const ratio = info.width / info.height;
-    if (ratio >= 0.65 && ratio <= 1.6) score += 12;
-    else if (ratio > 2.5 || ratio < 0.4) score -= 25;
+  for (const target of targets) {
+    const targetTokens = target.split(' ').filter(token => token.length > 1);
+    const matched = targetTokens.filter(token => titleTokens.has(token));
+    if (!matched.length) continue;
+
+    let score = matched.length * 30;
+    if (normalizedTitle === target) score += 100;
+    if (normalizedTitle === target || normalizedTitle.startsWith(target + ' ') || normalizedTitle.includes(' ' + target + ' ')) score += 55;
+    if (targetTokens.length > 1 && matched.length === targetTokens.length) score += 35;
+    if (/isolated|white background|product photo|studio|front view/i.test(title)) score += 18;
+    if (info.width >= 600 && info.height >= 600) score += 12;
+    if (info.width && info.height) {
+      const ratio = info.width / info.height;
+      if (ratio >= 0.65 && ratio <= 1.6) score += 12;
+      else if (ratio > 2.5 || ratio < 0.4) score -= 25;
+    }
+    if (/collection|assortment|various|different types|set of|group of|many |collage|diagram|drawing|illustration|icon|logo|symbol|screenshot|poster|advertisement|catalogue|catalog|infographic|schematic|blueprint|person|portrait|politician|building/i.test(title)) score -= 100;
+    if (/in use|being used|holding|wearing|on a person|with people/i.test(title)) score -= 35;
+    best = Math.max(best, score);
   }
-  if (/collection|assortment|various|different types|set of|group of|many |collage|diagram|drawing|illustration|icon|logo|symbol|screenshot|poster|advertisement|catalogue|catalog|infographic|schematic|blueprint|person|portrait|politician|building/i.test(title)) score -= 100;
-  if (/in use|being used|holding|wearing|on a person|with people/i.test(title)) score -= 35;
-  return score;
+  return best;
 }
 
-async function findCommonsImage(url, name, searchTerms) {
+async function findCommonsImage(url, name, searchTerms, aliases = []) {
   // Resolve configured Commons filenames directly when an entry has one.
   if (url && url.includes('Special:FilePath/')) {
     try {
@@ -218,11 +223,10 @@ async function findCommonsImage(url, name, searchTerms) {
 
   // Search for the specific object, not its broad category. Prefer a clean,
   // close-up/product-style image whose file title actually names the object.
-  const searches = [
-    '"' + name + '"',
-    name + ' isolated on white background',
-    name + ' product photograph'
-  ];
+  const searchNames = [...new Set([name, ...aliases].filter(Boolean))];
+  const searches = searchNames.flatMap((searchName, index) => index === 0
+    ? ['"' + searchName + '"', searchName + ' isolated on white background', searchName + ' product photograph']
+    : ['"' + searchName + '"']);
   if (searchTerms && !searchTerms.toLowerCase().includes(name.toLowerCase())) {
     searches.push(name + ' ' + searchTerms);
   }
@@ -241,7 +245,7 @@ async function findCommonsImage(url, name, searchTerms) {
       const candidates = Object.values(data.query?.pages || {})
         .map(page => ({ page, info: page.imageinfo?.[0] }))
         .filter(({ info }) => info && /^image\/(jpeg|png|webp|gif)$/i.test(info.mime || '') && (!info.width || info.width >= 350))
-        .map(({ page, info }) => ({ page, info, score: commonsImageScore(page, info, name) }))
+        .map(({ page, info }) => ({ page, info, score: commonsImageScore(page, info, name, aliases) }))
         .filter(candidate => candidate.score >= 45)
         .sort((a, b) => b.score - a.score);
 
@@ -256,10 +260,10 @@ async function findCommonsImage(url, name, searchTerms) {
   return null;
 }
 
-async function resolveImageUrl(url, name, searchTerms) {
+async function resolveImageUrl(url, name, searchTerms, aliases) {
   const cacheKey = String(name || url || '').toLowerCase();
   if (resolvedImageCache.has(cacheKey)) return resolvedImageCache.get(cacheKey);
-  const pending = findCommonsImage(url, name || 'politician', searchTerms).catch(error => {
+  const pending = findCommonsImage(url, name || 'politician', searchTerms, aliases).catch(error => {
     console.warn('Could not resolve image for ' + name + ':', error.message);
     return url && /^https:\/\//i.test(url) ? url : null;
   });
@@ -280,7 +284,7 @@ async function sendQuestion(channel, game) {
       q.resolvedImage = await resolveImageUrl(q.fallbackImage, q.name);
     }
   } else if (game.key === 'triviagen') {
-    q.resolvedImage = await resolveImageUrl(q.image, q.name, q.imageSearch || q.category);
+    q.resolvedImage = await resolveImageUrl(q.image, q.name, q.imageSearch || q.category, q.aliases || []);
   } else {
     q.resolvedImage = q.image && /^https:\/\//i.test(q.image) ? q.image : null;
     if (!q.resolvedImage && q.fallbackImage && /^https:\/\//i.test(q.fallbackImage)) {
