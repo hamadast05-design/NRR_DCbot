@@ -61,20 +61,26 @@ function finalEmbed(game, reason) {
 }
 
 function createGame(channel, config) {
-  const game = { key: config.key, title: config.title, color: config.color, bank: config.bank, hintEnabled: config.hintEnabled, infoEnabled: config.infoEnabled, active: true, current: null, question_counter: 0, points: new Map(), currentStreak: new Map(), bestStreak: new Map(), unansweredStreak: 0, used: new Set(), timeout: null, hintTimeout: null, cooldown: null };
+  const game = { key: config.key, title: config.title, color: config.color, bank: config.bank, config, hintEnabled: config.hintEnabled, infoEnabled: config.infoEnabled, active: true, current: null, question_counter: 0, points: new Map(), currentStreak: new Map(), bestStreak: new Map(), unansweredStreak: 0, used: new Set(), timeout: null, hintTimeout: null, cooldown: null };
   games.set(gameId(config.key, channel.id), game);
   return game;
 }
 
 function questionEmbed(game) {
-  const embed = new EmbedBuilder().setTitle(game.key === 'gtp' ? '🏛️ GUESS THE POLITICIAN' : '🌍 FLAGRUSH').setColor(game.color)
-    .setDescription(game.key === 'gtp' ? '**Who is this political figure?**' : '**Which country does this flag represent?**')
+  const title = game.config.questionTitle || (game.key === 'gtp' ? '🏛️ GUESS THE POLITICIAN' : '🌍 FLAGRUSH');
+  const prompt = game.config.questionPrompt || (game.key === 'gtp' ? '**Who is this political figure?**' : '**Which country does this flag represent?**');
+  return new EmbedBuilder().setTitle(title).setColor(game.color).setDescription(prompt)
     .setImage(game.current.resolvedImage || game.current.image || game.current.fallbackImage)
     .setFooter({ text: '30 seconds..' });
-  return embed;
 }
 
 function answerDescription(game, q) {
+  if (game.key === 'triviagen') {
+    const lines = ['**Answer:** ' + q.name];
+    if (game.infoEnabled && q.description) lines.push('**Description:** ' + q.description);
+    if (q.category) lines.push('**Category:** ' + q.category);
+    return lines.join('\n');
+  }
   if (game.key === 'gtp') {
     const lines = ['**Answer:** ' + q.name];
     if (game.infoEnabled) lines.push('**Country:** ' + q.country, '**Position:** ' + q.role);
@@ -115,7 +121,7 @@ async function requestCommons(params) {
   return response.json();
 }
 
-async function findCommonsImage(url, name) {
+async function findCommonsImage(url, name, searchTerms) {
   // First resolve the exact configured filename through the Commons API.
   // This avoids relying on Special:FilePath redirects inside Discord embeds.
   if (url && url.includes('Special:FilePath/')) {
@@ -139,7 +145,7 @@ async function findCommonsImage(url, name) {
   // Several entries in the curated bank point to outdated or nonexistent
   // filenames. Search Commons by the politician's name and select a real
   // raster image URL instead of returning a broken redirect.
-  const searches = [name + ' official portrait', name + ' politician portrait', name];
+  const searches = searchTerms ? [name + ' ' + searchTerms, name + ' object', name] : [name + ' official portrait', name + ' politician portrait', name];
   for (const query of searches) {
     try {
       const data = await requestCommons({
@@ -155,7 +161,7 @@ async function findCommonsImage(url, name) {
         const titleA = String(a.title || '').toLowerCase();
         const titleB = String(b.title || '').toLowerCase();
         const target = name.toLowerCase();
-        const score = title => (title.includes(target) ? 0 : title.includes('portrait') ? 1 : 2);
+        const score = title => (title.includes(target) ? 0 : title.includes('object') || title.includes('product') ? 1 : 2);
         return score(titleA) - score(titleB);
       });
       for (const page of pages) {
@@ -163,7 +169,8 @@ async function findCommonsImage(url, name) {
         const direct = imageInfoUrl(info);
         if (!direct || !/^image\/(jpeg|png|webp|gif)$/i.test(info.mime || '')) continue;
         if (info.width && info.width < 250) continue;
-        if (/coat of arms|flag of|logo|signature|map of/i.test(page.title || '')) continue;
+        if (/coat of arms|flag of|logo|signature|map of|diagram|drawing|icon|symbol|screenshot|poster|advertisement/i.test(page.title || '')) continue;
+        if (searchTerms && /person|portrait|politician|building|brand/i.test(page.title || '')) continue;
         return direct;
       }
     } catch (error) {
@@ -178,10 +185,10 @@ async function findCommonsImage(url, name) {
   return null;
 }
 
-async function resolveImageUrl(url, name) {
+async function resolveImageUrl(url, name, searchTerms) {
   const cacheKey = String(name || url || '').toLowerCase();
   if (resolvedImageCache.has(cacheKey)) return resolvedImageCache.get(cacheKey);
-  const pending = findCommonsImage(url, name || 'politician').catch(error => {
+  const pending = findCommonsImage(url, name || 'politician', searchTerms).catch(error => {
     console.warn('Could not resolve image for ' + name + ':', error.message);
     return url && /^https:\/\//i.test(url) ? url : null;
   });
@@ -201,6 +208,8 @@ async function sendQuestion(channel, game) {
     if (!q.resolvedImage && q.fallbackImage && q.fallbackImage !== q.image) {
       q.resolvedImage = await resolveImageUrl(q.fallbackImage, q.name);
     }
+  } else if (game.key === 'triviagen') {
+    q.resolvedImage = await resolveImageUrl(q.image, q.name, q.imageSearch || q.category);
   } else {
     q.resolvedImage = q.image && /^https:\/\//i.test(q.image) ? q.image : null;
     if (!q.resolvedImage && q.fallbackImage && /^https:\/\//i.test(q.fallbackImage)) {
@@ -224,6 +233,13 @@ async function sendQuestion(channel, game) {
       : (q.fallbackImage && /^https:\/\//i.test(q.fallbackImage) ? q.fallbackImage : null);
     if (!q.resolvedImage) throw error;
     await channel.send({ embeds: [questionEmbed(game)] });
+  }
+  if (game.hintEnabled && game.config.hintDelayMs && q.category) {
+    game.hintTimeout = setTimeout(async () => {
+      if (!game.active || games.get(gameId(game.key, channel.id)) !== game || game.current !== q) return;
+      game.hintTimeout = null;
+      await channel.send({ content: '💡 **Hint:** This item belongs to the **' + q.category + '** category.', allowedMentions: { parse: [] } }).catch(() => {});
+    }, game.config.hintDelayMs);
   }
   game.timeout = setTimeout(async () => {
     if (!game.active || games.get(gameId(game.key, channel.id)) !== game || !game.current) return;
