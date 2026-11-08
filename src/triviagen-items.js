@@ -1,4 +1,4 @@
-// Curated TriviaGen item bank: 300 everyday objects across ten categories.
+// Curated TriviaGen item bank: 300 unique everyday objects across ten categories.
 // Difficulty is mixed (50% Easy, 40% Medium, 10% Hard). Images resolve at runtime from Wikimedia Commons.
 const items = [
   {
@@ -1442,11 +1442,12 @@ const items = [
     "difficulty": "Easy"
   },
   {
-    "name": "Calculator",
+    "name": "Desk Calendar",
     "category": "Stationery",
-    "description": "Calculator is a stationery or office supply used for writing, drawing, or organizing.",
+    "description": "A desk calendar is a stationery item used to view dates and organize a schedule.",
     "aliases": [
-      "Calculator"
+      "Desk Calendar",
+      "Desktop Calendar"
     ],
     "imageSearch": "stationery everyday object photograph",
     "difficulty": "Easy"
@@ -2399,11 +2400,12 @@ const items = [
     "difficulty": "Medium"
   },
   {
-    "name": "Skateboard",
+    "name": "Inline Skates",
     "category": "Sports Equipment",
-    "description": "Skateboard is a piece of equipment used in a sport or physical activity.",
+    "description": "Inline skates are sports equipment worn on the feet for skating.",
     "aliases": [
-      "Skateboard"
+      "Inline Skates",
+      "Rollerblades"
     ],
     "imageSearch": "sports equipment everyday object photograph",
     "difficulty": "Medium"
