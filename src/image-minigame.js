@@ -179,6 +179,43 @@ async function findCommonsImage(url, name, searchTerms) {
     }
   }
 
+  // Preserve Guess The Politician's established portrait-search behavior.
+  // Object-focused scoring below is intentionally limited to TriviaGen.
+  if (!searchTerms) {
+    const portraitSearches = [name + ' official portrait', name + ' politician portrait', name];
+    for (const query of portraitSearches) {
+      try {
+        const data = await requestCommons({
+          generator: 'search',
+          gsrsearch: query,
+          gsrnamespace: '6',
+          gsrlimit: '12',
+          prop: 'imageinfo',
+          iiprop: 'url|mime|size',
+          iiurlwidth: '900'
+        });
+        const pages = Object.values(data.query?.pages || {}).sort((a, b) => {
+          const titleA = String(a.title || '').toLowerCase();
+          const titleB = String(b.title || '').toLowerCase();
+          const target = name.toLowerCase();
+          const score = title => title.includes(target) ? 0 : title.includes('portrait') ? 1 : 2;
+          return score(titleA) - score(titleB);
+        });
+        for (const page of pages) {
+          const info = page.imageinfo?.[0];
+          const direct = imageInfoUrl(info);
+          if (!direct || !/^image\/(jpeg|png|webp|gif)$/i.test(info.mime || '')) continue;
+          if (info.width && info.width < 250) continue;
+          if (/coat of arms|flag of|logo|signature|map of/i.test(page.title || '')) continue;
+          return direct;
+        }
+      } catch (error) {
+        console.warn('Commons portrait search failed for ' + name + ' (' + query + '):', error.message);
+      }
+    }
+    return null;
+  }
+
   // Search for the specific object, not its broad category. Prefer a clean,
   // close-up/product-style image whose file title actually names the object.
   const searches = [
