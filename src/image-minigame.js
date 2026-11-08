@@ -276,7 +276,7 @@ async function sendQuestion(channel, game) {
     game.hintTimeout = setTimeout(async () => {
       if (!game.active || games.get(gameId(game.key, channel.id)) !== game || game.current !== q) return;
       game.hintTimeout = null;
-      await channel.send({ content: '💡 **Hint:** This item belongs to the **' + q.category + '** category.', allowedMentions: { parse: [] } }).catch(() => {});
+      await channel.send({ content: '**HINT** • This item belongs to the **' + q.category + '** category.', allowedMentions: { parse: [] } }).catch(() => {});
     }, game.config.hintDelayMs);
   }
   game.timeout = setTimeout(async () => {
