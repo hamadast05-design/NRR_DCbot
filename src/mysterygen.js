@@ -1,14 +1,27 @@
-const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const {
+  EmbedBuilder,
+  PermissionFlagsBits,
+  ContainerBuilder,
+  TextDisplayBuilder,
+  SeparatorBuilder,
+  SeparatorSpacingSize,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  MessageFlags
+} = require('discord.js');
 const { hasPermission } = require('./access');
 const bank = require('./mysterygen-items');
 
 const CLUE_INTERVAL_MS = 20_000;
 const FINAL_CLUE_INTERVAL_MS = 15_000;
 const NEXT_ROUND_DELAY_MS = 10_000;
+const REPLAY_DELAY_MS = 5_000;
+const MYSTERY_ICON_URL = 'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/2753.png';
 const games = new Map();
 
 function normalize(value) {
-  return String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+  return String(value || '').normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9\\s-]/g, ' ').replace(/\\s+/g, ' ').trim();
 }
 function editDistanceAtMostOne(a, b) {
   if (Math.abs(a.length - b.length) > 1) return false;
@@ -51,29 +64,49 @@ function clueEmbed(game, clueIndex, isStart = false) {
     '```text',
     String(game.current.clues[clueIndex]).replace(/```/g, '` ` `'),
     '```'
-  ].join('\n');
-  const footer = isStart
-    ? '⌗ Round ' + game.roundNumber + ' • ⧉ ' + game.bank.length + ' items • ⏱ 20s / 20s / 15s • ⚙ !reveal'
-    : '⌗ Round ' + game.roundNumber + ' • ⏱ ' + (clueIndex === 2 ? 'Answer reveal' : 'Next clue') + ' in ' + waitSeconds + 's';
+  ].join('\\n');
+  const footer = '⌗ Round ' + game.roundNumber + (isStart ? '' : ' • ⏱ ' + (clueIndex === 2 ? 'Answer reveal' : 'Next clue') + ' in ' + waitSeconds + 's');
   return new EmbedBuilder()
     .setTitle(isStart ? 'MYSTERYGEN | GAME STARTED' : 'MYSTERYGEN')
     .setColor(colors[clueIndex])
+    .setThumbnail(MYSTERY_ICON_URL)
     .setDescription(description)
     .setFooter({ text: footer });
 }
 function answerEmbed(item, roundNumber, outcome) {
   const solved = outcome === 'solved';
-  const missed = outcome === 'missed';
   const note = solved
     ? 'Correct answer received!'
-    : outcome === 'host-reveal'
-      ? 'The host revealed the answer.'
-      : 'Nobody guessed correctly before time ran out.';
+    : 'The host revealed the answer.';
   return new EmbedBuilder()
     .setTitle(solved ? 'MYSTERY SOLVED' : 'MYSTERY REVEALED')
-    .setColor(solved ? 0x2ecc71 : missed ? 0xe74c3c : 0x5865f2)
-    .setDescription('## ' + item.name + '\n\n' + note)
+    .setColor(solved ? 0x2ecc71 : 0x5865f2)
+    .setDescription('## ' + item.name + '\\n\\n' + note)
     .setFooter({ text: '⌗ Round ' + roundNumber + ' • Next round in 10 seconds' });
+}
+function missedRoundPanel(item, roundNumber, channelId) {
+  const replayId = 'mysterygen:play-again:' + channelId + ':' + roundNumber;
+  const panel = new ContainerBuilder()
+    .setAccentColor(0xe74c3c)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent('## MYSTERY REVEALED'),
+      new TextDisplayBuilder().setContent('# ' + item.name + '\\nNobody guessed correctly before time ran out.')
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large)
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent('### » Ready for another round?')
+    )
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(replayId)
+          .setLabel('Play Again')
+          .setStyle(ButtonStyle.Secondary)
+      )
+    );
+  return panel;
 }
 function scheduleNextRound(channel,game) {
   clearTimer(game);
@@ -83,10 +116,20 @@ function scheduleNextRound(channel,game) {
 async function revealRound(channel,game,outcome,winnerId=null) {
   if (!game.active || games.get(String(channel.id))!==game || !game.current) return false;
   const item=game.current;
+  const roundNumber=game.roundNumber;
   game.current=null;
   game.phase='revealing';
   clearTimer(game);
-  await channel.send({embeds:[answerEmbed(item,game.roundNumber,outcome)],allowedMentions:{parse:[]}});
+  if (outcome === 'missed') {
+    await channel.send({
+      flags: MessageFlags.IsComponentsV2,
+      components: [missedRoundPanel(item,roundNumber,channel.id)],
+      allowedMentions: { parse: [] }
+    });
+    if (game.active && games.get(String(channel.id))===game) game.phase='awaiting-replay';
+    return true;
+  }
+  await channel.send({embeds:[answerEmbed(item,roundNumber,outcome)],allowedMentions:{parse:[]}});
   if (!game.active || games.get(String(channel.id))!==game) return true;
   if (winnerId) await channel.send({content:'Correct answer: <@'+winnerId+'>.',allowedMentions:{parse:[]}});
   scheduleNextRound(channel,game);
@@ -167,11 +210,38 @@ async function revealCommand(message) {
   await revealRound(message.channel,game,'host-reveal');
   return true;
 }
+async function onButton(interaction) {
+  const match = /^mysterygen:play-again:(\\d+):(\\d+)$/.exec(interaction.customId);
+  if (!match) return false;
+  const [, channelId, roundNumberText] = match;
+  const game = getGame(channelId);
+  if (!game || game.phase !== 'awaiting-replay' || game.roundNumber !== Number(roundNumberText) || interaction.channelId !== channelId) {
+    await interaction.reply({content:'This MysteryGen round is no longer waiting for a replay.',ephemeral:true});
+    return true;
+  }
+  game.phase = 'replay-starting';
+  await interaction.deferUpdate();
+  try {
+    await interaction.channel.send({content:'Starting new Round! ⚙..',allowedMentions:{parse:[]}});
+    clearTimer(game);
+    game.timer=setTimeout(()=>{
+      game.timer=null;
+      beginRound(interaction.channel,game).catch(error=>{
+        console.error('[MysteryGen] Replay start failed:',error);
+        if (game.active && games.get(String(channelId))===game) game.phase='awaiting-replay';
+      });
+    },REPLAY_DELAY_MS);
+  } catch(error) {
+    game.phase='awaiting-replay';
+    throw error;
+  }
+  return true;
+}
 async function onMessage(message) {
   if (!message.guild || message.author.bot || message.webhookId) return;
   const game=getGame(message.channel.id);
-  if (!game || !game.current || game.phase==='between-rounds' || game.phase==='revealing') return;
+  if (!game || !game.current || game.phase==='between-rounds' || game.phase==='revealing' || game.phase==='awaiting-replay' || game.phase==='replay-starting') return;
   if (!acceptedAnswer(game.current,message.content)) return;
   await revealRound(message.channel,game,'solved',message.author.id);
 }
-module.exports={startCommand,endCommand,onMessage,revealCommand,start,stop,getGame,bankSize:bank.length};
+module.exports={startCommand,endCommand,onMessage,revealCommand,onButton,start,stop,getGame,bankSize:bank.length};
