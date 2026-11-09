@@ -49,7 +49,7 @@ function clueEmbed(game, clueIndex, isStart = false) {
         '> ' + game.current.clues[clueIndex],
         '',
         'The first correct answer ends the round.'
-      ].join('\\n')
+      ].join('\n')
     : [
         '## I am thinking of something...',
         '',
@@ -57,7 +57,7 @@ function clueEmbed(game, clueIndex, isStart = false) {
         '> ' + game.current.clues[clueIndex],
         '',
         'Send your guess in chat. The next clue arrives automatically.'
-      ].join('\\n');
+      ].join('\n');
   const fields = isStart
     ? [
         { name: 'ROUND', value: String(game.roundNumber), inline: true },
