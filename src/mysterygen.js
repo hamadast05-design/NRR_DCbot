@@ -2,13 +2,13 @@ const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { hasPermission } = require('./access');
 const bank = require('./mysterygen-items');
 
-const CLUE_INTERVAL_MS = 15_000;
-const FINAL_CLUE_INTERVAL_MS = 10_000;
+const CLUE_INTERVAL_MS = 20_000;
+const FINAL_CLUE_INTERVAL_MS = 15_000;
 const NEXT_ROUND_DELAY_MS = 10_000;
 const games = new Map();
 
 function normalize(value) {
-  return String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+  return String(value || '').normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9\\s-]/g, ' ').replace(/\\s+/g, ' ').trim();
 }
 function editDistanceAtMostOne(a, b) {
   if (Math.abs(a.length - b.length) > 1) return false;
@@ -39,47 +39,31 @@ function pickItem(game) {
 }
 function clueEmbed(game, clueIndex, isStart = false) {
   const number = clueIndex + 1;
-  const description = isStart
-    ? [
-        '## Can you figure out what I am?',
-        '',
-        'Three clues will be revealed for each mystery item. Send your guess in chat at any time.',
-        '',
-        '**CLUE 1 OF 3**',
-        '> ' + game.current.clues[clueIndex],
-        '',
-        'The first correct answer ends the round.'
-      ].join('\n')
-    : [
-        '## I am thinking of something...',
-        '',
-        '**CLUE ' + number + ' OF 3**',
-        '> ' + game.current.clues[clueIndex],
-        '',
-        'Send your guess in chat. The next clue arrives automatically.'
-      ].join('\n');
-  const fields = isStart
-    ? [
-        { name: 'ROUND', value: String(game.roundNumber), inline: true },
-        { name: 'CLUE TIMING', value: '15s between clues', inline: true },
-        { name: 'FINAL CLUE', value: '10s to solve', inline: true },
-        { name: 'QUESTION BANK', value: game.bank.length + ' items', inline: true },
-        { name: 'HOST COMMAND', value: '!reveal skips to the answer', inline: true }
-      ]
-    : [
-        { name: 'ROUND', value: String(game.roundNumber), inline: true },
-        { name: 'CLUE', value: number + ' / 3', inline: true },
-        { name: 'NEXT CLUE', value: clueIndex === 2 ? 'Answer reveal in 10s' : 'In 15s', inline: true }
-      ];
+  const waitSeconds = clueIndex === 2 ? FINAL_CLUE_INTERVAL_MS / 1000 : CLUE_INTERVAL_MS / 1000;
+  const colors = [0xf1c40f, 0xe67e22, 0xe74c3c];
+  const description = [
+    ...(isStart ? [
+      '» A mystery is underway. Guess in chat at any time — the first correct answer wins.',
+      ''
+    ] : []),
+    '## ✦ CLUE ' + number + ' OF 3',
+    '',
+    '```text',
+    String(game.current.clues[clueIndex]).replace(/```/g, '` ` `'),
+    '```'
+  ].join('\\n');
+  const footer = isStart
+    ? '⌗ Round ' + game.roundNumber + ' • ⧉ ' + game.bank.length + ' items • ⏱ 20s / 20s / 15s • ⚙ !reveal'
+    : '⌗ Round ' + game.roundNumber + ' • ⏱ ' + (clueIndex === 2 ? 'Answer reveal' : 'Next clue') + ' in ' + waitSeconds + 's';
   return new EmbedBuilder()
-    .setTitle(isStart ? 'MYSTERYGEN | GAME STARTED' : 'MYSTERYGEN | WHAT AM I?')
-    .setColor(0x5865f2)
+    .setTitle(isStart ? 'MYSTERYGEN | GAME STARTED' : 'MYSTERYGEN')
+    .setColor(colors[clueIndex])
     .setDescription(description)
-    .addFields(fields)
-    .setFooter({ text: 'Three clues • First correct answer wins • No points or leaderboard' });
+    .setFooter({ text: footer });
 }
 function answerEmbed(item, roundNumber, outcome) {
   const solved = outcome === 'solved';
+  const missed = outcome === 'missed';
   const note = solved
     ? 'Correct answer received!'
     : outcome === 'host-reveal'
@@ -87,9 +71,9 @@ function answerEmbed(item, roundNumber, outcome) {
       : 'Nobody guessed correctly before time ran out.';
   return new EmbedBuilder()
     .setTitle(solved ? 'MYSTERY SOLVED' : 'MYSTERY REVEALED')
-    .setColor(solved ? 0x2ecc71 : 0x5865f2)
-    .setDescription('## ' + item.name + '\n\n' + note)
-    .setFooter({ text: 'Round ' + roundNumber + ' • Next round in 10 seconds' });
+    .setColor(solved ? 0x2ecc71 : missed ? 0xe74c3c : 0x5865f2)
+    .setDescription('## ' + item.name + '\\n\\n' + note)
+    .setFooter({ text: '⌗ Round ' + roundNumber + ' • Next round in 10 seconds' });
 }
 function scheduleNextRound(channel,game) {
   clearTimer(game);
