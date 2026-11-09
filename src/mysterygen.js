@@ -78,25 +78,31 @@ function clueEmbed(game, clueIndex, isStart = false) {
     .addFields(fields)
     .setFooter({ text: 'Three clues • First correct answer wins • No points or leaderboard' });
 }
-function answerEmbed(item, roundNumber, solved) {
+function answerEmbed(item, roundNumber, outcome) {
+  const solved = outcome === 'solved';
+  const note = solved
+    ? 'Correct answer received!'
+    : outcome === 'host-reveal'
+      ? 'The host revealed the answer.'
+      : 'Nobody guessed correctly before time ran out.';
   return new EmbedBuilder()
-    .setTitle(solved?'MYSTERY SOLVED':'MYSTERY REVEALED')
-    .setColor(solved?0x2ecc71:0x5865f2)
-    .setDescription('## '+item.name+'\n\n'+(solved?'Correct answer received!':'Nobody guessed the item this round.'))
-    .setFooter({text:'Round '+roundNumber+' • Next round in 10 seconds'});
+    .setTitle(solved ? 'MYSTERY SOLVED' : 'MYSTERY REVEALED')
+    .setColor(solved ? 0x2ecc71 : 0x5865f2)
+    .setDescription('## ' + item.name + '\n\n' + note)
+    .setFooter({ text: 'Round ' + roundNumber + ' • Next round in 10 seconds' });
 }
 function scheduleNextRound(channel,game) {
   clearTimer(game);
   game.phase='between-rounds';
   game.timer=setTimeout(()=>{ game.timer=null; beginRound(channel,game).catch(error=>console.error('[MysteryGen] Next round failed:',error)); },NEXT_ROUND_DELAY_MS);
 }
-async function revealRound(channel,game,solved,winnerId=null) {
+async function revealRound(channel,game,outcome,winnerId=null) {
   if (!game.active || games.get(String(channel.id))!==game || !game.current) return false;
   const item=game.current;
   game.current=null;
   game.phase='revealing';
   clearTimer(game);
-  await channel.send({embeds:[answerEmbed(item,game.roundNumber,solved)],allowedMentions:{parse:[]}});
+  await channel.send({embeds:[answerEmbed(item,game.roundNumber,outcome)],allowedMentions:{parse:[]}});
   if (!game.active || games.get(String(channel.id))!==game) return true;
   if (winnerId) await channel.send({content:'Correct answer: <@'+winnerId+'>.',allowedMentions:{parse:[]}});
   scheduleNextRound(channel,game);
@@ -113,7 +119,7 @@ async function sendClue(channel,game,index,isStart=false) {
     game.timer=null;
     if (!game.active || games.get(String(channel.id))!==game || !game.current) return;
     if (index<2) sendClue(channel,game,index+1).catch(error=>console.error('[MysteryGen] Clue send failed:',error));
-    else revealRound(channel,game,false).catch(error=>console.error('[MysteryGen] Reveal failed:',error));
+    else revealRound(channel,game,'missed').catch(error=>console.error('[MysteryGen] Reveal failed:',error));
   },index===2?FINAL_CLUE_INTERVAL_MS:CLUE_INTERVAL_MS);
 }
 async function beginRound(channel,game,isStart=false) {
@@ -174,7 +180,7 @@ async function revealCommand(message) {
     await message.reply('There is no active MysteryGen round to reveal in this channel.').catch(()=>{});
     return true;
   }
-  await revealRound(message.channel,game,false);
+  await revealRound(message.channel,game,'host-reveal');
   return true;
 }
 async function onMessage(message) {
@@ -182,6 +188,6 @@ async function onMessage(message) {
   const game=getGame(message.channel.id);
   if (!game || !game.current || game.phase==='between-rounds' || game.phase==='revealing') return;
   if (!acceptedAnswer(game.current,message.content)) return;
-  await revealRound(message.channel,game,true,message.author.id);
+  await revealRound(message.channel,game,'solved',message.author.id);
 }
 module.exports={startCommand,endCommand,onMessage,revealCommand,start,stop,getGame,bankSize:bank.length};
