@@ -37,18 +37,46 @@ function pickItem(game) {
   game.used.add(index);
   return game.bank[index];
 }
-function clueEmbed(game, clueIndex) {
-  const number=clueIndex+1;
+function clueEmbed(game, clueIndex, isStart = false) {
+  const number = clueIndex + 1;
+  const description = isStart
+    ? [
+        '## Can you figure out what I am?',
+        '',
+        'Three clues will be revealed for each mystery item. Send your guess in chat at any time.',
+        '',
+        '**CLUE 1 OF 3**',
+        '> ' + game.current.clues[clueIndex],
+        '',
+        'The first correct answer ends the round.'
+      ].join('\\n')
+    : [
+        '## I am thinking of something...',
+        '',
+        '**CLUE ' + number + ' OF 3**',
+        '> ' + game.current.clues[clueIndex],
+        '',
+        'Send your guess in chat. The next clue arrives automatically.'
+      ].join('\\n');
+  const fields = isStart
+    ? [
+        { name: 'ROUND', value: String(game.roundNumber), inline: true },
+        { name: 'CLUE TIMING', value: '15s between clues', inline: true },
+        { name: 'FINAL CLUE', value: '10s to solve', inline: true },
+        { name: 'QUESTION BANK', value: game.bank.length + ' items', inline: true },
+        { name: 'HOST COMMAND', value: '!reveal skips to the answer', inline: true }
+      ]
+    : [
+        { name: 'ROUND', value: String(game.roundNumber), inline: true },
+        { name: 'CLUE', value: number + ' / 3', inline: true },
+        { name: 'NEXT CLUE', value: clueIndex === 2 ? 'Answer reveal in 10s' : 'In 15s', inline: true }
+      ];
   return new EmbedBuilder()
-    .setTitle('MYSTERYGEN | WHAT AM I?')
+    .setTitle(isStart ? 'MYSTERYGEN | GAME STARTED' : 'MYSTERYGEN | WHAT AM I?')
     .setColor(0x5865f2)
-    .setDescription(['## I am thinking of something...','','**CLUE '+number+' OF 3**','> '+game.current.clues[clueIndex],'','Send your guess in chat. The next clue arrives automatically.'].join('\n'))
-    .addFields(
-      {name:'ROUND',value:String(game.roundNumber),inline:true},
-      {name:'CLUE',value:number+' / 3',inline:true},
-      {name:'NEXT CLUE',value:clueIndex===2?'Answer reveal in 10s':'In 15s',inline:true}
-    )
-    .setFooter({text:'Three clues • First correct answer wins • No points or leaderboard'});
+    .setDescription(description)
+    .addFields(fields)
+    .setFooter({ text: 'Three clues • First correct answer wins • No points or leaderboard' });
 }
 function answerEmbed(item, roundNumber, solved) {
   return new EmbedBuilder()
@@ -74,11 +102,11 @@ async function revealRound(channel,game,solved,winnerId=null) {
   scheduleNextRound(channel,game);
   return true;
 }
-async function sendClue(channel,game,index) {
+async function sendClue(channel,game,index,isStart=false) {
   if (!game.active || games.get(String(channel.id))!==game || !game.current) return;
   game.clueIndex=index;
   game.phase='clue-'+(index+1);
-  await channel.send({embeds:[clueEmbed(game,index)],allowedMentions:{parse:[]}});
+  await channel.send({embeds:[clueEmbed(game,index,isStart)],allowedMentions:{parse:[]}});
   if (!game.active || games.get(String(channel.id))!==game || !game.current) return;
   clearTimer(game);
   game.timer=setTimeout(()=>{
@@ -88,12 +116,12 @@ async function sendClue(channel,game,index) {
     else revealRound(channel,game,false).catch(error=>console.error('[MysteryGen] Reveal failed:',error));
   },index===2?FINAL_CLUE_INTERVAL_MS:CLUE_INTERVAL_MS);
 }
-async function beginRound(channel,game) {
+async function beginRound(channel,game,isStart=false) {
   if (!game.active || games.get(String(channel.id))!==game) return;
   game.current=pickItem(game);
   game.roundNumber++;
   game.clueIndex=0;
-  await sendClue(channel,game,0);
+  await sendClue(channel,game,0,isStart);
 }
 async function start(channel) {
   if (!channel || !channel.isTextBased() || !channel.send) return {ok:false,message:'MysteryGen can only be started in a text channel.'};
@@ -101,20 +129,7 @@ async function start(channel) {
   const game={active:true,bank,used:new Set(),current:null,clueIndex:-1,roundNumber:0,phase:'starting',timer:null};
   games.set(String(channel.id),game);
   try {
-    await channel.send({embeds:[new EmbedBuilder()
-      .setTitle('MYSTERYGEN | GAME STARTED')
-      .setColor(0x5865f2)
-      .setDescription('## Can you figure out what I am?\n\nThe bot reveals **three clues** for each mystery item. Submit your guess in chat at any time. The first correct answer ends the round.')
-      .addFields(
-        {name:'CLUE TIMING',value:'15s between clues',inline:true},
-        {name:'FINAL CLUE',value:'10s to solve',inline:true},
-        {name:'NEXT ROUND',value:'10s after reveal',inline:true},
-        {name:'QUESTION BANK',value:bank.length+' popular items',inline:true},
-        {name:'SCORING',value:'No points or leaderboard',inline:true},
-        {name:'HOST COMMAND',value:'!reveal skips to the answer',inline:true}
-      )
-      .setFooter({text:'Round 1 begins now'})],allowedMentions:{parse:[]}});
-    await beginRound(channel,game);
+    await beginRound(channel,game,true);
     return {ok:true};
   } catch(error) {
     game.active=false; clearTimer(game); games.delete(String(channel.id)); throw error;
