@@ -67,19 +67,6 @@ function createGame(channel, config) {
 }
 
 function questionEmbed(game) {
-  if (game.key === 'triviagen') {
-    return new EmbedBuilder()
-      .setTitle(game.config.questionTitle || 'TRIVIAGEN | ITEM IDENTIFICATION')
-      .setColor(game.color)
-      .setDescription('## What everyday item is shown?\n\n> Type your answer in chat.\n\n───')
-      .addFields(
-        { name: 'TIME LIMIT', value: '[ 30s ]', inline: true },
-        { name: 'REWARD', value: '+1 point', inline: true },
-        { name: 'CATEGORY', value: 'Revealed at 15s', inline: true }
-      )
-      .setImage(game.current.resolvedImage || game.current.image || game.current.fallbackImage)
-      .setFooter({ text: 'ROUND ' + game.round_counter + ' • ' + game.bank.length + ' ITEMS IN BANK' });
-  }
   const title = game.config.questionTitle || (game.key === 'gtp' ? '🏛️ GUESS THE POLITICIAN' : '🌍 FLAGRUSH');
   const prompt = game.config.questionPrompt || (game.key === 'gtp' ? '**Who is this political figure?**' : '**Which country does this flag represent?**');
   return new EmbedBuilder().setTitle(title).setColor(game.color).setDescription(prompt)
@@ -88,12 +75,6 @@ function questionEmbed(game) {
 }
 
 function answerDescription(game, q) {
-  if (game.key === 'triviagen') {
-    const lines = ['**Answer:** ' + q.name];
-    if (game.infoEnabled && q.description) lines.push('**Description:** ' + q.description);
-    if (q.category) lines.push('**Category:** ' + q.category);
-    return lines.join('\n');
-  }
   if (game.key === 'gtp') {
     const lines = ['**Answer:** ' + q.name];
     if (game.infoEnabled) lines.push('**Country:** ' + q.country, '**Position:** ' + q.role);
@@ -134,48 +115,12 @@ async function requestCommons(params) {
   return response.json();
 }
 
-function commonsImageScore(page, info, name, aliases = []) {
-  const title = String(page.title || '').replace(/^File:/i, '').replace(/_/g, ' ').toLowerCase();
-  const normalizedTitle = normalize(title);
-  const titleTokens = new Set(normalizedTitle.split(' '));
-  const targets = [...new Set([name, ...aliases].map(normalize).filter(Boolean))];
-  let best = -Infinity;
-
-  for (const target of targets) {
-    const targetTokens = target.split(' ').filter(token => token.length > 1);
-    const matched = targetTokens.filter(token => titleTokens.has(token));
-    if (!matched.length) continue;
-
-    let score = matched.length * 30;
-    if (normalizedTitle === target) score += 100;
-    if (normalizedTitle === target || normalizedTitle.startsWith(target + ' ') || normalizedTitle.includes(' ' + target + ' ')) score += 55;
-    if (targetTokens.length > 1 && matched.length === targetTokens.length) score += 35;
-    if (/isolated|white background|product photo|studio|front view/i.test(title)) score += 18;
-    if (info.width >= 600 && info.height >= 600) score += 12;
-    if (info.width && info.height) {
-      const ratio = info.width / info.height;
-      if (ratio >= 0.65 && ratio <= 1.6) score += 12;
-      else if (ratio > 2.5 || ratio < 0.4) score -= 25;
-    }
-    if (/collection|assortment|various|different types|set of|group of|many |collage|diagram|drawing|illustration|icon|logo|symbol|screenshot|poster|advertisement|catalogue|catalog|infographic|schematic|blueprint|person|portrait|politician|building/i.test(title)) score -= 100;
-    if (/in use|being used|holding|wearing|on a person|with people/i.test(title)) score -= 35;
-    best = Math.max(best, score);
-  }
-  return best;
-}
-
-async function findCommonsImage(url, name, searchTerms, aliases = []) {
-  // Resolve configured Commons filenames directly when an entry has one.
+async function findCommonsImage(url, name) {
   if (url && url.includes('Special:FilePath/')) {
     try {
       const raw = url.split('Special:FilePath/')[1].split(/[?#]/)[0];
       const filename = decodeURIComponent(raw).replace(/_/g, ' ');
-      const data = await requestCommons({
-        titles: 'File:' + filename,
-        prop: 'imageinfo',
-        iiprop: 'url|mime|size',
-        iiurlwidth: '900'
-      });
+      const data = await requestCommons({ titles: 'File:' + filename, prop: 'imageinfo', iiprop: 'url|mime|size', iiurlwidth: '900' });
       const page = Object.values(data.query?.pages || {})[0];
       const exact = imageInfoUrl(page?.imageinfo?.[0]);
       if (exact) return exact;
@@ -183,87 +128,39 @@ async function findCommonsImage(url, name, searchTerms, aliases = []) {
       console.warn('Exact Commons image lookup failed for ' + name + ':', error.message);
     }
   }
-
-  // Preserve Guess The Politician's established portrait-search behavior.
-  // Object-focused scoring below is intentionally limited to TriviaGen.
-  if (!searchTerms) {
-    const portraitSearches = [name + ' official portrait', name + ' politician portrait', name];
-    for (const query of portraitSearches) {
-      try {
-        const data = await requestCommons({
-          generator: 'search',
-          gsrsearch: query,
-          gsrnamespace: '6',
-          gsrlimit: '12',
-          prop: 'imageinfo',
-          iiprop: 'url|mime|size',
-          iiurlwidth: '900'
-        });
-        const pages = Object.values(data.query?.pages || {}).sort((a, b) => {
-          const titleA = String(a.title || '').toLowerCase();
-          const titleB = String(b.title || '').toLowerCase();
-          const target = name.toLowerCase();
-          const score = title => title.includes(target) ? 0 : title.includes('portrait') ? 1 : 2;
-          return score(titleA) - score(titleB);
-        });
-        for (const page of pages) {
-          const info = page.imageinfo?.[0];
-          const direct = imageInfoUrl(info);
-          if (!direct || !/^image\/(jpeg|png|webp|gif)$/i.test(info.mime || '')) continue;
-          if (info.width && info.width < 250) continue;
-          if (/coat of arms|flag of|logo|signature|map of/i.test(page.title || '')) continue;
-          return direct;
-        }
-      } catch (error) {
-        console.warn('Commons portrait search failed for ' + name + ' (' + query + '):', error.message);
-      }
-    }
-    return null;
-  }
-
-  // Search for the specific object, not its broad category. Prefer a clean,
-  // close-up/product-style image whose file title actually names the object.
-  const searchNames = [...new Set([name, ...aliases].filter(Boolean))];
-  const searches = searchNames.flatMap((searchName, index) => index === 0
-    ? ['"' + searchName + '"', searchName + ' isolated on white background', searchName + ' product photograph']
-    : ['"' + searchName + '"']);
-  if (searchTerms && !searchTerms.toLowerCase().includes(name.toLowerCase())) {
-    searches.push(name + ' ' + searchTerms);
-  }
-
+  const searches = [name + ' official portrait', name + ' politician portrait', name];
   for (const query of searches) {
     try {
       const data = await requestCommons({
-        generator: 'search',
-        gsrsearch: query,
-        gsrnamespace: '6',
-        gsrlimit: '30',
-        prop: 'imageinfo',
-        iiprop: 'url|mime|size',
-        iiurlwidth: '900'
+        generator: 'search', gsrsearch: query, gsrnamespace: '6', gsrlimit: '12',
+        prop: 'imageinfo', iiprop: 'url|mime|size', iiurlwidth: '900'
       });
-      const candidates = Object.values(data.query?.pages || {})
-        .map(page => ({ page, info: page.imageinfo?.[0] }))
-        .filter(({ info }) => info && /^image\/(jpeg|png|webp|gif)$/i.test(info.mime || '') && (!info.width || info.width >= 350))
-        .map(({ page, info }) => ({ page, info, score: commonsImageScore(page, info, name, aliases) }))
-        .filter(candidate => candidate.score >= 45)
-        .sort((a, b) => b.score - a.score);
-
-      if (candidates.length) return imageInfoUrl(candidates[0].info);
+      const pages = Object.values(data.query?.pages || {}).sort((a, b) => {
+        const titleA = String(a.title || '').toLowerCase();
+        const titleB = String(b.title || '').toLowerCase();
+        const target = name.toLowerCase();
+        const score = title => title.includes(target) ? 0 : title.includes('portrait') ? 1 : 2;
+        return score(titleA) - score(titleB);
+      });
+      for (const page of pages) {
+        const info = page.imageinfo?.[0];
+        const direct = imageInfoUrl(info);
+        if (!direct || !/^image\/(jpeg|png|webp|gif)$/i.test(info.mime || '')) continue;
+        if (info.width && info.width < 250) continue;
+        if (/coat of arms|flag of|logo|signature|map of/i.test(page.title || '')) continue;
+        return direct;
+      }
     } catch (error) {
-      console.warn('Commons search failed for ' + name + ' (' + query + '):', error.message);
+      console.warn('Commons portrait search failed for ' + name + ' (' + query + '):', error.message);
     }
   }
-
-  // Do not silently fall back to a broad category image. A missing image is
-  // safer than presenting an unrelated object as the answer.
   return null;
 }
 
-async function resolveImageUrl(url, name, searchTerms, aliases) {
+async function resolveImageUrl(url, name) {
   const cacheKey = String(name || url || '').toLowerCase();
   if (resolvedImageCache.has(cacheKey)) return resolvedImageCache.get(cacheKey);
-  const pending = findCommonsImage(url, name || 'politician', searchTerms, aliases).catch(error => {
+  const pending = findCommonsImage(url, name || 'politician').catch(error => {
     console.warn('Could not resolve image for ' + name + ':', error.message);
     return url && /^https:\/\//i.test(url) ? url : null;
   });
@@ -283,8 +180,6 @@ async function sendQuestion(channel, game) {
     if (!q.resolvedImage && q.fallbackImage && q.fallbackImage !== q.image) {
       q.resolvedImage = await resolveImageUrl(q.fallbackImage, q.name);
     }
-  } else if (game.key === 'triviagen') {
-    q.resolvedImage = await resolveImageUrl(q.image, q.name, q.imageSearch || q.category, q.aliases || []);
   } else {
     q.resolvedImage = q.image && /^https:\/\//i.test(q.image) ? q.image : null;
     if (!q.resolvedImage && q.fallbackImage && /^https:\/\//i.test(q.fallbackImage)) {
