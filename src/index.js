@@ -159,6 +159,7 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
 
 client.on(Events.InteractionCreate, async interaction => {
   try {
+    if (interaction.isButton() && interaction.customId.startsWith('mysterygen:')) return await mysteryGenSystem.onButton(interaction);
     if (interaction.isButton() && interaction.customId.startsWith('qotd:')) return await qotdSystem.onButton(interaction);
     if (interaction.isModalSubmit() && interaction.customId.startsWith('qotd:')) return await qotdSystem.onModal(interaction);
     await handleInteraction(interaction);
