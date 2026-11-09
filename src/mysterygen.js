@@ -8,7 +8,7 @@ const NEXT_ROUND_DELAY_MS = 10_000;
 const games = new Map();
 
 function normalize(value) {
-  return String(value || '').normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9\\s-]/g, ' ').replace(/\\s+/g, ' ').trim();
+  return String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 function editDistanceAtMostOne(a, b) {
   if (Math.abs(a.length - b.length) > 1) return false;
@@ -51,7 +51,7 @@ function clueEmbed(game, clueIndex, isStart = false) {
     '```text',
     String(game.current.clues[clueIndex]).replace(/```/g, '` ` `'),
     '```'
-  ].join('\\n');
+  ].join('\n');
   const footer = isStart
     ? '⌗ Round ' + game.roundNumber + ' • ⧉ ' + game.bank.length + ' items • ⏱ 20s / 20s / 15s • ⚙ !reveal'
     : '⌗ Round ' + game.roundNumber + ' • ⏱ ' + (clueIndex === 2 ? 'Answer reveal' : 'Next clue') + ' in ' + waitSeconds + 's';
@@ -72,7 +72,7 @@ function answerEmbed(item, roundNumber, outcome) {
   return new EmbedBuilder()
     .setTitle(solved ? 'MYSTERY SOLVED' : 'MYSTERY REVEALED')
     .setColor(solved ? 0x2ecc71 : missed ? 0xe74c3c : 0x5865f2)
-    .setDescription('## ' + item.name + '\\n\\n' + note)
+    .setDescription('## ' + item.name + '\n\n' + note)
     .setFooter({ text: '⌗ Round ' + roundNumber + ' • Next round in 10 seconds' });
 }
 function scheduleNextRound(channel,game) {
