@@ -7,7 +7,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to sweep dust and crumbs into a pile.",
       "I usually have a long handle ending in a bundle of stiff bristles."
     ]
@@ -19,7 +19,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to wash floors and soak up liquid spills.",
       "I usually have absorbent strands or a flat pad fixed to a long handle."
     ]
@@ -31,7 +31,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to suck dust and dirt from carpets and floors.",
       "I usually have a motorized body connected to a hose or floor nozzle."
     ]
@@ -43,7 +43,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to collect the dirt gathered by sweeping.",
       "I usually have a shallow scoop with a flat edge."
     ]
@@ -55,7 +55,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to carry or store water and other liquids.",
       "I usually have a deep container with a handle across its top."
     ]
@@ -63,11 +63,12 @@ module.exports = [
   {
     "name": "Clothes Hanger",
     "aliases": [
-      "Clothes Hanger"
+      "Clothes Hanger",
+      "Coat Hanger"
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to keep clothes hanging neatly in a wardrobe.",
       "I usually have a shaped frame with a hook at the top."
     ]
@@ -79,7 +80,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to carry clothes to and from the washing machine.",
       "I usually have an open container with handles and ventilation holes."
     ]
@@ -91,7 +92,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to press wrinkles out of clothes.",
       "I usually have a long padded board that folds onto supporting legs."
     ]
@@ -103,7 +104,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to light up a small work or reading area.",
       "I usually have an adjustable light attached to a compact base."
     ]
@@ -115,7 +116,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to light a desk, side table, or bedside area.",
       "I usually have a base with a stem and a shade around the bulb."
     ]
@@ -123,11 +124,12 @@ module.exports = [
   {
     "name": "Wall Clock",
     "aliases": [
-      "Wall Clock"
+      "Wall Clock",
+      "Clock"
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to show the time from a fixed place on a wall.",
       "I usually have a face with numbers and usually moving hands."
     ]
@@ -135,11 +137,12 @@ module.exports = [
   {
     "name": "Alarm Clock",
     "aliases": [
-      "Alarm Clock"
+      "Alarm Clock",
+      "Alarm"
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to wake someone at a chosen time.",
       "I usually have a small clock with an alarm setting and a speaker or bells."
     ]
@@ -151,7 +154,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to show a person's reflection.",
       "I usually have a smooth reflective surface, often inside a frame."
     ]
@@ -163,7 +166,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to wipe dirt from shoes before entering a building.",
       "I usually have a flat rough mat placed by a doorway."
     ]
@@ -175,7 +178,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to cover a window and control how much light enters.",
       "I usually have a hanging piece of fabric that slides along a rail."
     ]
@@ -187,7 +190,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to support someone's head or neck while resting.",
       "I usually have a soft padded fabric case filled with cushioning."
     ]
@@ -199,7 +202,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to keep someone warm while sitting or sleeping.",
       "I usually have a large soft covering made from fabric or fleece."
     ]
@@ -211,7 +214,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to cover a mattress and provide a clean sleeping surface.",
       "I usually have a large rectangular piece of fabric tucked around a bed."
     ]
@@ -223,7 +226,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to provide a comfortable surface for sleeping.",
       "I usually have a thick padded rectangle placed on a bed frame."
     ]
@@ -235,7 +238,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to store books upright and keep them organized.",
       "I usually have a piece of furniture made of several horizontal shelves."
     ]
@@ -247,7 +250,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to keep pairs of footwear organized near an entrance.",
       "I usually have a stand with several bars, shelves, or slots."
     ]
@@ -259,7 +262,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to hang coats and hats near a doorway.",
       "I usually have a vertical stand or wall fitting with several hooks."
     ]
@@ -269,11 +272,12 @@ module.exports = [
     "aliases": [
       "Trash Can",
       "Rubbish Bin",
-      "Garbage Can"
+      "Garbage Can",
+      "Trash Bin"
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to hold rubbish until it can be thrown away.",
       "I usually have a container with an open top or a hinged lid."
     ]
@@ -285,7 +289,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to keep belongings together and protect them from clutter.",
       "I usually have a rectangular container with a removable or hinged lid."
     ]
@@ -298,7 +302,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to provide portable light in a dark place.",
       "I usually have a handheld tube with a lens at one end."
     ]
@@ -310,7 +314,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to bring electrical power farther from a wall socket.",
       "I usually have a flexible insulated cable with a plug and socket."
     ]
@@ -322,7 +326,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to let several electrical plugs share one wall outlet.",
       "I usually have a long bar with multiple sockets and often a switch."
     ]
@@ -334,7 +338,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to move air around a room to help people feel cooler.",
       "I usually have a set of spinning blades behind a protective grille."
     ]
@@ -346,7 +350,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to warm the air in a room during cold weather.",
       "I usually have an electrical or fuel-powered appliance with a heat outlet."
     ]
@@ -358,7 +362,7 @@ module.exports = [
     ],
     "category": "Household Items",
     "clues": [
-      "I am commonly found in a home.",
+      "I am commonly found around the home.",
       "People use me to make a room smell fresher.",
       "I usually have a spray can, gel container, or small scented device."
     ]
@@ -757,7 +761,8 @@ module.exports = [
     "name": "Computer Monitor",
     "aliases": [
       "Computer Monitor",
-      "Monitor"
+      "Monitor",
+      "Display"
     ],
     "category": "Electronics",
     "clues": [
@@ -795,7 +800,8 @@ module.exports = [
     "aliases": [
       "Smartphone",
       "Mobile Phone",
-      "Cell Phone"
+      "Cell Phone",
+      "Mobile"
     ],
     "category": "Electronics",
     "clues": [
@@ -832,7 +838,8 @@ module.exports = [
   {
     "name": "Bluetooth Speaker",
     "aliases": [
-      "Bluetooth Speaker"
+      "Bluetooth Speaker",
+      "Wireless Speaker"
     ],
     "category": "Electronics",
     "clues": [
@@ -844,7 +851,8 @@ module.exports = [
   {
     "name": "Television",
     "aliases": [
-      "Television"
+      "Television",
+      "TV"
     ],
     "category": "Electronics",
     "clues": [
@@ -856,7 +864,8 @@ module.exports = [
   {
     "name": "Remote Control",
     "aliases": [
-      "Remote Control"
+      "Remote Control",
+      "Remote"
     ],
     "category": "Electronics",
     "clues": [
@@ -940,7 +949,10 @@ module.exports = [
   {
     "name": "USB Flash Drive",
     "aliases": [
-      "USB Flash Drive"
+      "USB Flash Drive",
+      "Flash Drive",
+      "USB Stick",
+      "Thumb Drive"
     ],
     "category": "Electronics",
     "clues": [
@@ -964,7 +976,8 @@ module.exports = [
   {
     "name": "Power Bank",
     "aliases": [
-      "Power Bank"
+      "Power Bank",
+      "Portable Charger"
     ],
     "category": "Electronics",
     "clues": [
@@ -976,7 +989,8 @@ module.exports = [
   {
     "name": "Phone Charger",
     "aliases": [
-      "Phone Charger"
+      "Phone Charger",
+      "Charger"
     ],
     "category": "Electronics",
     "clues": [
@@ -1012,7 +1026,8 @@ module.exports = [
   {
     "name": "Digital Camera",
     "aliases": [
-      "Digital Camera"
+      "Digital Camera",
+      "Camera"
     ],
     "category": "Electronics",
     "clues": [
@@ -1100,7 +1115,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to drive nails into wood or other materials.",
       "I usually have a solid head fixed across the end of a handle."
     ]
@@ -1113,7 +1128,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to turn screws to fasten or loosen them.",
       "I usually have a narrow metal shaft with a shaped tip and grip handle."
     ]
@@ -1122,11 +1137,12 @@ module.exports = [
     "name": "Adjustable Wrench",
     "aliases": [
       "Adjustable Wrench",
-      "Wrench"
+      "Wrench",
+      "Crescent Wrench"
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to tighten or loosen nuts of different sizes.",
       "I usually have a metal wrench with a movable jaw."
     ]
@@ -1138,7 +1154,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to grip, bend, or cut small objects and wires.",
       "I usually have two metal jaws connected by a pivot and long handles."
     ]
@@ -1150,7 +1166,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to turn screws with a hexagonal socket.",
       "I usually have a short L-shaped metal rod with a hexagonal end."
     ]
@@ -1158,11 +1174,12 @@ module.exports = [
   {
     "name": "Measuring Tape",
     "aliases": [
-      "Measuring Tape"
+      "Measuring Tape",
+      "Tape Measure"
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to measure length, width, or distance.",
       "I usually have a marked flexible strip that retracts into a small case."
     ]
@@ -1174,7 +1191,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to check whether a surface is horizontal or vertical.",
       "I usually have a straight bar with a small liquid-filled bubble vial."
     ]
@@ -1186,7 +1203,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to cut wood using repeated back-and-forth strokes.",
       "I usually have a long toothed blade attached to a handle."
     ]
@@ -1194,11 +1211,12 @@ module.exports = [
   {
     "name": "Utility Knife",
     "aliases": [
-      "Utility Knife"
+      "Utility Knife",
+      "Box Cutter"
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to cut cardboard, packaging, and other materials.",
       "I usually have a small handle containing a short replaceable blade."
     ]
@@ -1210,7 +1228,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to make holes in wood, metal, or other materials.",
       "I usually have a powered handheld tool that spins a bit."
     ]
@@ -1222,7 +1240,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to turn screws using a powered motor.",
       "I usually have a handheld tool with a rotating bit and trigger."
     ]
@@ -1234,7 +1252,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to shape or remove material by striking its end.",
       "I usually have a metal blade with a sharp flat edge and striking handle."
     ]
@@ -1246,7 +1264,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to apply paint in controlled strokes.",
       "I usually have a bundle of bristles held in a ferrule and handle."
     ]
@@ -1258,7 +1276,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to cover large flat surfaces with paint quickly.",
       "I usually have a rotating cylindrical sleeve mounted on a handle."
     ]
@@ -1270,7 +1288,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to help someone reach a higher place.",
       "I usually have two long side rails joined by evenly spaced steps."
     ]
@@ -1282,7 +1300,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to dig, lift, or move soil.",
       "I usually have a broad scoop-shaped blade attached to a long handle."
     ]
@@ -1294,7 +1312,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to gather leaves or loosen soil.",
       "I usually have a long handle ending in a row of teeth."
     ]
@@ -1306,7 +1324,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to move heavy loads around a garden or worksite.",
       "I usually have a single-wheeled tray with two handles."
     ]
@@ -1318,7 +1336,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to carry water from a tap to plants or outdoor areas.",
       "I usually have a long flexible tube that connects to a water supply."
     ]
@@ -1330,7 +1348,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to trim small branches and stems from plants.",
       "I usually have a compact pair of spring-loaded cutting blades."
     ]
@@ -1342,7 +1360,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to hold two pieces of material tightly together.",
       "I usually have a tool with jaws tightened by a screw or lever."
     ]
@@ -1354,7 +1372,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to hold an object firmly while someone works on it.",
       "I usually have a heavy fixture with two parallel jaws mounted to a bench."
     ]
@@ -1366,7 +1384,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to turn nuts and bolts using interchangeable sockets.",
       "I usually have a ratcheting handle that accepts round metal attachments."
     ]
@@ -1378,7 +1396,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to cut metal or plastic using a narrow toothed blade.",
       "I usually have a U-shaped frame holding a thin replaceable blade."
     ]
@@ -1390,7 +1408,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to pry apart objects or pull out stubborn nails.",
       "I usually have a strong metal bar with a flattened curved end."
     ]
@@ -1402,7 +1420,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to smooth rough surfaces by rubbing them.",
       "I usually have a sheet with a gritty abrasive coating."
     ]
@@ -1414,7 +1432,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to fasten fabric or thin materials using heavy staples.",
       "I usually have a handheld tool with a spring-loaded trigger."
     ]
@@ -1426,7 +1444,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to store and carry hand tools in one place.",
       "I usually have a sturdy case with a handle and compartments."
     ]
@@ -1438,7 +1456,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to protect the eyes from dust or flying particles.",
       "I usually have close-fitting protective eyewear with clear lenses."
     ]
@@ -1450,7 +1468,7 @@ module.exports = [
     ],
     "category": "Tools & Equipment",
     "clues": [
-      "I help with practical jobs, repairs, or maintenance.",
+      "I am a tool used for practical jobs, repairs, or maintenance.",
       "People use me to protect hands while handling rough or dirty materials.",
       "I usually have a pair of durable gloves made from thick fabric or leather."
     ]
@@ -1463,7 +1481,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to write on paper using a rolling ink tip.",
       "I usually have a slim barrel with a tiny ball at the writing end."
     ]
@@ -1475,7 +1493,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to write or sketch with marks that can be erased.",
       "I usually have a barrel containing a graphite core."
     ]
@@ -1487,7 +1505,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to remove pencil marks from paper.",
       "I usually have a small soft block of rubber-like material."
     ]
@@ -1500,7 +1518,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to make a pencil point sharp again.",
       "I usually have a small device with a blade and a hole for the pencil."
     ]
@@ -1512,7 +1530,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to measure short distances and draw straight lines.",
       "I usually have a flat strip marked with measurement units."
     ]
@@ -1525,7 +1543,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to write notes across a collection of pages.",
       "I usually have a bound set of blank or lined sheets."
     ]
@@ -1535,11 +1553,12 @@ module.exports = [
     "aliases": [
       "Sticky Notes",
       "Post It Notes",
-      "Post-it Notes"
+      "Post-it Notes",
+      "Sticky Note"
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to leave short reminders that can be moved around.",
       "I usually have small paper squares with a reusable adhesive strip."
     ]
@@ -1551,7 +1570,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to fasten sheets of paper together with metal staples.",
       "I usually have a hinged handheld device with a long top lever."
     ]
@@ -1563,7 +1582,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to pull staples out of sheets of paper.",
       "I usually have a small hinged tool with two narrow metal teeth."
     ]
@@ -1575,7 +1594,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to hold sheets of paper together without piercing them.",
       "I usually have small bent pieces of coated metal wire."
     ]
@@ -1587,7 +1606,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to hold a thick stack of papers firmly together.",
       "I usually have black spring clips with two folding metal handles."
     ]
@@ -1599,7 +1618,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to make selected words stand out with bright ink.",
       "I usually have a marker with a broad fluorescent tip."
     ]
@@ -1611,7 +1630,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to write bold lines on paper or other surfaces.",
       "I usually have a pen-shaped tube with a felt tip and cap."
     ]
@@ -1623,7 +1642,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to write on a glossy board using ink that can be wiped away.",
       "I usually have a marker with a smooth tip and erasable ink."
     ]
@@ -1635,7 +1654,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to provide a smooth surface for writing and wiping away notes.",
       "I usually have a glossy board usually mounted on a wall or stand."
     ]
@@ -1647,7 +1666,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to cut paper, fabric, and other thin materials.",
       "I usually have two sharpened blades joined by a central pivot and finger loops."
     ]
@@ -1659,7 +1678,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to attach paper and lightweight materials without liquid glue.",
       "I usually have a solid adhesive inside a twist-up tube."
     ]
@@ -1671,7 +1690,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to hold and cut strips of sticky tape.",
       "I usually have a weighted base with a roll holder and serrated edge."
     ]
@@ -1683,7 +1702,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to stick two surfaces together or seal a package.",
       "I usually have a thin flexible strip coated with glue on one side."
     ]
@@ -1695,7 +1714,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to cover mistakes on paper with a clean opaque strip.",
       "I usually have a small dispenser that lays down a white ribbon."
     ]
@@ -1707,7 +1726,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to measure or draw angles on paper.",
       "I usually have a semicircular or circular tool marked in degrees."
     ]
@@ -1719,7 +1738,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to draw circles of different sizes.",
       "I usually have a hinged instrument with one sharp point and one pencil leg."
     ]
@@ -1732,7 +1751,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to show dates and help organize upcoming plans.",
       "I usually have a small stand or pad with pages for each month or day."
     ]
@@ -1744,7 +1763,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to keep loose papers together and organized.",
       "I usually have a folded paper or plastic cover with pockets."
     ]
@@ -1756,7 +1775,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to store punched sheets so they can be added or removed.",
       "I usually have a hard-covered folder with metal rings inside."
     ]
@@ -1768,7 +1787,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to hold a letter or document for sending.",
       "I usually have a flat paper sleeve with a closing flap."
     ]
@@ -1780,7 +1799,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to provide blank sheets for printing or writing.",
       "I usually have a stack of thin white rectangular sheets."
     ]
@@ -1792,7 +1811,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to hold short notes or study facts in a compact format.",
       "I usually have small stiff rectangular cards, often lined."
     ]
@@ -1804,7 +1823,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to make neat holes in paper so it can be filed.",
       "I usually have a handheld device with one or more metal punching pins."
     ]
@@ -1816,7 +1835,7 @@ module.exports = [
     ],
     "category": "Stationery",
     "clues": [
-      "I am commonly used for writing, drawing, or organizing paper.",
+      "I am commonly used in a classroom, office, or study area.",
       "People use me to keep pens and small office supplies arranged.",
       "I usually have a desktop container divided into small compartments."
     ]
@@ -1826,7 +1845,8 @@ module.exports = [
     "aliases": [
       "T-Shirt",
       "T Shirt",
-      "Tee Shirt"
+      "Tee Shirt",
+      "Tee"
     ],
     "category": "Clothing & Accessories",
     "clues": [
@@ -1886,7 +1906,8 @@ module.exports = [
   {
     "name": "Trousers",
     "aliases": [
-      "Trousers"
+      "Trousers",
+      "Pants"
     ],
     "category": "Clothing & Accessories",
     "clues": [
@@ -1923,7 +1944,8 @@ module.exports = [
     "name": "Sneakers",
     "aliases": [
       "Sneakers",
-      "Trainers"
+      "Trainers",
+      "Running Shoes"
     ],
     "category": "Clothing & Accessories",
     "clues": [
@@ -1984,7 +2006,9 @@ module.exports = [
   {
     "name": "Beanie",
     "aliases": [
-      "Beanie"
+      "Beanie",
+      "Wool Hat",
+      "Knitted Hat"
     ],
     "category": "Clothing & Accessories",
     "clues": [
@@ -2032,7 +2056,8 @@ module.exports = [
   {
     "name": "Sunglasses",
     "aliases": [
-      "Sunglasses"
+      "Sunglasses",
+      "Shades"
     ],
     "category": "Clothing & Accessories",
     "clues": [
@@ -2044,7 +2069,8 @@ module.exports = [
   {
     "name": "Backpack",
     "aliases": [
-      "Backpack"
+      "Backpack",
+      "Rucksack"
     ],
     "category": "Clothing & Accessories",
     "clues": [
@@ -2188,11 +2214,12 @@ module.exports = [
   {
     "name": "Toothbrush",
     "aliases": [
-      "Toothbrush"
+      "Toothbrush",
+      "Tooth Brush"
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to clean teeth as part of a daily routine.",
       "I usually have a small handle with a compact head covered in bristles."
     ]
@@ -2200,11 +2227,12 @@ module.exports = [
   {
     "name": "Toothpaste",
     "aliases": [
-      "Toothpaste"
+      "Toothpaste",
+      "Tooth Paste"
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to help clean teeth when used with a brush.",
       "I usually have a paste or gel squeezed from a tube."
     ]
@@ -2216,7 +2244,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to remove food and plaque from between teeth.",
       "I usually have a thin strand wound inside a small dispenser."
     ]
@@ -2224,11 +2252,12 @@ module.exports = [
   {
     "name": "Hairbrush",
     "aliases": [
-      "Hairbrush"
+      "Hairbrush",
+      "Hair Brush"
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to smooth and arrange hair.",
       "I usually have a handled tool with many bristles across a base."
     ]
@@ -2240,7 +2269,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to separate and arrange strands of hair.",
       "I usually have a narrow piece with a row of closely spaced teeth."
     ]
@@ -2252,7 +2281,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to wash hair and remove oil or dirt.",
       "I usually have a squeezable bottle containing liquid cleanser."
     ]
@@ -2264,7 +2293,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to soften hair after it has been washed.",
       "I usually have a bottle containing a creamy hair-care product."
     ]
@@ -2276,7 +2305,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to clean skin with water.",
       "I usually have a solid scented block that becomes slippery when wet."
     ]
@@ -2288,7 +2317,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to release a measured amount of liquid soap.",
       "I usually have a container with a pump pressed from the top."
     ]
@@ -2300,7 +2329,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to clean hands when soap and water are unavailable.",
       "I usually have a small bottle or gel container with sanitizing liquid."
     ]
@@ -2312,7 +2341,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to help control body odor.",
       "I usually have a solid product that twists upward from a plastic tube."
     ]
@@ -2324,7 +2353,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to hold a scented liquid applied to the body.",
       "I usually have a decorative container, often with a spray nozzle."
     ]
@@ -2337,7 +2366,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to blow warm air to dry wet hair.",
       "I usually have a handheld appliance with a fan and air outlet."
     ]
@@ -2349,7 +2378,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to make hair look straighter using heated plates.",
       "I usually have a hinged electrical tool with two flat heated arms."
     ]
@@ -2361,7 +2390,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to trim facial or body hair using powered cutters.",
       "I usually have a handheld battery-powered grooming device."
     ]
@@ -2373,7 +2402,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to shave hair close to the skin.",
       "I usually have a small handle holding one or more sharp blades."
     ]
@@ -2385,7 +2414,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to trim fingernails and toenails.",
       "I usually have a small hinged metal tool with curved cutting edges."
     ]
@@ -2397,7 +2426,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to smooth and shape the edges of nails.",
       "I usually have a narrow abrasive strip or board."
     ]
@@ -2409,7 +2438,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to grip and remove tiny hairs or small objects.",
       "I usually have two narrow metal arms joined at one end."
     ]
@@ -2421,7 +2450,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to apply or clean small areas with a soft tip.",
       "I usually have a short stick with a cotton tip at each end."
     ]
@@ -2433,7 +2462,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to apply skincare products or remove makeup.",
       "I usually have small soft round or oval pieces of cotton."
     ]
@@ -2445,7 +2474,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to dry the face after washing.",
       "I usually have a small soft rectangular towel."
     ]
@@ -2457,7 +2486,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to dry the body after bathing or showering.",
       "I usually have a large absorbent piece of fabric."
     ]
@@ -2469,7 +2498,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to help scrub and exfoliate skin while washing.",
       "I usually have a porous sponge or mesh scrubber."
     ]
@@ -2481,7 +2510,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to keep hair dry while taking a shower.",
       "I usually have a waterproof elastic cap that fits over the head."
     ]
@@ -2493,7 +2522,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to apply or blend cosmetics on the face.",
       "I usually have a small handled brush with soft bristles."
     ]
@@ -2505,7 +2534,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to moisturize and protect dry lips.",
       "I usually have a small waxy product in a twist-up tube or pot."
     ]
@@ -2517,7 +2546,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to hold a lotion used to hydrate the skin.",
       "I usually have a pump bottle or tube containing a creamy product."
     ]
@@ -2529,7 +2558,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to keep paper tissues ready for wiping or blowing the nose.",
       "I usually have a rectangular box with tissues pulled through an opening."
     ]
@@ -2541,7 +2570,7 @@ module.exports = [
     ],
     "category": "Personal Care",
     "clues": [
-      "I help with grooming or personal hygiene.",
+      "I am used as part of a personal-care routine.",
       "People use me to keep basic medical supplies together for minor injuries.",
       "I usually have a compact case marked with a medical cross."
     ]
@@ -2554,7 +2583,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to play a team sport where players move a ball toward a goal.",
       "I usually have a round ball with panels and a textured outer surface."
     ]
@@ -2566,7 +2595,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to play a sport that involves shooting through a raised hoop.",
       "I usually have a large orange ball with deep channels."
     ]
@@ -2578,7 +2607,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to hit a ball over a net during a court game.",
       "I usually have an oval frame covered with tightly woven strings."
     ]
@@ -2590,7 +2619,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to hit a lightweight shuttlecock across a net.",
       "I usually have a very light racket with a narrow oval stringed head."
     ]
@@ -2602,7 +2631,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to play a team sport by sending a ball over a high net.",
       "I usually have a lightweight round ball with curved panels."
     ]
@@ -2614,7 +2643,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to hit a small ball during a field game.",
       "I usually have a long solid tapered club, often made from wood or metal."
     ]
@@ -2626,7 +2655,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to catch a hard ball during a field game.",
       "I usually have a padded leather glove with a deep pocket."
     ]
@@ -2638,7 +2667,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to strike a ball during a game played with wickets.",
       "I usually have a flat wooden blade with a long handle."
     ]
@@ -2650,7 +2679,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to control and strike a puck or ball during a hockey game.",
       "I usually have a long stick with a curved blade at one end."
     ]
@@ -2662,7 +2691,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to hit a small ball toward a distant hole.",
       "I usually have a long shaft with a specialized metal or composite head."
     ]
@@ -2674,7 +2703,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to travel across a course after being struck by a club.",
       "I usually have a small hard white ball covered in tiny dimples."
     ]
@@ -2682,11 +2711,13 @@ module.exports = [
   {
     "name": "Table Tennis Paddle",
     "aliases": [
-      "Table Tennis Paddle"
+      "Table Tennis Paddle",
+      "Ping Pong Paddle",
+      "Table Tennis Bat"
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to hit a lightweight ball across a small table net.",
       "I usually have a small wooden blade covered with rubber on both sides."
     ]
@@ -2698,7 +2729,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to bounce across a small table during a racket sport.",
       "I usually have a very light hollow sphere, usually white or orange."
     ]
@@ -2706,11 +2737,12 @@ module.exports = [
   {
     "name": "Jump Rope",
     "aliases": [
-      "Jump Rope"
+      "Jump Rope",
+      "Skipping Rope"
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to exercise by jumping over a swinging rope.",
       "I usually have a long cord with a handle at each end."
     ]
@@ -2722,7 +2754,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to provide a cushioned surface for floor exercises.",
       "I usually have a thin rectangular foam mat that rolls up."
     ]
@@ -2734,7 +2766,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to train muscles using a weight held in one hand.",
       "I usually have a short handle with a weight fixed at each end."
     ]
@@ -2746,7 +2778,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to perform strength exercises with a swinging weight.",
       "I usually have a heavy rounded weight with a loop-shaped handle."
     ]
@@ -2758,7 +2790,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to lift heavy weights using both hands.",
       "I usually have a long metal bar with weight plates fitted at its ends."
     ]
@@ -2770,7 +2802,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to add resistance to stretching and strength exercises.",
       "I usually have a long elastic loop or strip that stretches under tension."
     ]
@@ -2782,7 +2814,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to perform balance and core exercises on an unstable surface.",
       "I usually have a large inflatable rubber sphere."
     ]
@@ -2794,7 +2826,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to protect the hands during boxing practice or competition.",
       "I usually have padded gloves with a broad rounded striking surface."
     ]
@@ -2806,7 +2838,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to protect the lower legs during contact sports.",
       "I usually have curved protective pads worn inside socks."
     ]
@@ -2819,7 +2851,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to provide grip while running on a grass pitch.",
       "I usually have sports shoes with studs on the bottom."
     ]
@@ -2831,7 +2863,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to make a sharp sound to signal the start or stop of play.",
       "I usually have a small hollow device with a mouthpiece."
     ]
@@ -2839,11 +2871,13 @@ module.exports = [
   {
     "name": "Stopwatch",
     "aliases": [
-      "Stopwatch"
+      "Stopwatch",
+      "Stop Watch",
+      "Timer"
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to measure how long an activity takes.",
       "I usually have a handheld timer with start, stop, and reset buttons."
     ]
@@ -2855,7 +2889,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to help someone see underwater while protecting the eyes.",
       "I usually have two clear lenses joined by a flexible strap."
     ]
@@ -2867,7 +2901,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to keep hair contained while swimming.",
       "I usually have a tight stretchy cap that covers the head."
     ]
@@ -2880,7 +2914,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to roll along a smooth surface using wheels in one line.",
       "I usually have a boot attached to a frame with several wheels in a row."
     ]
@@ -2892,7 +2926,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to protect a cyclist's head during a ride.",
       "I usually have a hard lightweight shell with ventilation holes and straps."
     ]
@@ -2904,7 +2938,7 @@ module.exports = [
     ],
     "category": "Sports Equipment",
     "clues": [
-      "I am used for exercise, training, or a sport.",
+      "I am used for a sport, exercise, or training.",
       "People use me to bounce across a court during a racket sport.",
       "I usually have a fuzzy felt-covered ball, usually bright yellow."
     ]
@@ -2974,7 +3008,9 @@ module.exports = [
     "name": "Car Tire",
     "aliases": [
       "Car Tire",
-      "Tire"
+      "Tire",
+      "Car Tyre",
+      "Tyre"
     ],
     "category": "Transportation Items",
     "clues": [
@@ -3022,7 +3058,8 @@ module.exports = [
   {
     "name": "Seat Belt",
     "aliases": [
-      "Seat Belt"
+      "Seat Belt",
+      "Safety Belt"
     ],
     "category": "Transportation Items",
     "clues": [
@@ -3046,7 +3083,8 @@ module.exports = [
   {
     "name": "Rearview Mirror",
     "aliases": [
-      "Rearview Mirror"
+      "Rearview Mirror",
+      "Rear View Mirror"
     ],
     "category": "Transportation Items",
     "clues": [
@@ -3082,7 +3120,9 @@ module.exports = [
   {
     "name": "License Plate",
     "aliases": [
-      "License Plate"
+      "License Plate",
+      "Number Plate",
+      "Registration Plate"
     ],
     "category": "Transportation Items",
     "clues": [
@@ -3142,7 +3182,8 @@ module.exports = [
   {
     "name": "Suitcase",
     "aliases": [
-      "Suitcase"
+      "Suitcase",
+      "Travel Case"
     ],
     "category": "Transportation Items",
     "clues": [
@@ -3178,7 +3219,8 @@ module.exports = [
   {
     "name": "Motorcycle Helmet",
     "aliases": [
-      "Motorcycle Helmet"
+      "Motorcycle Helmet",
+      "Motorbike Helmet"
     ],
     "category": "Transportation Items",
     "clues": [
@@ -3279,7 +3321,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to store milk for pouring into a glass or cereal bowl.",
       "I usually have a folded paperboard container with a sealed top."
     ]
@@ -3291,7 +3333,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to hold a single serving of fruit juice.",
       "I usually have a small rectangular drink carton often used with a straw."
     ]
@@ -3300,11 +3342,12 @@ module.exports = [
     "name": "Water Bottle",
     "aliases": [
       "Water Bottle",
-      "Bottle"
+      "Bottle",
+      "Drinking Bottle"
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to carry drinking water throughout the day.",
       "I usually have a reusable or disposable bottle with a narrow opening."
     ]
@@ -3316,7 +3359,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to keep dry breakfast cereal ready to pour.",
       "I usually have a tall cardboard package with a sealed inner bag."
     ]
@@ -3328,7 +3371,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to provide slices for sandwiches or toast.",
       "I usually have a soft baked food with a crust around the outside."
     ]
@@ -3340,7 +3383,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to protect eggs while they are stored or carried.",
       "I usually have a molded container with separate rounded compartments."
     ]
@@ -3352,7 +3395,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to hold butter on a table or in a refrigerator.",
       "I usually have a small covered tray with a flat base."
     ]
@@ -3364,7 +3407,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to hold an individual serving of a thick dairy snack.",
       "I usually have a small sealed plastic cup with a peel-back lid."
     ]
@@ -3376,7 +3419,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to store a thick golden sweetener made by bees.",
       "I usually have a glass container filled with a sticky amber liquid."
     ]
@@ -3388,7 +3431,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to store a sweet fruit spread for toast or sandwiches.",
       "I usually have a glass jar with a screw-on lid."
     ]
@@ -3400,7 +3443,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to hold a thick spread made from ground peanuts.",
       "I usually have a jar containing a tan or brown paste."
     ]
@@ -3412,7 +3455,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to keep dry pasta ready for boiling and serving.",
       "I usually have a sealed bag or box containing dried noodles."
     ]
@@ -3424,7 +3467,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to store uncooked grains used in many meals.",
       "I usually have a sealed sack or pouch filled with small grains."
     ]
@@ -3436,7 +3479,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to hold a fine powder used in baking and cooking.",
       "I usually have a paper or plastic package filled with a soft white powder."
     ]
@@ -3448,7 +3491,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to keep granulated sugar ready to add to drinks or food.",
       "I usually have a small bowl, often with a lid and spoon."
     ]
@@ -3460,7 +3503,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to sprinkle small amounts of salt onto food.",
       "I usually have a small container with several holes in its lid."
     ]
@@ -3472,7 +3515,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to crush whole peppercorns over a meal.",
       "I usually have a handheld mill with a twisting top."
     ]
@@ -3484,7 +3527,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to store liquid oil used for frying and cooking.",
       "I usually have a bottle filled with a clear or golden liquid."
     ]
@@ -3496,7 +3539,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to store a sharp acidic liquid used in cooking and dressings.",
       "I usually have a bottle containing a clear or amber liquid."
     ]
@@ -3508,7 +3551,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to dispense a popular tomato-based condiment.",
       "I usually have a squeezable bottle filled with a thick red sauce."
     ]
@@ -3520,7 +3563,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to dispense a sharp yellow condiment.",
       "I usually have a squeeze bottle filled with a yellow sauce."
     ]
@@ -3532,7 +3575,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to hold a creamy condiment often used in sandwiches.",
       "I usually have a jar filled with a pale thick sauce."
     ]
@@ -3544,7 +3587,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to store tea bags or loose tea leaves.",
       "I usually have a small cardboard package often containing individually wrapped bags."
     ]
@@ -3556,7 +3599,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to keep instant coffee or coffee granules dry.",
       "I usually have a sealed jar filled with dark brown granules."
     ]
@@ -3564,11 +3607,12 @@ module.exports = [
   {
     "name": "Chocolate Bar",
     "aliases": [
-      "Chocolate Bar"
+      "Chocolate Bar",
+      "Chocolate"
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to provide a sweet snack made mainly from cocoa.",
       "I usually have a rectangular slab divided into smaller breakable sections."
     ]
@@ -3576,11 +3620,13 @@ module.exports = [
   {
     "name": "Potato Chips Bag",
     "aliases": [
-      "Potato Chips Bag"
+      "Potato Chips Bag",
+      "Crisps Packet",
+      "Chips Bag"
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to hold thin crispy slices of fried or baked potato.",
       "I usually have a crinkly sealed bag filled with a salty snack."
     ]
@@ -3592,7 +3638,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to store baked sweet biscuits and keep them fresh.",
       "I usually have a round or rectangular metal container with a lid."
     ]
@@ -3604,7 +3650,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to store cooked beans in a sealed metal container.",
       "I usually have a cylindrical tin with a pull tab or metal lid."
     ]
@@ -3616,7 +3662,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to hold soup that can be heated before serving.",
       "I usually have a sealed cylindrical metal container with a printed label."
     ]
@@ -3628,7 +3674,7 @@ module.exports = [
     ],
     "category": "Food & Everyday Products",
     "clues": [
-      "I am commonly found in a kitchen, pantry, or grocery shop.",
+      "I am commonly found in a pantry, kitchen, or grocery shop.",
       "People use me to keep small wooden picks ready after a meal.",
       "I usually have a tiny container with a narrow opening at the top."
     ]
