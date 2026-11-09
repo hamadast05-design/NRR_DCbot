@@ -133,7 +133,7 @@ client.on(Events.MessageCreate, async message => {
     else if (/^!set_qotd_channel\s+/i.test(raw)) { try { await qotdSystem.setChannel(message, raw.split(/\s+/)[1]); } catch (error) { console.error('QOTD channel setup failed:', error); await message.reply('❌ I could not update the QOTD channel.'); } }
     else if (/^!reveal$/i.test(raw)) { try { await mysteryGenSystem.revealCommand(message); } catch (error) { console.error('MysteryGen reveal command failed:', error); await message.reply('I could not reveal the current MysteryGen item.').catch(() => {}); } }
   }
-  try { await handlePrefixRoleCommands(message); catch (error) { console.error('Hoster Manager role command failed:', error); }
+  try { await handlePrefixRoleCommands(message); } catch (error) { console.error('Hoster Manager role command failed:', error); }
   // Automation controls remain inactive while Chat Revival and game invitations are paused.
   // Chat Revival is intentionally disabled; no revival prompts should be sent.
   try { await staffAnalytics.onMessage(message); } catch (error) { console.error('Staff activity tracking failed:', error); }
