@@ -10,7 +10,7 @@ const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
 const guessPoliticianSystem = require('./guess-the-politician');
 const flagRushSystem = require('./flagrush');
-const triviaGenSystem = require('./triviagen');
+const mysteryGenSystem = require('./mysterygen');
 const chessPuzzleSystem = require('./chess-puzzle');
 const learningGames = require('./learning-games');
 const newsSystem = require('./news');
@@ -131,8 +131,9 @@ client.on(Events.MessageCreate, async message => {
     if (/^!send_news$/i.test(raw)) { if (!message.member?.permissions?.has(PermissionFlagsBits.ManageGuild)) return message.reply('❌ You need Manage Server permission to send manual news.'); try { await newsSystem.sendLatest(client, message); } catch (error) { console.error('Manual news command failed:', error); await message.reply('❌ I could not fetch or post a news story right now.'); } }
     else if (/^!send_qotd$/i.test(raw)) { try { await qotdSystem.sendPanel(message); } catch (error) { console.error('QOTD panel command failed:', error); await message.reply('❌ I could not post the QOTD submission panel.'); } }
     else if (/^!set_qotd_channel\s+/i.test(raw)) { try { await qotdSystem.setChannel(message, raw.split(/\s+/)[1]); } catch (error) { console.error('QOTD channel setup failed:', error); await message.reply('❌ I could not update the QOTD channel.'); } }
+    else if (/^!reveal$/i.test(raw)) { try { await mysteryGenSystem.revealCommand(message); } catch (error) { console.error('MysteryGen reveal command failed:', error); await message.reply('I could not reveal the current MysteryGen item.').catch(() => {}); } }
   }
-  try { await handlePrefixRoleCommands(message); } catch (error) { console.error('Hoster Manager role command failed:', error); }
+  try { await handlePrefixRoleCommands(message); catch (error) { console.error('Hoster Manager role command failed:', error); }
   // Automation controls remain inactive while Chat Revival and game invitations are paused.
   // Chat Revival is intentionally disabled; no revival prompts should be sent.
   try { await staffAnalytics.onMessage(message); } catch (error) { console.error('Staff activity tracking failed:', error); }
@@ -141,7 +142,7 @@ client.on(Events.MessageCreate, async message => {
   try { await politicalTriviaSystem.onMessage(message); } catch (error) { console.error('Political Trivia message error:', error); }
   try { await guessPoliticianSystem.onMessage(message); } catch (error) { console.error('Guess The Politician message error:', error); }
   try { await flagRushSystem.onMessage(message); } catch (error) { console.error('FlagRush message error:', error); }
-  try { await triviaGenSystem.onMessage(message); } catch (error) { console.error('TriviaGen message error:', error); }
+  try { await mysteryGenSystem.onMessage(message); } catch (error) { console.error('MysteryGen message error:', error); }
   try { await chessPuzzleSystem.onMessage(message); } catch (error) { console.error('Chess Puzzle message error:', error); }
   try { await eventSystem.onMessage(message); } catch (error) { console.error('Event stick error:', error); }
   try { await annihilateSystem.onMessage(message); } catch (error) { console.error('Annihilate message error:', error); }
