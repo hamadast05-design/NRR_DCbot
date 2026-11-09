@@ -92,8 +92,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving ironing board.",
-      "My shape and design are made specifically for my job."
+      "People use me to press wrinkles out of clothes.",
+      "I usually have a long padded board that folds onto supporting legs."
     ]
   },
   {
@@ -116,8 +116,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving table lamp.",
-      "My shape and design are made specifically for my job."
+      "People use me to light a desk, side table, or bedside area.",
+      "I usually have a base with a stem and a shade around the bulb."
     ]
   },
   {
@@ -140,8 +140,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving alarm clock.",
-      "My shape and design are made specifically for my job."
+      "People use me to wake someone at a chosen time.",
+      "I usually have a small clock with an alarm setting and a speaker or bells."
     ]
   },
   {
@@ -164,8 +164,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving door mat.",
-      "My shape and design are made specifically for my job."
+      "People use me to wipe dirt from shoes before entering a building.",
+      "I usually have a flat rough mat placed by a doorway."
     ]
   },
   {
@@ -176,8 +176,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving curtain.",
-      "My shape and design are made specifically for my job."
+      "People use me to cover a window and control how much light enters.",
+      "I usually have a hanging piece of fabric that slides along a rail."
     ]
   },
   {
@@ -188,8 +188,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving pillow.",
-      "My shape and design are made specifically for my job."
+      "People use me to support someone's head or neck while resting.",
+      "I usually have a soft padded fabric case filled with cushioning."
     ]
   },
   {
@@ -200,8 +200,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving blanket.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep someone warm while sitting or sleeping.",
+      "I usually have a large soft covering made from fabric or fleece."
     ]
   },
   {
@@ -212,8 +212,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving bedsheet.",
-      "My shape and design are made specifically for my job."
+      "People use me to cover a mattress and provide a clean sleeping surface.",
+      "I usually have a large rectangular piece of fabric tucked around a bed."
     ]
   },
   {
@@ -224,8 +224,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving mattress.",
-      "My shape and design are made specifically for my job."
+      "People use me to provide a comfortable surface for sleeping.",
+      "I usually have a thick padded rectangle placed on a bed frame."
     ]
   },
   {
@@ -236,8 +236,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving bookshelf.",
-      "My shape and design are made specifically for my job."
+      "People use me to store books upright and keep them organized.",
+      "I usually have a piece of furniture made of several horizontal shelves."
     ]
   },
   {
@@ -248,8 +248,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving shoe rack.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep pairs of footwear organized near an entrance.",
+      "I usually have a stand with several bars, shelves, or slots."
     ]
   },
   {
@@ -260,8 +260,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving coat rack.",
-      "My shape and design are made specifically for my job."
+      "People use me to hang coats and hats near a doorway.",
+      "I usually have a vertical stand or wall fitting with several hooks."
     ]
   },
   {
@@ -274,8 +274,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving trash can.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold rubbish until it can be thrown away.",
+      "I usually have a container with an open top or a hinged lid."
     ]
   },
   {
@@ -286,8 +286,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving storage box.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep belongings together and protect them from clutter.",
+      "I usually have a rectangular container with a removable or hinged lid."
     ]
   },
   {
@@ -299,8 +299,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving flashlight.",
-      "My shape and design are made specifically for my job."
+      "People use me to provide portable light in a dark place.",
+      "I usually have a handheld tube with a lens at one end."
     ]
   },
   {
@@ -311,8 +311,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving extension cord.",
-      "My shape and design are made specifically for my job."
+      "People use me to bring electrical power farther from a wall socket.",
+      "I usually have a flexible insulated cable with a plug and socket."
     ]
   },
   {
@@ -323,8 +323,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving power strip.",
-      "My shape and design are made specifically for my job."
+      "People use me to let several electrical plugs share one wall outlet.",
+      "I usually have a long bar with multiple sockets and often a switch."
     ]
   },
   {
@@ -335,8 +335,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving fan.",
-      "My shape and design are made specifically for my job."
+      "People use me to move air around a room to help people feel cooler.",
+      "I usually have a set of spinning blades behind a protective grille."
     ]
   },
   {
@@ -347,8 +347,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving heater.",
-      "My shape and design are made specifically for my job."
+      "People use me to warm the air in a room during cold weather.",
+      "I usually have an electrical or fuel-powered appliance with a heat outlet."
     ]
   },
   {
@@ -359,8 +359,8 @@ module.exports = [
     "category": "Household Items",
     "clues": [
       "I am commonly found in a home.",
-      "People use me for a familiar everyday task involving air freshener.",
-      "My shape and design are made specifically for my job."
+      "People use me to make a room smell fresher.",
+      "I usually have a spray can, gel container, or small scented device."
     ]
   },
   {
@@ -434,8 +434,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving freezer.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep food frozen for long-term storage.",
+      "I usually have an insulated compartment that stays below freezing."
     ]
   },
   {
@@ -495,8 +495,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving cooking pot.",
-      "My shape and design are made specifically for my job."
+      "People use me to boil or simmer larger amounts of food.",
+      "I usually have a deep round vessel with two side handles."
     ]
   },
   {
@@ -507,8 +507,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving baking tray.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold food while it cooks in an oven.",
+      "I usually have a flat rectangular metal sheet with a shallow raised edge."
     ]
   },
   {
@@ -519,8 +519,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving cutting board.",
-      "My shape and design are made specifically for my job."
+      "People use me to provide a safe surface for chopping ingredients.",
+      "I usually have a flat board often made from wood or plastic."
     ]
   },
   {
@@ -544,8 +544,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving peeler.",
-      "My shape and design are made specifically for my job."
+      "People use me to remove thin outer skins from fruits and vegetables.",
+      "I usually have a small handheld tool with a narrow swiveling blade."
     ]
   },
   {
@@ -556,8 +556,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving can opener.",
-      "My shape and design are made specifically for my job."
+      "People use me to cut open the sealed top of a metal food can.",
+      "I usually have a handheld tool with a turning wheel and cutting edge."
     ]
   },
   {
@@ -568,8 +568,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving bottle opener.",
-      "My shape and design are made specifically for my job."
+      "People use me to remove metal caps from glass bottles.",
+      "I usually have a small metal tool with a hooked opening."
     ]
   },
   {
@@ -580,8 +580,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving whisk.",
-      "My shape and design are made specifically for my job."
+      "People use me to beat eggs and mix air into liquid ingredients.",
+      "I usually have a handle attached to several looped metal wires."
     ]
   },
   {
@@ -592,8 +592,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving spatula.",
-      "My shape and design are made specifically for my job."
+      "People use me to flip food or scrape mixtures from a bowl.",
+      "I usually have a flat flexible or solid blade attached to a handle."
     ]
   },
   {
@@ -604,8 +604,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving ladle.",
-      "My shape and design are made specifically for my job."
+      "People use me to serve soup or other liquids from a pot.",
+      "I usually have a deep rounded scoop at the end of a long handle."
     ]
   },
   {
@@ -616,8 +616,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving tongs.",
-      "My shape and design are made specifically for my job."
+      "People use me to grip and turn hot food without touching it.",
+      "I usually have two joined arms that open and close like pincers."
     ]
   },
   {
@@ -628,8 +628,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving colander.",
-      "My shape and design are made specifically for my job."
+      "People use me to drain water away from cooked pasta or washed vegetables.",
+      "I usually have a bowl-shaped container covered in small holes."
     ]
   },
   {
@@ -640,8 +640,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving measuring cup.",
-      "My shape and design are made specifically for my job."
+      "People use me to measure the volume of ingredients while cooking.",
+      "I usually have a cup-shaped vessel marked with measurement lines."
     ]
   },
   {
@@ -652,8 +652,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving rolling pin.",
-      "My shape and design are made specifically for my job."
+      "People use me to flatten dough into an even sheet.",
+      "I usually have a smooth cylinder with a handle at each end."
     ]
   },
   {
@@ -664,8 +664,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving grater.",
-      "My shape and design are made specifically for my job."
+      "People use me to shred cheese or vegetables into small pieces.",
+      "I usually have a metal surface covered with sharp raised holes."
     ]
   },
   {
@@ -676,8 +676,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving garlic press.",
-      "My shape and design are made specifically for my job."
+      "People use me to crush garlic cloves into small pieces.",
+      "I usually have a hinged handheld tool with a small perforated chamber."
     ]
   },
   {
@@ -688,8 +688,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving tea strainer.",
-      "My shape and design are made specifically for my job."
+      "People use me to separate loose tea leaves from a drink.",
+      "I usually have a small mesh basket or sieve with a handle."
     ]
   },
   {
@@ -700,8 +700,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving thermos flask.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep a drink hot or cold while travelling.",
+      "I usually have an insulated bottle with a tightly sealing lid."
     ]
   },
   {
@@ -712,8 +712,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving food container.",
-      "My shape and design are made specifically for my job."
+      "People use me to store leftovers and keep food covered.",
+      "I usually have a reusable box with a fitted lid."
     ]
   },
   {
@@ -724,8 +724,8 @@ module.exports = [
     "category": "Kitchen Items",
     "clues": [
       "I am commonly found in a kitchen.",
-      "People use me for a familiar everyday task involving dish rack.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold washed plates and cups while they dry.",
+      "I usually have a raised frame with slots for dishes and a tray below."
     ]
   },
   {
@@ -885,8 +885,8 @@ module.exports = [
     "category": "Electronics",
     "clues": [
       "I am an electronic device or accessory.",
-      "People use me for a familiar everyday task involving modem.",
-      "My shape and design are made specifically for my job."
+      "People use me to connect a home or office network to an internet service.",
+      "I usually have a small electronic box with indicator lights and ports."
     ]
   },
   {
@@ -933,8 +933,8 @@ module.exports = [
     "category": "Electronics",
     "clues": [
       "I am an electronic device or accessory.",
-      "People use me for a familiar everyday task involving scanner.",
-      "My shape and design are made specifically for my job."
+      "People use me to turn a paper document or photo into a digital file.",
+      "I usually have a flat glass surface beneath a moving scanning bar."
     ]
   },
   {
@@ -957,8 +957,8 @@ module.exports = [
     "category": "Electronics",
     "clues": [
       "I am an electronic device or accessory.",
-      "People use me for a familiar everyday task involving external hard drive.",
-      "My shape and design are made specifically for my job."
+      "People use me to store large amounts of files outside a computer.",
+      "I usually have a compact storage case with a data cable connection."
     ]
   },
   {
@@ -981,8 +981,8 @@ module.exports = [
     "category": "Electronics",
     "clues": [
       "I am an electronic device or accessory.",
-      "People use me for a familiar everyday task involving phone charger.",
-      "My shape and design are made specifically for my job."
+      "People use me to supply electrical power to recharge a mobile device.",
+      "I usually have a plug adapter or cable with a connector for a phone."
     ]
   },
   {
@@ -993,8 +993,8 @@ module.exports = [
     "category": "Electronics",
     "clues": [
       "I am an electronic device or accessory.",
-      "People use me for a familiar everyday task involving hdmi cable.",
-      "My shape and design are made specifically for my job."
+      "People use me to carry high-quality video and audio between devices.",
+      "I usually have a cable with a flat, wide connector at each end."
     ]
   },
   {
@@ -1005,8 +1005,8 @@ module.exports = [
     "category": "Electronics",
     "clues": [
       "I am an electronic device or accessory.",
-      "People use me for a familiar everyday task involving game controller.",
-      "My shape and design are made specifically for my job."
+      "People use me to control characters and actions in video games.",
+      "I usually have a handheld device with buttons, triggers, and thumb sticks."
     ]
   },
   {
@@ -1017,8 +1017,8 @@ module.exports = [
     "category": "Electronics",
     "clues": [
       "I am an electronic device or accessory.",
-      "People use me for a familiar everyday task involving digital camera.",
-      "My shape and design are made specifically for my job."
+      "People use me to take photographs and record videos.",
+      "I usually have a camera body with a lens and image sensor."
     ]
   },
   {
@@ -1029,8 +1029,8 @@ module.exports = [
     "category": "Electronics",
     "clues": [
       "I am an electronic device or accessory.",
-      "People use me for a familiar everyday task involving tripod.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep a camera or phone steady while recording.",
+      "I usually have a three-legged stand with a mounting head."
     ]
   },
   {
@@ -1041,8 +1041,8 @@ module.exports = [
     "category": "Electronics",
     "clues": [
       "I am an electronic device or accessory.",
-      "People use me for a familiar everyday task involving smartwatch.",
-      "My shape and design are made specifically for my job."
+      "People use me to show notifications and track activity from the wrist.",
+      "I usually have a small touchscreen device attached to a wrist strap."
     ]
   },
   {
@@ -1053,8 +1053,8 @@ module.exports = [
     "category": "Electronics",
     "clues": [
       "I am an electronic device or accessory.",
-      "People use me for a familiar everyday task involving calculator.",
-      "My shape and design are made specifically for my job."
+      "People use me to perform arithmetic without doing it by hand.",
+      "I usually have a small device with number keys and a digital display."
     ]
   },
   {
@@ -1065,8 +1065,8 @@ module.exports = [
     "category": "Electronics",
     "clues": [
       "I am an electronic device or accessory.",
-      "People use me for a familiar everyday task involving projector.",
-      "My shape and design are made specifically for my job."
+      "People use me to show a large image on a wall or screen.",
+      "I usually have an electronic device with a bright lens."
     ]
   },
   {
@@ -1077,8 +1077,8 @@ module.exports = [
     "category": "Electronics",
     "clues": [
       "I am an electronic device or accessory.",
-      "People use me for a familiar everyday task involving memory card.",
-      "My shape and design are made specifically for my job."
+      "People use me to store photos and files in a small portable format.",
+      "I usually have a tiny flat card with electrical contacts."
     ]
   },
   {
@@ -1089,8 +1089,8 @@ module.exports = [
     "category": "Electronics",
     "clues": [
       "I am an electronic device or accessory.",
-      "People use me for a familiar everyday task involving portable ssd.",
-      "My shape and design are made specifically for my job."
+      "People use me to store files on fast solid-state memory in a compact device.",
+      "I usually have a small flat drive with a USB connection."
     ]
   },
   {
@@ -1151,8 +1151,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving allen key.",
-      "My shape and design are made specifically for my job."
+      "People use me to turn screws with a hexagonal socket.",
+      "I usually have a short L-shaped metal rod with a hexagonal end."
     ]
   },
   {
@@ -1223,8 +1223,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving electric screwdriver.",
-      "My shape and design are made specifically for my job."
+      "People use me to turn screws using a powered motor.",
+      "I usually have a handheld tool with a rotating bit and trigger."
     ]
   },
   {
@@ -1235,8 +1235,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving chisel.",
-      "My shape and design are made specifically for my job."
+      "People use me to shape or remove material by striking its end.",
+      "I usually have a metal blade with a sharp flat edge and striking handle."
     ]
   },
   {
@@ -1259,8 +1259,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving paint roller.",
-      "My shape and design are made specifically for my job."
+      "People use me to cover large flat surfaces with paint quickly.",
+      "I usually have a rotating cylindrical sleeve mounted on a handle."
     ]
   },
   {
@@ -1307,8 +1307,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving wheelbarrow.",
-      "My shape and design are made specifically for my job."
+      "People use me to move heavy loads around a garden or worksite.",
+      "I usually have a single-wheeled tray with two handles."
     ]
   },
   {
@@ -1319,8 +1319,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving garden hose.",
-      "My shape and design are made specifically for my job."
+      "People use me to carry water from a tap to plants or outdoor areas.",
+      "I usually have a long flexible tube that connects to a water supply."
     ]
   },
   {
@@ -1331,8 +1331,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving pruning shears.",
-      "My shape and design are made specifically for my job."
+      "People use me to trim small branches and stems from plants.",
+      "I usually have a compact pair of spring-loaded cutting blades."
     ]
   },
   {
@@ -1343,8 +1343,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving clamp.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold two pieces of material tightly together.",
+      "I usually have a tool with jaws tightened by a screw or lever."
     ]
   },
   {
@@ -1355,8 +1355,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving workbench vise.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold an object firmly while someone works on it.",
+      "I usually have a heavy fixture with two parallel jaws mounted to a bench."
     ]
   },
   {
@@ -1367,8 +1367,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving socket wrench.",
-      "My shape and design are made specifically for my job."
+      "People use me to turn nuts and bolts using interchangeable sockets.",
+      "I usually have a ratcheting handle that accepts round metal attachments."
     ]
   },
   {
@@ -1379,8 +1379,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving hacksaw.",
-      "My shape and design are made specifically for my job."
+      "People use me to cut metal or plastic using a narrow toothed blade.",
+      "I usually have a U-shaped frame holding a thin replaceable blade."
     ]
   },
   {
@@ -1391,8 +1391,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving crowbar.",
-      "My shape and design are made specifically for my job."
+      "People use me to pry apart objects or pull out stubborn nails.",
+      "I usually have a strong metal bar with a flattened curved end."
     ]
   },
   {
@@ -1403,8 +1403,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving sandpaper.",
-      "My shape and design are made specifically for my job."
+      "People use me to smooth rough surfaces by rubbing them.",
+      "I usually have a sheet with a gritty abrasive coating."
     ]
   },
   {
@@ -1415,8 +1415,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving staple gun.",
-      "My shape and design are made specifically for my job."
+      "People use me to fasten fabric or thin materials using heavy staples.",
+      "I usually have a handheld tool with a spring-loaded trigger."
     ]
   },
   {
@@ -1427,8 +1427,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving toolbox.",
-      "My shape and design are made specifically for my job."
+      "People use me to store and carry hand tools in one place.",
+      "I usually have a sturdy case with a handle and compartments."
     ]
   },
   {
@@ -1439,8 +1439,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving safety goggles.",
-      "My shape and design are made specifically for my job."
+      "People use me to protect the eyes from dust or flying particles.",
+      "I usually have close-fitting protective eyewear with clear lenses."
     ]
   },
   {
@@ -1451,8 +1451,8 @@ module.exports = [
     "category": "Tools & Equipment",
     "clues": [
       "I help with practical jobs, repairs, or maintenance.",
-      "People use me for a familiar everyday task involving work gloves.",
-      "My shape and design are made specifically for my job."
+      "People use me to protect hands while handling rough or dirty materials.",
+      "I usually have a pair of durable gloves made from thick fabric or leather."
     ]
   },
   {
@@ -1501,8 +1501,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving pencil sharpener.",
-      "My shape and design are made specifically for my job."
+      "People use me to make a pencil point sharp again.",
+      "I usually have a small device with a blade and a hole for the pencil."
     ]
   },
   {
@@ -1564,8 +1564,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving staple remover.",
-      "My shape and design are made specifically for my job."
+      "People use me to pull staples out of sheets of paper.",
+      "I usually have a small hinged tool with two narrow metal teeth."
     ]
   },
   {
@@ -1576,8 +1576,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving paper clips.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold sheets of paper together without piercing them.",
+      "I usually have small bent pieces of coated metal wire."
     ]
   },
   {
@@ -1588,8 +1588,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving binder clips.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold a thick stack of papers firmly together.",
+      "I usually have black spring clips with two folding metal handles."
     ]
   },
   {
@@ -1600,8 +1600,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving highlighter.",
-      "My shape and design are made specifically for my job."
+      "People use me to make selected words stand out with bright ink.",
+      "I usually have a marker with a broad fluorescent tip."
     ]
   },
   {
@@ -1612,8 +1612,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving marker pen.",
-      "My shape and design are made specifically for my job."
+      "People use me to write bold lines on paper or other surfaces.",
+      "I usually have a pen-shaped tube with a felt tip and cap."
     ]
   },
   {
@@ -1624,8 +1624,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving whiteboard marker.",
-      "My shape and design are made specifically for my job."
+      "People use me to write on a glossy board using ink that can be wiped away.",
+      "I usually have a marker with a smooth tip and erasable ink."
     ]
   },
   {
@@ -1636,8 +1636,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving whiteboard.",
-      "My shape and design are made specifically for my job."
+      "People use me to provide a smooth surface for writing and wiping away notes.",
+      "I usually have a glossy board usually mounted on a wall or stand."
     ]
   },
   {
@@ -1660,8 +1660,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving glue stick.",
-      "My shape and design are made specifically for my job."
+      "People use me to attach paper and lightweight materials without liquid glue.",
+      "I usually have a solid adhesive inside a twist-up tube."
     ]
   },
   {
@@ -1672,8 +1672,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving tape dispenser.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold and cut strips of sticky tape.",
+      "I usually have a weighted base with a roll holder and serrated edge."
     ]
   },
   {
@@ -1684,8 +1684,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving adhesive tape.",
-      "My shape and design are made specifically for my job."
+      "People use me to stick two surfaces together or seal a package.",
+      "I usually have a thin flexible strip coated with glue on one side."
     ]
   },
   {
@@ -1696,8 +1696,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving correction tape.",
-      "My shape and design are made specifically for my job."
+      "People use me to cover mistakes on paper with a clean opaque strip.",
+      "I usually have a small dispenser that lays down a white ribbon."
     ]
   },
   {
@@ -1708,8 +1708,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving protractor.",
-      "My shape and design are made specifically for my job."
+      "People use me to measure or draw angles on paper.",
+      "I usually have a semicircular or circular tool marked in degrees."
     ]
   },
   {
@@ -1720,8 +1720,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving compass.",
-      "My shape and design are made specifically for my job."
+      "People use me to draw circles of different sizes.",
+      "I usually have a hinged instrument with one sharp point and one pencil leg."
     ]
   },
   {
@@ -1733,8 +1733,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving desk calendar.",
-      "My shape and design are made specifically for my job."
+      "People use me to show dates and help organize upcoming plans.",
+      "I usually have a small stand or pad with pages for each month or day."
     ]
   },
   {
@@ -1745,8 +1745,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving folder.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep loose papers together and organized.",
+      "I usually have a folded paper or plastic cover with pockets."
     ]
   },
   {
@@ -1757,8 +1757,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving ring binder.",
-      "My shape and design are made specifically for my job."
+      "People use me to store punched sheets so they can be added or removed.",
+      "I usually have a hard-covered folder with metal rings inside."
     ]
   },
   {
@@ -1769,8 +1769,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving envelope.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold a letter or document for sending.",
+      "I usually have a flat paper sleeve with a closing flap."
     ]
   },
   {
@@ -1781,8 +1781,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving printer paper.",
-      "My shape and design are made specifically for my job."
+      "People use me to provide blank sheets for printing or writing.",
+      "I usually have a stack of thin white rectangular sheets."
     ]
   },
   {
@@ -1793,8 +1793,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving index cards.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold short notes or study facts in a compact format.",
+      "I usually have small stiff rectangular cards, often lined."
     ]
   },
   {
@@ -1805,8 +1805,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving hole punch.",
-      "My shape and design are made specifically for my job."
+      "People use me to make neat holes in paper so it can be filed.",
+      "I usually have a handheld device with one or more metal punching pins."
     ]
   },
   {
@@ -1817,8 +1817,8 @@ module.exports = [
     "category": "Stationery",
     "clues": [
       "I am commonly used for writing, drawing, or organizing paper.",
-      "People use me for a familiar everyday task involving desk organizer.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep pens and small office supplies arranged.",
+      "I usually have a desktop container divided into small compartments."
     ]
   },
   {
@@ -1855,8 +1855,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving jacket.",
-      "My shape and design are made specifically for my job."
+      "People use me to provide an outer layer against cool weather.",
+      "I usually have a garment with sleeves and a front opening."
     ]
   },
   {
@@ -1867,8 +1867,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving coat.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep someone warm outdoors in cold weather.",
+      "I usually have a long outer garment, often with buttons or a zipper."
     ]
   },
   {
@@ -1891,8 +1891,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving trousers.",
-      "My shape and design are made specifically for my job."
+      "People use me to cover both legs from the waist down.",
+      "I usually have a garment with two separate leg sections."
     ]
   },
   {
@@ -1903,8 +1903,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving shorts.",
-      "My shape and design are made specifically for my job."
+      "People use me to cover the waist and upper legs in warm weather.",
+      "I usually have a shorter version of trousers ending above the knees."
     ]
   },
   {
@@ -1952,8 +1952,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving sandals.",
-      "My shape and design are made specifically for my job."
+      "People use me to cover the soles while leaving much of the foot exposed.",
+      "I usually have open footwear held on by straps."
     ]
   },
   {
@@ -1989,8 +1989,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving beanie.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep the head warm in cold weather.",
+      "I usually have a close-fitting knitted hat without a brim."
     ]
   },
   {
@@ -2013,8 +2013,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving gloves.",
-      "My shape and design are made specifically for my job."
+      "People use me to cover the hands and protect the fingers.",
+      "I usually have a pair of coverings with separate spaces for each finger."
     ]
   },
   {
@@ -2025,8 +2025,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving wristwatch.",
-      "My shape and design are made specifically for my job."
+      "People use me to show the time while worn on the wrist.",
+      "I usually have a small clock attached to a strap or bracelet."
     ]
   },
   {
@@ -2037,8 +2037,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving sunglasses.",
-      "My shape and design are made specifically for my job."
+      "People use me to reduce glare and protect the eyes in bright light.",
+      "I usually have eyewear with dark or tinted lenses."
     ]
   },
   {
@@ -2073,8 +2073,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving handbag.",
-      "My shape and design are made specifically for my job."
+      "People use me to carry personal belongings as an everyday accessory.",
+      "I usually have a bag with handles or a shoulder strap."
     ]
   },
   {
@@ -2085,8 +2085,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving tie.",
-      "My shape and design are made specifically for my job."
+      "People use me to decorate the front of a shirt or formal outfit.",
+      "I usually have a long narrow strip of fabric knotted at the collar."
     ]
   },
   {
@@ -2097,8 +2097,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving bow tie.",
-      "My shape and design are made specifically for my job."
+      "People use me to decorate a shirt collar with a compact formal accessory.",
+      "I usually have a short piece of fabric tied into two loops."
     ]
   },
   {
@@ -2109,8 +2109,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving raincoat.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep clothing dry during wet weather.",
+      "I usually have a waterproof outer layer with sleeves and a front opening."
     ]
   },
   {
@@ -2121,8 +2121,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving pajamas.",
-      "My shape and design are made specifically for my job."
+      "People use me to provide comfortable clothing for sleeping.",
+      "I usually have a loose matching top and bottom set."
     ]
   },
   {
@@ -2133,8 +2133,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving sports jersey.",
-      "My shape and design are made specifically for my job."
+      "People use me to identify a player or team during a match.",
+      "I usually have a lightweight athletic shirt often printed with a number."
     ]
   },
   {
@@ -2145,8 +2145,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving slippers.",
-      "My shape and design are made specifically for my job."
+      "People use me to cover the feet indoors with soft comfortable footwear.",
+      "I usually have soft shoes with flexible soles and an open or closed heel."
     ]
   },
   {
@@ -2157,8 +2157,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving umbrella.",
-      "My shape and design are made specifically for my job."
+      "People use me to shield someone from rain or strong sunlight.",
+      "I usually have a folding frame covered by a waterproof canopy."
     ]
   },
   {
@@ -2169,8 +2169,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving necklace.",
-      "My shape and design are made specifically for my job."
+      "People use me to decorate the neck as an accessory.",
+      "I usually have a chain or string worn around the neck, often with a pendant."
     ]
   },
   {
@@ -2181,8 +2181,8 @@ module.exports = [
     "category": "Clothing & Accessories",
     "clues": [
       "I am something people wear or carry.",
-      "People use me for a familiar everyday task involving bracelet.",
-      "My shape and design are made specifically for my job."
+      "People use me to decorate the wrist as an accessory.",
+      "I usually have a circular band or chain worn around the wrist."
     ]
   },
   {
@@ -2217,8 +2217,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving dental floss.",
-      "My shape and design are made specifically for my job."
+      "People use me to remove food and plaque from between teeth.",
+      "I usually have a thin strand wound inside a small dispenser."
     ]
   },
   {
@@ -2265,8 +2265,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving conditioner bottle.",
-      "My shape and design are made specifically for my job."
+      "People use me to soften hair after it has been washed.",
+      "I usually have a bottle containing a creamy hair-care product."
     ]
   },
   {
@@ -2289,8 +2289,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving soap dispenser.",
-      "My shape and design are made specifically for my job."
+      "People use me to release a measured amount of liquid soap.",
+      "I usually have a container with a pump pressed from the top."
     ]
   },
   {
@@ -2313,8 +2313,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving deodorant stick.",
-      "My shape and design are made specifically for my job."
+      "People use me to help control body odor.",
+      "I usually have a solid product that twists upward from a plastic tube."
     ]
   },
   {
@@ -2350,8 +2350,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving hair straightener.",
-      "My shape and design are made specifically for my job."
+      "People use me to make hair look straighter using heated plates.",
+      "I usually have a hinged electrical tool with two flat heated arms."
     ]
   },
   {
@@ -2362,8 +2362,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving electric shaver.",
-      "My shape and design are made specifically for my job."
+      "People use me to trim facial or body hair using powered cutters.",
+      "I usually have a handheld battery-powered grooming device."
     ]
   },
   {
@@ -2386,8 +2386,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving nail clippers.",
-      "My shape and design are made specifically for my job."
+      "People use me to trim fingernails and toenails.",
+      "I usually have a small hinged metal tool with curved cutting edges."
     ]
   },
   {
@@ -2398,8 +2398,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving nail file.",
-      "My shape and design are made specifically for my job."
+      "People use me to smooth and shape the edges of nails.",
+      "I usually have a narrow abrasive strip or board."
     ]
   },
   {
@@ -2410,8 +2410,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving tweezers.",
-      "My shape and design are made specifically for my job."
+      "People use me to grip and remove tiny hairs or small objects.",
+      "I usually have two narrow metal arms joined at one end."
     ]
   },
   {
@@ -2422,8 +2422,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving cotton swabs.",
-      "My shape and design are made specifically for my job."
+      "People use me to apply or clean small areas with a soft tip.",
+      "I usually have a short stick with a cotton tip at each end."
     ]
   },
   {
@@ -2434,8 +2434,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving cotton pads.",
-      "My shape and design are made specifically for my job."
+      "People use me to apply skincare products or remove makeup.",
+      "I usually have small soft round or oval pieces of cotton."
     ]
   },
   {
@@ -2446,8 +2446,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving face towel.",
-      "My shape and design are made specifically for my job."
+      "People use me to dry the face after washing.",
+      "I usually have a small soft rectangular towel."
     ]
   },
   {
@@ -2458,8 +2458,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving bath towel.",
-      "My shape and design are made specifically for my job."
+      "People use me to dry the body after bathing or showering.",
+      "I usually have a large absorbent piece of fabric."
     ]
   },
   {
@@ -2470,8 +2470,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving loofah.",
-      "My shape and design are made specifically for my job."
+      "People use me to help scrub and exfoliate skin while washing.",
+      "I usually have a porous sponge or mesh scrubber."
     ]
   },
   {
@@ -2482,8 +2482,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving shower cap.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep hair dry while taking a shower.",
+      "I usually have a waterproof elastic cap that fits over the head."
     ]
   },
   {
@@ -2494,8 +2494,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving makeup brush.",
-      "My shape and design are made specifically for my job."
+      "People use me to apply or blend cosmetics on the face.",
+      "I usually have a small handled brush with soft bristles."
     ]
   },
   {
@@ -2506,8 +2506,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving lip balm.",
-      "My shape and design are made specifically for my job."
+      "People use me to moisturize and protect dry lips.",
+      "I usually have a small waxy product in a twist-up tube or pot."
     ]
   },
   {
@@ -2518,8 +2518,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving moisturizer bottle.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold a lotion used to hydrate the skin.",
+      "I usually have a pump bottle or tube containing a creamy product."
     ]
   },
   {
@@ -2530,8 +2530,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving tissue box.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep paper tissues ready for wiping or blowing the nose.",
+      "I usually have a rectangular box with tissues pulled through an opening."
     ]
   },
   {
@@ -2542,8 +2542,8 @@ module.exports = [
     "category": "Personal Care",
     "clues": [
       "I help with grooming or personal hygiene.",
-      "People use me for a familiar everyday task involving first aid kit.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep basic medical supplies together for minor injuries.",
+      "I usually have a compact case marked with a medical cross."
     ]
   },
   {
@@ -2591,8 +2591,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving badminton racket.",
-      "My shape and design are made specifically for my job."
+      "People use me to hit a lightweight shuttlecock across a net.",
+      "I usually have a very light racket with a narrow oval stringed head."
     ]
   },
   {
@@ -2627,8 +2627,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving baseball glove.",
-      "My shape and design are made specifically for my job."
+      "People use me to catch a hard ball during a field game.",
+      "I usually have a padded leather glove with a deep pocket."
     ]
   },
   {
@@ -2639,8 +2639,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving cricket bat.",
-      "My shape and design are made specifically for my job."
+      "People use me to strike a ball during a game played with wickets.",
+      "I usually have a flat wooden blade with a long handle."
     ]
   },
   {
@@ -2651,8 +2651,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving hockey stick.",
-      "My shape and design are made specifically for my job."
+      "People use me to control and strike a puck or ball during a hockey game.",
+      "I usually have a long stick with a curved blade at one end."
     ]
   },
   {
@@ -2663,8 +2663,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving golf club.",
-      "My shape and design are made specifically for my job."
+      "People use me to hit a small ball toward a distant hole.",
+      "I usually have a long shaft with a specialized metal or composite head."
     ]
   },
   {
@@ -2687,8 +2687,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving table tennis paddle.",
-      "My shape and design are made specifically for my job."
+      "People use me to hit a lightweight ball across a small table net.",
+      "I usually have a small wooden blade covered with rubber on both sides."
     ]
   },
   {
@@ -2699,8 +2699,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving table tennis ball.",
-      "My shape and design are made specifically for my job."
+      "People use me to bounce across a small table during a racket sport.",
+      "I usually have a very light hollow sphere, usually white or orange."
     ]
   },
   {
@@ -2747,8 +2747,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving kettlebell.",
-      "My shape and design are made specifically for my job."
+      "People use me to perform strength exercises with a swinging weight.",
+      "I usually have a heavy rounded weight with a loop-shaped handle."
     ]
   },
   {
@@ -2759,8 +2759,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving barbell.",
-      "My shape and design are made specifically for my job."
+      "People use me to lift heavy weights using both hands.",
+      "I usually have a long metal bar with weight plates fitted at its ends."
     ]
   },
   {
@@ -2771,8 +2771,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving resistance band.",
-      "My shape and design are made specifically for my job."
+      "People use me to add resistance to stretching and strength exercises.",
+      "I usually have a long elastic loop or strip that stretches under tension."
     ]
   },
   {
@@ -2783,8 +2783,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving exercise ball.",
-      "My shape and design are made specifically for my job."
+      "People use me to perform balance and core exercises on an unstable surface.",
+      "I usually have a large inflatable rubber sphere."
     ]
   },
   {
@@ -2795,8 +2795,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving boxing gloves.",
-      "My shape and design are made specifically for my job."
+      "People use me to protect the hands during boxing practice or competition.",
+      "I usually have padded gloves with a broad rounded striking surface."
     ]
   },
   {
@@ -2807,8 +2807,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving shin guards.",
-      "My shape and design are made specifically for my job."
+      "People use me to protect the lower legs during contact sports.",
+      "I usually have curved protective pads worn inside socks."
     ]
   },
   {
@@ -2820,8 +2820,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving soccer cleats.",
-      "My shape and design are made specifically for my job."
+      "People use me to provide grip while running on a grass pitch.",
+      "I usually have sports shoes with studs on the bottom."
     ]
   },
   {
@@ -2832,8 +2832,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving whistle.",
-      "My shape and design are made specifically for my job."
+      "People use me to make a sharp sound to signal the start or stop of play.",
+      "I usually have a small hollow device with a mouthpiece."
     ]
   },
   {
@@ -2856,8 +2856,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving swimming goggles.",
-      "My shape and design are made specifically for my job."
+      "People use me to help someone see underwater while protecting the eyes.",
+      "I usually have two clear lenses joined by a flexible strap."
     ]
   },
   {
@@ -2868,8 +2868,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving swim cap.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep hair contained while swimming.",
+      "I usually have a tight stretchy cap that covers the head."
     ]
   },
   {
@@ -2881,8 +2881,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving inline skates.",
-      "My shape and design are made specifically for my job."
+      "People use me to roll along a smooth surface using wheels in one line.",
+      "I usually have a boot attached to a frame with several wheels in a row."
     ]
   },
   {
@@ -2893,8 +2893,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving bicycle helmet.",
-      "My shape and design are made specifically for my job."
+      "People use me to protect a cyclist's head during a ride.",
+      "I usually have a hard lightweight shell with ventilation holes and straps."
     ]
   },
   {
@@ -2905,8 +2905,8 @@ module.exports = [
     "category": "Sports Equipment",
     "clues": [
       "I am used for exercise, training, or a sport.",
-      "People use me for a familiar everyday task involving tennis ball.",
-      "My shape and design are made specifically for my job."
+      "People use me to bounce across a court during a racket sport.",
+      "I usually have a fuzzy felt-covered ball, usually bright yellow."
     ]
   },
   {
@@ -2954,8 +2954,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving bicycle lock.",
-      "My shape and design are made specifically for my job."
+      "People use me to secure a bicycle to a fixed object.",
+      "I usually have a strong chain, cable, or rigid shackle with a locking mechanism."
     ]
   },
   {
@@ -2966,8 +2966,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving car steering wheel.",
-      "My shape and design are made specifically for my job."
+      "People use me to turn a car in the direction the driver wants to travel.",
+      "I usually have a circular control mounted in front of the driver."
     ]
   },
   {
@@ -2991,8 +2991,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving car wheel.",
-      "My shape and design are made specifically for my job."
+      "People use me to support a vehicle and rotate as it moves.",
+      "I usually have a round metal rim fitted inside a rubber tire."
     ]
   },
   {
@@ -3015,8 +3015,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving car jack.",
-      "My shape and design are made specifically for my job."
+      "People use me to raise part of a car off the ground for maintenance.",
+      "I usually have a compact lifting device operated by a handle or screw."
     ]
   },
   {
@@ -3039,8 +3039,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving car seat.",
-      "My shape and design are made specifically for my job."
+      "People use me to provide a place for a driver or passenger to sit.",
+      "I usually have a padded chair fixed inside a vehicle."
     ]
   },
   {
@@ -3063,8 +3063,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving side mirror.",
-      "My shape and design are made specifically for my job."
+      "People use me to let a driver see vehicles beside and behind the car.",
+      "I usually have a reflective panel mounted on the outside of a vehicle."
     ]
   },
   {
@@ -3087,8 +3087,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving license plate.",
-      "My shape and design are made specifically for my job."
+      "People use me to display a vehicle's official registration number.",
+      "I usually have a flat rectangular plate with letters and digits."
     ]
   },
   {
@@ -3123,8 +3123,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving train ticket.",
-      "My shape and design are made specifically for my job."
+      "People use me to show permission to travel on a particular train service.",
+      "I usually have a printed or digital pass with route and journey details."
     ]
   },
   {
@@ -3135,8 +3135,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving bus pass.",
-      "My shape and design are made specifically for my job."
+      "People use me to show permission to use bus services.",
+      "I usually have a card or digital pass scanned when boarding."
     ]
   },
   {
@@ -3159,8 +3159,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving luggage tag.",
-      "My shape and design are made specifically for my job."
+      "People use me to identify a travel bag and its owner.",
+      "I usually have a small label attached to a suitcase handle."
     ]
   },
   {
@@ -3171,8 +3171,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving car key.",
-      "My shape and design are made specifically for my job."
+      "People use me to unlock a car and allow its engine to start.",
+      "I usually have a small metal key or electronic fob with buttons."
     ]
   },
   {
@@ -3207,8 +3207,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving scooter.",
-      "My shape and design are made specifically for my job."
+      "People use me to travel short distances by standing on a narrow deck.",
+      "I usually have a small vehicle with handlebars and two or more wheels."
     ]
   },
   {
@@ -3219,8 +3219,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving paddle.",
-      "My shape and design are made specifically for my job."
+      "People use me to move a small boat through water.",
+      "I usually have a short shaft with a broad flat blade at one end."
     ]
   },
   {
@@ -3231,8 +3231,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving life jacket.",
-      "My shape and design are made specifically for my job."
+      "People use me to help keep a person afloat in water.",
+      "I usually have a buoyant vest with straps and often bright colors."
     ]
   },
   {
@@ -3243,8 +3243,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving oar.",
-      "My shape and design are made specifically for my job."
+      "People use me to push a boat through water using leverage.",
+      "I usually have a long pole with a broad flat blade at one end."
     ]
   },
   {
@@ -3255,8 +3255,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving fuel can.",
-      "My shape and design are made specifically for my job."
+      "People use me to store and carry liquid fuel for engines or equipment.",
+      "I usually have a sturdy sealed container with a spout and handle."
     ]
   },
   {
@@ -3267,8 +3267,8 @@ module.exports = [
     "category": "Transportation Items",
     "clues": [
       "I am connected with travelling or vehicles.",
-      "People use me for a familiar everyday task involving charging cable.",
-      "My shape and design are made specifically for my job."
+      "People use me to connect a device to a power source for recharging.",
+      "I usually have a flexible insulated wire with a connector at each end."
     ]
   },
   {
@@ -3353,8 +3353,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving butter dish.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold butter on a table or in a refrigerator.",
+      "I usually have a small covered tray with a flat base."
     ]
   },
   {
@@ -3365,8 +3365,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving yogurt cup.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold an individual serving of a thick dairy snack.",
+      "I usually have a small sealed plastic cup with a peel-back lid."
     ]
   },
   {
@@ -3425,8 +3425,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving rice bag.",
-      "My shape and design are made specifically for my job."
+      "People use me to store uncooked grains used in many meals.",
+      "I usually have a sealed sack or pouch filled with small grains."
     ]
   },
   {
@@ -3437,8 +3437,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving flour bag.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold a fine powder used in baking and cooking.",
+      "I usually have a paper or plastic package filled with a soft white powder."
     ]
   },
   {
@@ -3449,8 +3449,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving sugar bowl.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep granulated sugar ready to add to drinks or food.",
+      "I usually have a small bowl, often with a lid and spoon."
     ]
   },
   {
@@ -3485,8 +3485,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving cooking oil bottle.",
-      "My shape and design are made specifically for my job."
+      "People use me to store liquid oil used for frying and cooking.",
+      "I usually have a bottle filled with a clear or golden liquid."
     ]
   },
   {
@@ -3497,8 +3497,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving vinegar bottle.",
-      "My shape and design are made specifically for my job."
+      "People use me to store a sharp acidic liquid used in cooking and dressings.",
+      "I usually have a bottle containing a clear or amber liquid."
     ]
   },
   {
@@ -3509,8 +3509,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving ketchup bottle.",
-      "My shape and design are made specifically for my job."
+      "People use me to dispense a popular tomato-based condiment.",
+      "I usually have a squeezable bottle filled with a thick red sauce."
     ]
   },
   {
@@ -3521,8 +3521,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving mustard bottle.",
-      "My shape and design are made specifically for my job."
+      "People use me to dispense a sharp yellow condiment.",
+      "I usually have a squeeze bottle filled with a yellow sauce."
     ]
   },
   {
@@ -3533,8 +3533,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving mayonnaise jar.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold a creamy condiment often used in sandwiches.",
+      "I usually have a jar filled with a pale thick sauce."
     ]
   },
   {
@@ -3545,8 +3545,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving tea box.",
-      "My shape and design are made specifically for my job."
+      "People use me to store tea bags or loose tea leaves.",
+      "I usually have a small cardboard package often containing individually wrapped bags."
     ]
   },
   {
@@ -3557,8 +3557,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving coffee jar.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep instant coffee or coffee granules dry.",
+      "I usually have a sealed jar filled with dark brown granules."
     ]
   },
   {
@@ -3581,8 +3581,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving potato chips bag.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold thin crispy slices of fried or baked potato.",
+      "I usually have a crinkly sealed bag filled with a salty snack."
     ]
   },
   {
@@ -3593,8 +3593,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving cookie tin.",
-      "My shape and design are made specifically for my job."
+      "People use me to store baked sweet biscuits and keep them fresh.",
+      "I usually have a round or rectangular metal container with a lid."
     ]
   },
   {
@@ -3605,8 +3605,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving canned beans.",
-      "My shape and design are made specifically for my job."
+      "People use me to store cooked beans in a sealed metal container.",
+      "I usually have a cylindrical tin with a pull tab or metal lid."
     ]
   },
   {
@@ -3617,8 +3617,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving soup can.",
-      "My shape and design are made specifically for my job."
+      "People use me to hold soup that can be heated before serving.",
+      "I usually have a sealed cylindrical metal container with a printed label."
     ]
   },
   {
@@ -3629,8 +3629,8 @@ module.exports = [
     "category": "Food & Everyday Products",
     "clues": [
       "I am commonly found in a kitchen, pantry, or grocery shop.",
-      "People use me for a familiar everyday task involving toothpick holder.",
-      "My shape and design are made specifically for my job."
+      "People use me to keep small wooden picks ready after a meal.",
+      "I usually have a tiny container with a narrow opening at the top."
     ]
   }
 ];
