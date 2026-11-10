@@ -21,7 +21,7 @@ const MYSTERY_ICON_URL = 'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/ass
 const games = new Map();
 
 function normalize(value) {
-  return String(value || '').normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9\\s-]/g, ' ').replace(/\\s+/g, ' ').trim();
+  return String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 function editDistanceAtMostOne(a, b) {
   if (Math.abs(a.length - b.length) > 1) return false;
@@ -64,7 +64,7 @@ function clueEmbed(game, clueIndex, isStart = false) {
     '```text',
     String(game.current.clues[clueIndex]).replace(/```/g, '` ` `'),
     '```'
-  ].join('\\n');
+  ].join('\n');
   const footer = '⌗ Round ' + game.roundNumber + (isStart ? '' : ' • ⏱ ' + (clueIndex === 2 ? 'Answer reveal' : 'Next clue') + ' in ' + waitSeconds + 's');
   return new EmbedBuilder()
     .setTitle(isStart ? 'MYSTERYGEN | GAME STARTED' : 'MYSTERYGEN')
@@ -81,7 +81,7 @@ function answerEmbed(item, roundNumber, outcome) {
   return new EmbedBuilder()
     .setTitle(solved ? 'MYSTERY SOLVED' : 'MYSTERY REVEALED')
     .setColor(solved ? 0x2ecc71 : 0x5865f2)
-    .setDescription('## ' + item.name + '\\n\\n' + note)
+    .setDescription('## ' + item.name + '\n\n' + note)
     .setFooter({ text: '⌗ Round ' + roundNumber + ' • Next round in 10 seconds' });
 }
 function missedRoundPanel(item, roundNumber, channelId) {
@@ -90,7 +90,7 @@ function missedRoundPanel(item, roundNumber, channelId) {
     .setAccentColor(0xe74c3c)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent('## MYSTERY REVEALED'),
-      new TextDisplayBuilder().setContent('# ' + item.name + '\\nNobody guessed correctly before time ran out.')
+      new TextDisplayBuilder().setContent('# ' + item.name + '\nNobody guessed correctly before time ran out.')
     )
     .addSeparatorComponents(
       new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large)
@@ -211,7 +211,7 @@ async function revealCommand(message) {
   return true;
 }
 async function onButton(interaction) {
-  const match = /^mysterygen:play-again:(\\d+):(\\d+)$/.exec(interaction.customId);
+  const match = /^mysterygen:play-again:(\d+):(\d+)$/.exec(interaction.customId);
   if (!match) return false;
   const [, channelId, roundNumberText] = match;
   const game = getGame(channelId);
@@ -220,8 +220,9 @@ async function onButton(interaction) {
     return true;
   }
   game.phase = 'replay-starting';
-  await interaction.deferUpdate();
   try {
+    // Acknowledge the component immediately so Discord does not time out the interaction.
+    await interaction.deferUpdate();
     await interaction.channel.send({content:'Starting new Round! ⚙..',allowedMentions:{parse:[]}});
     clearTimer(game);
     game.timer=setTimeout(()=>{
@@ -233,7 +234,10 @@ async function onButton(interaction) {
     },REPLAY_DELAY_MS);
   } catch(error) {
     game.phase='awaiting-replay';
-    throw error;
+    console.error('[MysteryGen] Replay button handling failed:',error);
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.reply({content:'I could not start the next round. Please try the button again.',ephemeral:true}).catch(()=>{});
+    }
   }
   return true;
 }
