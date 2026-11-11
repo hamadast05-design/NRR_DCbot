@@ -3040,7 +3040,7 @@ module.exports = [
   {
     "id": "GEO361",
     "category": "Political Geography",
-    "question": "Which country or countries: smallest independent country by area?",
+    "question": "Identify the country or countries matching this description: smallest independent country by area?",
     "answers": [
       "Vatican City"
     ]
@@ -3048,7 +3048,7 @@ module.exports = [
   {
     "id": "GEO362",
     "category": "Political Geography",
-    "question": "Which country or countries: largest country by area?",
+    "question": "Identify the country or countries matching this description: largest country by area?",
     "answers": [
       "Russia"
     ]
@@ -3056,7 +3056,7 @@ module.exports = [
   {
     "id": "GEO363",
     "category": "Political Geography",
-    "question": "Which country or countries: two independent enclaves entirely surrounded by Italy?",
+    "question": "Identify the country or countries matching this description: two independent enclaves entirely surrounded by Italy?",
     "answers": [
       "San Marino and Vatican City"
     ]
@@ -3064,7 +3064,7 @@ module.exports = [
   {
     "id": "GEO364",
     "category": "Political Geography",
-    "question": "Which country or countries: country that completely surrounds Lesotho?",
+    "question": "Identify the country or countries matching this description: country that completely surrounds Lesotho?",
     "answers": [
       "South Africa"
     ]
@@ -3072,7 +3072,7 @@ module.exports = [
   {
     "id": "GEO365",
     "category": "Political Geography",
-    "question": "Which country or countries: country completely surrounded by Senegal?",
+    "question": "Identify the country or countries matching this description: country completely surrounded by Senegal?",
     "answers": [
       "The Gambia"
     ]
@@ -3080,7 +3080,7 @@ module.exports = [
   {
     "id": "GEO366",
     "category": "Political Geography",
-    "question": "Which country or countries: two countries sharing Hispaniola?",
+    "question": "Identify the country or countries matching this description: two countries sharing Hispaniola?",
     "answers": [
       "Haiti and the Dominican Republic"
     ]
@@ -3088,7 +3088,7 @@ module.exports = [
   {
     "id": "GEO367",
     "category": "Political Geography",
-    "question": "Which country or countries: country with the world's longest coastline?",
+    "question": "Identify the country or countries matching this description: country with the world's longest coastline?",
     "answers": [
       "Canada"
     ]
@@ -3096,7 +3096,7 @@ module.exports = [
   {
     "id": "GEO368",
     "category": "Political Geography",
-    "question": "Which country or countries: country in Europe and Asia whose largest city is Istanbul?",
+    "question": "Identify the country or countries matching this description: country in Europe and Asia whose largest city is Istanbul?",
     "answers": [
       "Turkey"
     ]
@@ -3104,7 +3104,7 @@ module.exports = [
   {
     "id": "GEO369",
     "category": "Political Geography",
-    "question": "Which country or countries: country with the Baltic Sea exclave of Kaliningrad?",
+    "question": "Identify the country or countries matching this description: country with the Baltic Sea exclave of Kaliningrad?",
     "answers": [
       "Russia"
     ]
@@ -3112,7 +3112,7 @@ module.exports = [
   {
     "id": "GEO370",
     "category": "Political Geography",
-    "question": "Which country or countries: country with French Guiana in South America?",
+    "question": "Identify the country or countries matching this description: country with French Guiana in South America?",
     "answers": [
       "France"
     ]
@@ -3120,7 +3120,7 @@ module.exports = [
   {
     "id": "GEO371",
     "category": "Political Geography",
-    "question": "Which country or countries: country that administers Alaska?",
+    "question": "Identify the country or countries matching this description: country that administers Alaska?",
     "answers": [
       "United States"
     ]
@@ -3128,7 +3128,7 @@ module.exports = [
   {
     "id": "GEO372",
     "category": "Political Geography",
-    "question": "Which country or countries: country made up of England, Scotland, Wales and Northern Ireland?",
+    "question": "Identify the country or countries matching this description: country made up of England, Scotland, Wales and Northern Ireland?",
     "answers": [
       "United Kingdom"
     ]
@@ -3136,7 +3136,7 @@ module.exports = [
   {
     "id": "GEO373",
     "category": "Political Geography",
-    "question": "Which country or countries: doubly landlocked country between Austria and Switzerland?",
+    "question": "Identify the country or countries matching this description: doubly landlocked country between Austria and Switzerland?",
     "answers": [
       "Liechtenstein"
     ]
@@ -3144,7 +3144,7 @@ module.exports = [
   {
     "id": "GEO374",
     "category": "Political Geography",
-    "question": "Which country or countries: country with the autonomous territory of Greenland?",
+    "question": "Identify the country or countries matching this description: country with the autonomous territory of Greenland?",
     "answers": [
       "Denmark"
     ]
@@ -3152,7 +3152,7 @@ module.exports = [
   {
     "id": "GEO375",
     "category": "Political Geography",
-    "question": "Which country or countries: country with the Faroe Islands as an autonomous territory?",
+    "question": "Identify the country or countries matching this description: country with the Faroe Islands as an autonomous territory?",
     "answers": [
       "Denmark"
     ]
@@ -3160,7 +3160,7 @@ module.exports = [
   {
     "id": "GEO376",
     "category": "Political Geography",
-    "question": "Which country or countries: country divided into 26 cantons?",
+    "question": "Identify the country or countries matching this description: country divided into 26 cantons?",
     "answers": [
       "Switzerland"
     ]
@@ -3168,7 +3168,7 @@ module.exports = [
   {
     "id": "GEO377",
     "category": "Political Geography",
-    "question": "Which country or countries: country divided into 50 states?",
+    "question": "Identify the country or countries matching this description: country divided into 50 states?",
     "answers": [
       "United States"
     ]
@@ -3176,7 +3176,7 @@ module.exports = [
   {
     "id": "GEO378",
     "category": "Political Geography",
-    "question": "Which country or countries: largest landlocked country by area?",
+    "question": "Identify the country or countries matching this description: largest landlocked country by area?",
     "answers": [
       "Kazakhstan"
     ]
@@ -3184,7 +3184,7 @@ module.exports = [
   {
     "id": "GEO379",
     "category": "Political Geography",
-    "question": "Which country or countries: smallest landlocked country by area?",
+    "question": "Identify the country or countries matching this description: smallest landlocked country by area?",
     "answers": [
       "Vatican City"
     ]
@@ -3192,7 +3192,7 @@ module.exports = [
   {
     "id": "GEO380",
     "category": "Political Geography",
-    "question": "Which country or countries: country surrounding San Marino?",
+    "question": "Identify the country or countries matching this description: country surrounding San Marino?",
     "answers": [
       "Italy"
     ]
@@ -3200,7 +3200,7 @@ module.exports = [
   {
     "id": "GEO381",
     "category": "Political Geography",
-    "question": "Which country or countries: country with the exclave of Nakhchivan?",
+    "question": "Identify the country or countries matching this description: country with the exclave of Nakhchivan?",
     "answers": [
       "Azerbaijan"
     ]
@@ -3208,7 +3208,7 @@ module.exports = [
   {
     "id": "GEO382",
     "category": "Political Geography",
-    "question": "Which country or countries: country bordering both Atlantic and Indian Oceans at its southern tip?",
+    "question": "Identify the country or countries matching this description: country bordering both Atlantic and Indian Oceans at its southern tip?",
     "answers": [
       "South Africa"
     ]
@@ -3216,7 +3216,7 @@ module.exports = [
   {
     "id": "GEO383",
     "category": "Political Geography",
-    "question": "Which country or countries: country sharing New Guinea with Papua New Guinea?",
+    "question": "Identify the country or countries matching this description: country sharing New Guinea with Papua New Guinea?",
     "answers": [
       "Indonesia"
     ]
@@ -3224,7 +3224,7 @@ module.exports = [
   {
     "id": "GEO384",
     "category": "Political Geography",
-    "question": "Which country or countries: country containing the Tibet Autonomous Region?",
+    "question": "Identify the country or countries matching this description: country containing the Tibet Autonomous Region?",
     "answers": [
       "China"
     ]
@@ -3232,7 +3232,7 @@ module.exports = [
   {
     "id": "GEO385",
     "category": "Political Geography",
-    "question": "Which country or countries: country containing the Kurdistan Region?",
+    "question": "Identify the country or countries matching this description: country containing the Kurdistan Region?",
     "answers": [
       "Iraq"
     ]
@@ -3240,7 +3240,7 @@ module.exports = [
   {
     "id": "GEO386",
     "category": "Political Geography",
-    "question": "Which country or countries: country with the Spanish exclaves of Ceuta and Melilla?",
+    "question": "Identify the country or countries matching this description: country with the Spanish exclaves of Ceuta and Melilla?",
     "answers": [
       "Spain"
     ]
@@ -3248,7 +3248,7 @@ module.exports = [
   {
     "id": "GEO387",
     "category": "Political Geography",
-    "question": "Which country or countries: country with Réunion in the Indian Ocean?",
+    "question": "Identify the country or countries matching this description: country with Réunion in the Indian Ocean?",
     "answers": [
       "France"
     ]
@@ -3256,7 +3256,7 @@ module.exports = [
   {
     "id": "GEO388",
     "category": "Political Geography",
-    "question": "Which country or countries: Southeast Asian archipelago country of more than 7,000 islands?",
+    "question": "Identify the country or countries matching this description: Southeast Asian archipelago country of more than 7,000 islands?",
     "answers": [
       "Philippines"
     ]
@@ -3264,7 +3264,7 @@ module.exports = [
   {
     "id": "GEO389",
     "category": "Political Geography",
-    "question": "Which country or countries: world's largest island country by area?",
+    "question": "Identify the country or countries matching this description: world's largest island country by area?",
     "answers": [
       "Indonesia"
     ]
@@ -3272,7 +3272,7 @@ module.exports = [
   {
     "id": "GEO390",
     "category": "Political Geography",
-    "question": "Which country or countries: country bordering both Caspian Sea and Persian Gulf?",
+    "question": "Identify the country or countries matching this description: country bordering both Caspian Sea and Persian Gulf?",
     "answers": [
       "Iran"
     ]
@@ -3280,7 +3280,7 @@ module.exports = [
   {
     "id": "GEO391",
     "category": "Political Geography",
-    "question": "Which country or countries: country containing Vatican City?",
+    "question": "Identify the country or countries matching this description: country containing Vatican City?",
     "answers": [
       "Italy"
     ]
@@ -3288,7 +3288,7 @@ module.exports = [
   {
     "id": "GEO392",
     "category": "Political Geography",
-    "question": "Which country or countries: country containing Lesotho?",
+    "question": "Identify the country or countries matching this description: country containing Lesotho?",
     "answers": [
       "South Africa"
     ]
@@ -3296,7 +3296,7 @@ module.exports = [
   {
     "id": "GEO393",
     "category": "Political Geography",
-    "question": "Which country or countries: doubly landlocked country in Central Asia?",
+    "question": "Identify the country or countries matching this description: doubly landlocked country in Central Asia?",
     "answers": [
       "Uzbekistan"
     ]
@@ -3304,7 +3304,7 @@ module.exports = [
   {
     "id": "GEO394",
     "category": "Political Geography",
-    "question": "Which country or countries: European microstate between France and Spain?",
+    "question": "Identify the country or countries matching this description: European microstate between France and Spain?",
     "answers": [
       "Andorra"
     ]
@@ -3312,7 +3312,7 @@ module.exports = [
   {
     "id": "GEO395",
     "category": "Political Geography",
-    "question": "Which country or countries: country containing the Zanzibar archipelago?",
+    "question": "Identify the country or countries matching this description: country containing the Zanzibar archipelago?",
     "answers": [
       "Tanzania"
     ]
@@ -3320,7 +3320,7 @@ module.exports = [
   {
     "id": "GEO396",
     "category": "Political Geography",
-    "question": "Which country or countries: country containing Transylvania?",
+    "question": "Identify the country or countries matching this description: country containing Transylvania?",
     "answers": [
       "Romania"
     ]
@@ -3328,7 +3328,7 @@ module.exports = [
   {
     "id": "GEO397",
     "category": "Political Geography",
-    "question": "Which country or countries: country containing Flanders?",
+    "question": "Identify the country or countries matching this description: country containing Flanders?",
     "answers": [
       "Belgium"
     ]
@@ -3336,7 +3336,7 @@ module.exports = [
   {
     "id": "GEO398",
     "category": "Political Geography",
-    "question": "Which country or countries: country containing Catalonia?",
+    "question": "Identify the country or countries matching this description: country containing Catalonia?",
     "answers": [
       "Spain"
     ]
@@ -3344,7 +3344,7 @@ module.exports = [
   {
     "id": "GEO399",
     "category": "Political Geography",
-    "question": "Which country or countries: country containing Bavaria?",
+    "question": "Identify the country or countries matching this description: country containing Bavaria?",
     "answers": [
       "Germany"
     ]
@@ -3352,7 +3352,7 @@ module.exports = [
   {
     "id": "GEO400",
     "category": "Political Geography",
-    "question": "Which country or countries: country containing the Cabinda exclave?",
+    "question": "Identify the country or countries matching this description: country containing the Cabinda exclave?",
     "answers": [
       "Angola"
     ]
