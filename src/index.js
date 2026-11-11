@@ -8,6 +8,7 @@ const eventSystem = require('./event');
 const annihilateSystem = require('./annihilate');
 const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
+const geographyTriviaSystem = require('./geography-trivia');
 const guessPoliticianSystem = require('./guess-the-politician');
 const flagRushSystem = require('./flagrush');
 const mysteryGenSystem = require('./mysterygen');
@@ -140,6 +141,7 @@ client.on(Events.MessageCreate, async message => {
   try { await learningGames.onMessage(message); } catch (error) { console.error('Learning game message error:', error); }
   try { await wordkillSystem.onMessage(message); } catch (error) { console.error('WordKill message error:', error); }
   try { await politicalTriviaSystem.onMessage(message); } catch (error) { console.error('Political Trivia message error:', error); }
+  try { await geographyTriviaSystem.onMessage(message); } catch (error) { console.error('Geography Trivia message error:', error); }
   try { await guessPoliticianSystem.onMessage(message); } catch (error) { console.error('Guess The Politician message error:', error); }
   try { await flagRushSystem.onMessage(message); } catch (error) { console.error('FlagRush message error:', error); }
   try { await mysteryGenSystem.onMessage(message); } catch (error) { console.error('MysteryGen message error:', error); }
