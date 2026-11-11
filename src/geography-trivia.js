@@ -1,5 +1,6 @@
 const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const questionBank = require('./geography-trivia-questions');
+if (questionBank.length !== 400) throw new Error('Geography Trivia must contain exactly 400 questions.');
 const { hasPermission } = require('./access');
 
 const games = new Map();
@@ -138,7 +139,7 @@ async function sendQuestion(channel, game) {
     game.current = null;
     resetCurrentStreaks(game);
     game.unansweredStreak += 1;
-    await channel.send('⏰ Time\\'s up! ' + revealAnswers(question.answers)).catch(() => {});
+    await channel.send("⏰ Time's up! " + revealAnswers(question.answers)).catch(() => {});
     if (game.unansweredStreak >= 3) {
       await finish(channel, game, 'unanswered');
       return;
@@ -173,7 +174,7 @@ async function skip(channel, game) {
   game.timeout = null;
   const answers = game.current.answers;
   game.current = null;
-  await channel.send('⏭️ Geography Trivia skipped. ' + revealAnswers(game.current.answers) + ' No points awarded.').catch(() => {});
+  await channel.send('⏭️ Geography Trivia skipped. ' + revealAnswers(answers) + ' No points awarded.').catch(() => {});
   scheduleNext(channel, game, NORMAL_COOLDOWN_MS);
   return true;
 }
