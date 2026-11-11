@@ -95,6 +95,10 @@ function createGame(channelId) {
 function resetCurrentStreaks(game) {
   for (const streak of game.streaks.values()) streak.current = 0;
 }
+function revealAnswers(answers) {
+  if (answers.length === 1) return 'The correct answer was **' + answers[0] + '**.';
+  return 'Accepted answers include: **' + answers.join('**, **') + '**.';
+}
 async function finish(channel, game, reason) {
   if (!game.active || games.get(channel.id) !== game) return false;
   game.active = false;
@@ -134,7 +138,7 @@ async function sendQuestion(channel, game) {
     game.current = null;
     resetCurrentStreaks(game);
     game.unansweredStreak += 1;
-    await channel.send('⏰ Time\\'s up! The correct answer was **' + question.answers[0] + '**.').catch(() => {});
+    await channel.send('⏰ Time\\'s up! ' + revealAnswers(question.answers)).catch(() => {});
     if (game.unansweredStreak >= 3) {
       await finish(channel, game, 'unanswered');
       return;
@@ -167,9 +171,9 @@ async function skip(channel, game) {
   if (!game || !game.current || game.cooldown) return false;
   if (game.timeout) clearTimeout(game.timeout);
   game.timeout = null;
-  const answer = game.current.answers[0];
+  const answers = game.current.answers;
   game.current = null;
-  await channel.send('⏭️ Geography Trivia skipped. The answer was **' + answer + '**. No points awarded.').catch(() => {});
+  await channel.send('⏭️ Geography Trivia skipped. ' + revealAnswers(game.current.answers) + ' No points awarded.').catch(() => {});
   scheduleNext(channel, game, NORMAL_COOLDOWN_MS);
   return true;
 }
