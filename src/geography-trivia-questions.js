@@ -91,7 +91,7 @@ module.exports = [
   {
     "id": "GEO012",
     "category": "General Geography",
-    "question": "What continent is DR Congo in?",
+    "question": "What continent is Democratic Republic of the Congo in?",
     "answers": [
       "Africa"
     ]
@@ -509,7 +509,8 @@ module.exports = [
     "category": "General Geography",
     "question": "What continent is Cyprus in?",
     "answers": [
-      "Asia"
+      "Asia",
+      "Europe"
     ]
   },
   {
@@ -771,7 +772,7 @@ module.exports = [
   {
     "id": "GEO097",
     "category": "General Geography",
-    "question": "What continent is UAE in?",
+    "question": "What continent is United Arab Emirates in?",
     "answers": [
       "Asia"
     ]
@@ -1255,7 +1256,8 @@ module.exports = [
       "France",
       "Luxembourg",
       "Belgium",
-      "Netherlands"
+      "Netherlands",
+      "Czech Republic"
     ]
   },
   {
@@ -1368,7 +1370,8 @@ module.exports = [
       "Ukraine",
       "Belarus",
       "Lithuania",
-      "Russia"
+      "Russia",
+      "Czech Republic"
     ]
   },
   {
@@ -1431,7 +1434,8 @@ module.exports = [
       "Slovenia",
       "Italy",
       "Switzerland",
-      "Liechtenstein"
+      "Liechtenstein",
+      "Czech Republic"
     ]
   },
   {
@@ -1455,7 +1459,10 @@ module.exports = [
     "answers": [
       "United States",
       "Guatemala",
-      "Belize"
+      "Belize",
+      "USA",
+      "US",
+      "United States of America"
     ]
   },
   {
@@ -1582,7 +1589,8 @@ module.exports = [
       "Mozambique",
       "Zimbabwe",
       "Botswana",
-      "Namibia"
+      "Namibia",
+      "Democratic Republic of the Congo"
     ]
   },
   {
@@ -1754,7 +1762,8 @@ module.exports = [
     "category": "Capital Cities",
     "question": "What is the capital city of Bolivia?",
     "answers": [
-      "Sucre"
+      "Sucre",
+      "La Paz"
     ]
   },
   {
@@ -2322,7 +2331,8 @@ module.exports = [
     "category": "Capital Cities",
     "question": "What is the capital city of Netherlands?",
     "answers": [
-      "Amsterdam"
+      "Amsterdam",
+      "The Hague"
     ]
   },
   {
@@ -3122,7 +3132,10 @@ module.exports = [
     "category": "Political Geography",
     "question": "Identify the country or countries matching this description: country that administers Alaska?",
     "answers": [
-      "United States"
+      "United States",
+      "USA",
+      "US",
+      "United States of America"
     ]
   },
   {
@@ -3170,7 +3183,10 @@ module.exports = [
     "category": "Political Geography",
     "question": "Identify the country or countries matching this description: country divided into 50 states?",
     "answers": [
-      "United States"
+      "United States",
+      "USA",
+      "US",
+      "United States of America"
     ]
   },
   {
