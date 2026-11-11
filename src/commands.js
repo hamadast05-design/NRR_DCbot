@@ -13,6 +13,7 @@ const qotdSystem = require('./qotd');
 const newsSystem = require('./news');
 const wordkillSystem = require('./wordkill');
 const politicalTriviaSystem = require('./political-trivia');
+const geographyTriviaSystem = require('./geography-trivia');
 const guessPoliticianSystem = require('./guess-the-politician');
 const flagRushSystem = require('./flagrush');
 const mysteryGenSystem = require('./mysterygen');
@@ -46,6 +47,8 @@ const commands = [
   new SlashCommandBuilder().setName('end_wordkill').setDescription('End the active WordKill game in this channel.'),
   new SlashCommandBuilder().setName('start_pt').setDescription('Start Political Trivia in this channel.'),
   new SlashCommandBuilder().setName('end_pt').setDescription('End Political Trivia in this channel.'),
+  new SlashCommandBuilder().setName('start_geography_trivia').setDescription('Start Geography Trivia in this channel.'),
+  new SlashCommandBuilder().setName('end_geography_trivia').setDescription('End Geography Trivia in this channel.'),
   new SlashCommandBuilder().setName('start_guess_politician').setDescription('Start Guess The Politician in this channel.'),
   new SlashCommandBuilder().setName('end_guess_politician').setDescription('End Guess The Politician in this channel.'),
   new SlashCommandBuilder().setName('start_flagrush').setDescription('Start FlagRush in this channel.'),
@@ -517,6 +520,8 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'end_wordkill') return wordkillSystem.endCommand(interaction);
     if (interaction.commandName === 'start_pt') return politicalTriviaSystem.startCommand(interaction);
     if (interaction.commandName === 'end_pt') return politicalTriviaSystem.endCommand(interaction);
+    if (interaction.commandName === 'start_geography_trivia') return geographyTriviaSystem.startCommand(interaction);
+    if (interaction.commandName === 'end_geography_trivia') return geographyTriviaSystem.endCommand(interaction);
     if (interaction.commandName === 'start_guess_politician') return guessPoliticianSystem.startCommand(interaction);
     if (interaction.commandName === 'end_guess_politician') return guessPoliticianSystem.endCommand(interaction);
     if (interaction.commandName === 'start_flagrush') return flagRushSystem.startCommand(interaction);
