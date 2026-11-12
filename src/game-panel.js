@@ -89,9 +89,16 @@ function buildPanel(ownerId, selectedId = 'home', targetUserId = null) {
     .addOptions({label:'Game Library — Home',value:'home',description:'Return to the Game Panel home page',emoji:'🎮',default:!selected},
       ...GAMES.map(game => ({label:game.name,value:game.id,description:(game.category + ' • ' + game.details).slice(0,100),emoji:game.icon,default:selected?.id===game.id})));
   container.addActionRowComponents(new ActionRowBuilder().addComponents(select));
-  const launchButton = new ButtonBuilder().setCustomId('gamepanel:start:' + ownerId + ':' + (selected?.id || 'none'))
-    .setLabel(selected ? (selected.launch ? 'Start ' + selected.name : 'How to start ' + selected.name) : 'Select a game first')
-    .setEmoji(selected ? selected.icon : '🎮').setStyle(selected?.launch ? ButtonStyle.Success : ButtonStyle.Secondary).setDisabled(!selected);
+  if (selected?.id === 'steal') {
+    container.addTextDisplayComponents(text('**CHALLENGE OPPONENT**'), text('Choose the member who will receive the challenge. You cannot challenge yourself or a bot.'));
+    container.addActionRowComponents(new ActionRowBuilder().addComponents(
+      new UserSelectMenuBuilder().setCustomId('gamepanel:target:' + ownerId).setPlaceholder('Select your opponent').setMinValues(1).setMaxValues(1)
+    ));
+  }
+  const canLaunch = Boolean(selected && (selected.launch || (selected.id === 'steal' && targetUserId)));
+  const launchButton = new ButtonBuilder().setCustomId('gamepanel:start:' + ownerId + ':' + (selected?.id || 'none') + ':' + (targetUserId || 'none'))
+    .setLabel(!selected ? 'Select a game first' : selected.id === 'steal' ? (targetUserId ? 'Start Steal Or No Steal' : 'Choose an opponent first') : 'Start ' + selected.name)
+    .setEmoji(selected ? selected.icon : '🎮').setStyle(canLaunch ? ButtonStyle.Success : ButtonStyle.Secondary).setDisabled(!canLaunch);
   container.addActionRowComponents(new ActionRowBuilder().addComponents(launchButton));
   container.addTextDisplayComponents(text('-# NR:R • Game Panel'));
   return container;
