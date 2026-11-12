@@ -273,4 +273,4 @@ async function endCommand(message) {
   }
 }
 
-module.exports = { start, startCommand, endCommand, onMessage, getGame };
+module.exports = { start, stop, startCommand, endCommand, onMessage, getGame };
