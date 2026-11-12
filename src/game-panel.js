@@ -118,6 +118,10 @@ async function handleInteraction(interaction) {
     await interaction.reply({content:'❌ This Game Panel belongs to the member who opened it.',ephemeral:true});
     return true;
   }
+  if (!allowed(interaction)) {
+    await interaction.reply({content:'❌ You no longer have permission to use the Game Panel.',ephemeral:true});
+    return true;
+  }
   if (action === 'select' && interaction.isStringSelectMenu()) {
     await interaction.update({components:[buildPanel(ownerId,interaction.values[0])],flags:MessageFlags.IsComponentsV2,allowedMentions:{parse:[]}});
     return true;
