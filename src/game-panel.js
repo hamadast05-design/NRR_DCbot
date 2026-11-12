@@ -81,7 +81,7 @@ function buildPanel(ownerId, selectedId = 'home', targetUserId = null) {
       .addTextDisplayComponents(text('# ' + selected.icon + ' ' + selected.name), text(selected.description),
         text('**Category:** ' + selected.category + '\n**Game details:** ' + selected.details))
       .setThumbnailAccessory(new ThumbnailBuilder().setURL(emojiUrl(selected.image)).setDescription(selected.name + ' icon')));
-    container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(1));
+    container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
     container.addTextDisplayComponents(text('**GAME PANEL**  •  ' + (GAMES.findIndex(game => game.id === selected.id) + 1) + ' / ' + GAMES.length),
       text('Choose another game from the selector, or use the button below to launch the selected game in this channel.'));
   }
