@@ -6,6 +6,7 @@ const flagRush = require('./flagrush');
 const mysteryGen = require('./mysterygen');
 const chessPuzzle = require('./chess-puzzle');
 const learningGames = require('./learning-games');
+const db = require('./db');
 
 const reservations = new Map();
 const readers = [
@@ -43,6 +44,8 @@ async function runExclusive(channelId, gameName, start) {
   const token = Symbol(gameName);
   reservations.set(id, { token, name: gameName });
   try {
+    const challenge = await db.getActiveStealNoStealInChannel(id);
+    if (challenge) return { ok:false, message:'A Steal Or No Steal challenge is already active in this channel. Please wait until it finishes.' };
     const result = await start();
     if (result && result.ok === false) return result;
     return { ok: true, result };
