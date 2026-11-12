@@ -66,7 +66,7 @@ function questionEmbed(game) {
     .setDescription(game.current.question)
     .setColor(0x3498db)
     .setThumbnail(GLOBE_THUMBNAIL_URL)
-    .setFooter({ text: 'First correct answer wins • Ends' + ' <t:' + deadline + ':R>' });
+    .setFooter({ text: `First correct answer wins • Ends <t:${deadline}:R>` });
 }
 function rankedPlayers(game) {
   return [...game.points.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
