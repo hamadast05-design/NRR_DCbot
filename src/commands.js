@@ -501,6 +501,7 @@ async function handleInteraction(interaction) {
 
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === 'setup_rolegiver') return setupRoleGiver(interaction);
+    if (interaction.commandName === 'gamepanel') return gamePanel.handleCommand(interaction);
     if (interaction.commandName === 'make_news') return newsSystem.sendCustom(interaction);
     if (interaction.commandName === 'send_qotd') return qotdSystem.sendPanel({guild:interaction.guild,member:interaction.member,channel:interaction.channel,reply:(content)=>interaction.reply({content,ephemeral:true}),});
     if (interaction.commandName === 'createevent') return eventSystem.createEvent(interaction);
