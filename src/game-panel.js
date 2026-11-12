@@ -1,6 +1,6 @@
 const {
   SlashCommandBuilder, PermissionFlagsBits, MessageFlags, ContainerBuilder, TextDisplayBuilder,
-  SectionBuilder, ThumbnailBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, SeparatorBuilder,
+  SectionBuilder, ThumbnailBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, SeparatorBuilder, SeparatorSpacingSize,
   StringSelectMenuBuilder, UserSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle,
 } = require('discord.js');
 const { runExclusive } = require('./game-sessions');
@@ -58,8 +58,9 @@ async function launchLearning(channel, owner, type) {
 
 function allowed(interaction) {
   if (interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) return true;
-  const roles = interaction.member?.roles?.cache;
-  return Boolean(roles && [...ACCESS_ROLES].some(id => roles.has(id)));
+  const roleCache = interaction.member?.roles?.cache;
+  const roleIds = roleCache ? [...roleCache.keys()] : (interaction.member?.roles || []);
+  return [...ACCESS_ROLES].some(id => roleIds.includes(id));
 }
 const text = content => new TextDisplayBuilder().setContent(content);
 
@@ -73,7 +74,7 @@ function buildPanel(ownerId, selectedId = 'home', targetUserId = null) {
     container.addSectionComponents(new SectionBuilder()
       .addTextDisplayComponents(text('# 🎮 NR:R Game Panel'), text('Browse the minigames available in this server. Select a game below to view its description, mechanics and launch options.'))
       .setThumbnailAccessory(new ThumbnailBuilder().setURL(emojiUrl('1f3ae')).setDescription('Game controller')));
-    container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(1));
+    container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
     container.addTextDisplayComponents(text('**GAME LIBRARY**'), text('**' + GAMES.length + ' games available**  •  Select a title to explore its page.'));
   } else {
     container.addSectionComponents(new SectionBuilder()
