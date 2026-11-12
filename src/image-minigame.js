@@ -262,4 +262,4 @@ async function onMessage(message, config) {
   if (game.question_counter % 5 === 0) await message.channel.send({ embeds: [leaderboardEmbed(game)] });
   game.cooldown = setTimeout(() => { game.cooldown = null; sendQuestion(message.channel, game).catch(error => console.error(game.title + ' next round error:', error)); }, game.question_counter % 5 === 0 ? MILESTONE_COOLDOWN_MS : NORMAL_COOLDOWN_MS);
 }
-module.exports = { startCommand, endCommand, onMessage, start, getGame: (channelId, key) => getGame(channelId, key) };
+module.exports = { startCommand, endCommand, onMessage, start, stop, getGame: (channelId, key) => getGame(channelId, key) };
