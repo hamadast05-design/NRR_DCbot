@@ -198,4 +198,4 @@ async function endCommand(interaction) {
   }
 }
 
-module.exports = { startCommand, endCommand, onMessage, getGame, start };
+module.exports = { startCommand, endCommand, onMessage, getGame, start, stop };
