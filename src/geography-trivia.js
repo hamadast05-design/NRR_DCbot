@@ -60,13 +60,12 @@ function chooseQuestion(game) {
   return questionBank[game.deck.pop()];
 }
 function questionEmbed(game) {
-  const deadline = Math.floor(game.questionEndsAt / 1000);
   return new EmbedBuilder()
     .setTitle('🌍 Geography Trivia')
     .setDescription(game.current.question)
     .setColor(0x3498db)
     .setThumbnail(GLOBE_THUMBNAIL_URL)
-    .setFooter({ text: `First correct answer wins • Ends <t:${deadline}:R>` });
+    .setFooter({ text: 'First correct answer wins.' });
 }
 function rankedPlayers(game) {
   return [...game.points.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
