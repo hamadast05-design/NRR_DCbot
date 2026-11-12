@@ -111,7 +111,7 @@ async function handleCommand(interaction) {
   return interaction.reply({components:[buildPanel(interaction.user.id)],flags:MessageFlags.IsComponentsV2,allowedMentions:{parse:[]}});
 }
 async function handleInteraction(interaction) {
-  const [namespace,action,ownerId,gameId] = interaction.customId.split(':');
+  const [namespace,action,ownerId,gameId,targetUserId] = interaction.customId.split(':');
   if (namespace !== 'gamepanel') return false;
   if (interaction.user.id !== ownerId) {
     await interaction.reply({content:'❌ This Game Panel belongs to the member who opened it.',ephemeral:true});
@@ -121,14 +121,19 @@ async function handleInteraction(interaction) {
     await interaction.update({components:[buildPanel(ownerId,interaction.values[0])],flags:MessageFlags.IsComponentsV2,allowedMentions:{parse:[]}});
     return true;
   }
+  if (action === 'target' && interaction.isUserSelectMenu()) {
+    await interaction.update({components:[buildPanel(ownerId,'steal',interaction.values[0])],flags:MessageFlags.IsComponentsV2,allowedMentions:{parse:[]}});
+    return true;
+  }
   if (action === 'start' && interaction.isButton()) {
     const game = GAMES.find(item => item.id === gameId);
     if (!game) { await interaction.reply({content:'Select a game before starting.',ephemeral:true}); return true; }
-    if (!game.launch) {
-      await interaction.reply({content:'🧳 Steal Or No Steal is an opponent-based challenge. Start it with /steal_or_no_steal and choose the member you want to challenge.',ephemeral:true});
+    if (game.id === 'steal' && (!targetUserId || targetUserId === 'none')) {
+      await interaction.reply({content:'Choose an opponent before starting the challenge.',ephemeral:true});
       return true;
     }
-    const result = await runExclusive(interaction.channelId,game.name,() => game.launch(interaction.channel,interaction.user));
+    const launch = game.id === 'steal' ? () => launchStealChallenge(interaction.channel,interaction.user,targetUserId) : () => game.launch(interaction.channel,interaction.user);
+    const result = await runExclusive(interaction.channelId,game.name,launch);
     if (!result.ok) { await interaction.reply({content:'⛔ ' + result.message,ephemeral:true}); return true; }
     await interaction.reply({content:'✅ **' + game.name + '** has been started in this channel.',ephemeral:true});
     return true;
