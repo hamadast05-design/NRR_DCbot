@@ -21,6 +21,8 @@ const chessPuzzleSystem = require('./chess-puzzle');
 const learningGames = require('./learning-games');
 const stealOrNoSteal = require('./steal-or-no-steal');
 const { isSuperuser, hasPermission } = require('./access');
+const gamePanel = require('./game-panel');
+const { runExclusive } = require('./game-sessions');
 
 const COLORS = {
   fame: 0xf1c40f,
@@ -38,6 +40,7 @@ const staffRankingCommand = new SlashCommandBuilder()
     .addChoices({ name: 'Messages', value: 'messages' }, { name: 'Punishments', value: 'punishments' }));
 
 const commands = [
+  gamePanel.command,
   new SlashCommandBuilder()
     .setName('setup_rolegiver')
     .setDescription('Post a button that lets members receive a role.')
@@ -488,6 +491,7 @@ async function handleRoleGiverButton(interaction) {
 }
 
 async function handleInteraction(interaction) {
+  if ((interaction.isStringSelectMenu() || interaction.isUserSelectMenu() || interaction.isButton()) && interaction.customId.startsWith('gamepanel:')) return gamePanel.handleInteraction(interaction);
   if (interaction.isStringSelectMenu() && interaction.customId === 'staff-ranking:category') return staffRanking.handleSelect(interaction);
   if (interaction.isButton() && interaction.customId.startsWith('stealno:')) return stealOrNoSteal.onButton(interaction);
   if (interaction.isButton() && interaction.customId.startsWith('learn:')) return learningGames.onButton(interaction);
@@ -497,6 +501,7 @@ async function handleInteraction(interaction) {
 
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === 'setup_rolegiver') return setupRoleGiver(interaction);
+    if (interaction.commandName === 'gamepanel') return gamePanel.handleCommand(interaction);
     if (interaction.commandName === 'make_news') return newsSystem.sendCustom(interaction);
     if (interaction.commandName === 'send_qotd') return qotdSystem.sendPanel({guild:interaction.guild,member:interaction.member,channel:interaction.channel,reply:(content)=>interaction.reply({content,ephemeral:true}),});
     if (interaction.commandName === 'createevent') return eventSystem.createEvent(interaction);
@@ -514,27 +519,27 @@ async function handleInteraction(interaction) {
         userId: interaction.user.id,
         guildId: interaction.guildId,
       });
-      return stealOrNoSteal.startCommand(interaction);
+      return runExclusive(interaction.channelId, 'Steal Or No Steal', () => stealOrNoSteal.startCommand(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     }
-    if (interaction.commandName === 'start_wordkill') return wordkillSystem.startCommand(interaction);
+    if (interaction.commandName === 'start_wordkill') return runExclusive(interaction.channelId, 'WordKill', () => wordkillSystem.startCommand(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     if (interaction.commandName === 'end_wordkill') return wordkillSystem.endCommand(interaction);
-    if (interaction.commandName === 'start_pt') return politicalTriviaSystem.startCommand(interaction);
+    if (interaction.commandName === 'start_pt') return runExclusive(interaction.channelId, 'Political Trivia', () => politicalTriviaSystem.startCommand(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     if (interaction.commandName === 'end_pt') return politicalTriviaSystem.endCommand(interaction);
-    if (interaction.commandName === 'start_geography_trivia') return geographyTriviaSystem.startCommand(interaction);
+    if (interaction.commandName === 'start_geography_trivia') return runExclusive(interaction.channelId, 'Geography Trivia', () => geographyTriviaSystem.startCommand(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     if (interaction.commandName === 'end_geography_trivia') return geographyTriviaSystem.endCommand(interaction);
-    if (interaction.commandName === 'start_guess_politician') return guessPoliticianSystem.startCommand(interaction);
+    if (interaction.commandName === 'start_guess_politician') return runExclusive(interaction.channelId, 'Guess The Politician', () => guessPoliticianSystem.startCommand(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     if (interaction.commandName === 'end_guess_politician') return guessPoliticianSystem.endCommand(interaction);
-    if (interaction.commandName === 'start_flagrush') return flagRushSystem.startCommand(interaction);
+    if (interaction.commandName === 'start_flagrush') return runExclusive(interaction.channelId, 'FlagRush', () => flagRushSystem.startCommand(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     if (interaction.commandName === 'end_flagrush') return flagRushSystem.endCommand(interaction);
-    if (interaction.commandName === 'start_mysterygen') return mysteryGenSystem.startCommand(interaction);
+    if (interaction.commandName === 'start_mysterygen') return runExclusive(interaction.channelId, 'MysteryGen', () => mysteryGenSystem.startCommand(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     if (interaction.commandName === 'end_mysterygen') return mysteryGenSystem.endCommand(interaction);
-    if (interaction.commandName === 'start_math') return learningGames.startMath(interaction);
+    if (interaction.commandName === 'start_math') return runExclusive(interaction.channelId, 'Math Game', () => learningGames.startMath(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     if (interaction.commandName === 'stop_math') return learningGames.stopMath(interaction);
-    if (interaction.commandName === 'start_language_game') return learningGames.startLanguage(interaction);
+    if (interaction.commandName === 'start_language_game') return runExclusive(interaction.channelId, 'Language Game', () => learningGames.startLanguage(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     if (interaction.commandName === 'stop_tlg') return learningGames.stopLanguage(interaction);
-    if (interaction.commandName === 'start_academics') return learningGames.startAcademics(interaction);
+    if (interaction.commandName === 'start_academics') return runExclusive(interaction.channelId, 'Academic Game', () => learningGames.startAcademics(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     if (interaction.commandName === 'stop_academics') return learningGames.stopAcademics(interaction);
-    if (interaction.commandName === 'start_chess_puzzle') return chessPuzzleSystem.startCommand(interaction);
+    if (interaction.commandName === 'start_chess_puzzle') return runExclusive(interaction.channelId, 'Chess Puzzle', () => chessPuzzleSystem.startCommand(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     if (interaction.commandName === 'end_chess_puzzle') return chessPuzzleSystem.endCommand(interaction);
     if (interaction.commandName === 'mute') return handleMute(interaction);
     if (interaction.commandName === 'kick') return handleKick(interaction);

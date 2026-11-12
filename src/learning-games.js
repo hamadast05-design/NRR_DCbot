@@ -57,6 +57,7 @@ const academic={};for(const [subject,rows] of Object.entries(subjects)){academic
 function pick(a){return a[Math.floor(Math.random()*a.length)];}
 function title(g){return g.type==='math'?'◆ Math Game':g.type==='language'?'◆ Language Game':'◆ Academic Game';}
 function active(id){const g=games.get(id);return g&&g.active?g:null;}
+function getGame(channelId){return active(String(channelId));}
 function progress(g){const n=Math.min(g.number,10);return '▰'.repeat(n)+'▱'.repeat(10-n);}
 function embed(g){
  const step=((g.number-1)%10)+1,bar='▰'.repeat(step)+'▱'.repeat(10-step);
@@ -123,4 +124,4 @@ const startLanguage=i=>start(i,'language',i.options.getBoolean('buttons'));
 const stopLanguage=i=>stop(i,'language');
 const startAcademics=i=>start(i,'academics',i.options.getString('subject'));
 const stopAcademics=i=>stop(i,'academics');
-module.exports={startMath,stopMath,startLanguage,stopLanguage,startAcademics,stopAcademics,onMessage,onButton};
+module.exports={startMath,stopMath,startLanguage,stopLanguage,startAcademics,stopAcademics,onMessage,onButton,getGame};

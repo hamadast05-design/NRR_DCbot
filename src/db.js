@@ -598,6 +598,16 @@ async function endEvent(eventId) {
 }
 
 
+async function getActiveStealNoStealInChannel(channelId) {
+  const result = await query(`
+    SELECT game_data FROM steal_no_steal_games
+    WHERE game_data->>'channelId' = $1
+      AND COALESCE((game_data->>'finished')::boolean, false) = false
+    ORDER BY updated_at DESC LIMIT 1
+  `, [String(channelId)]);
+  return result.rows[0]?.game_data || null;
+}
+
 async function getStealNoStealGame(gameId) {
   const result = await query(
     'SELECT game_data FROM steal_no_steal_games WHERE game_id = $1',
@@ -643,6 +653,7 @@ module.exports = {
   query,
   migrate,
   getStealNoStealGame,
+  getActiveStealNoStealInChannel,
   saveStealNoStealGame,
   deleteStealNoStealGame,
   claimStealNoStealDecision,
