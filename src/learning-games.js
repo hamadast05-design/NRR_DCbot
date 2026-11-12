@@ -124,4 +124,14 @@ const startLanguage=i=>start(i,'language',i.options.getBoolean('buttons'));
 const stopLanguage=i=>stop(i,'language');
 const startAcademics=i=>start(i,'academics',i.options.getString('subject'));
 const stopAcademics=i=>stop(i,'academics');
-module.exports={startMath,stopMath,startLanguage,stopLanguage,startAcademics,stopAcademics,onMessage,onButton,getGame};
+
+async function stopByPanel(channel,userId,type){
+ const g=active(String(channel.id));
+ if(!g||g.type!==type||g.hostId!==userId)return false;
+ stopState(String(channel.id));
+ await channel.send({embeds:[new EmbedBuilder().setColor(0x3c3c3d).setTitle('◆ '+title(g).replace('◆ ','')+' Ended').setDescription('━━━━━━━━━━━━━━━━━━\\nThe game panel host ended the game.\\n\\n'+progress(g)+'  '+(((g.number-1)%10+1)*10)+'%').addFields({name:'Correct Answers',value:String(g.correct),inline:true},{name:'Questions Failed',value:String(g.failures||0),inline:true},{name:'Players Scored',value:String(g.points.size),inline:true}).setFooter({text:'Game session ended'})]}).catch(()=>{});
+ if(g.points.size)await channel.send({embeds:[board(g)]}).catch(()=>{});
+ return true;
+}
+
+module.exports={startMath,stopMath,startLanguage,stopLanguage,startAcademics,stopAcademics,onMessage,onButton,getGame,stopByPanel};
