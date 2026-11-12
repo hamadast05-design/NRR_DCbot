@@ -2,6 +2,7 @@ const { Client, GatewayIntentBits, Events, PermissionFlagsBits, ActivityType } =
 const { config, validate } = require('./config');
 const db = require('./db');
 const { handleInteraction, handlePrefixMute } = require('./commands');
+const gamePanel = require('./game-panel');
 const { handlePrefixRoleCommands } = require('./hoster-role-commands');
 const { hasPermission } = require('./access');
 const eventSystem = require('./event');
@@ -125,6 +126,7 @@ client.on(Events.MessageDelete, async message => {
 
 client.on(Events.MessageCreate, async message => {
   try { await handlePrefixMute(message); } catch (error) { console.error('Prefix mute command failed:', error); }
+  try { await gamePanel.handleStopMessage(message); } catch (error) { console.error('Game Panel !stop command failed:', error); }
   try { await staffRanking.handlePrefixMessage(message); } catch (error) { console.error('Staff ranking prefix command failed:', error); }
   try { await staffRanking.handleDiagnosticsMessage(message); } catch (error) { console.error('Staff ranking diagnostics command failed:', error); }
   if (message.guild && !message.author.bot && !message.webhookId) {
