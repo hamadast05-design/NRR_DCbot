@@ -9,6 +9,7 @@ const NORMAL_COOLDOWN_MS = 5_000;
 const MILESTONE_COOLDOWN_MS = 10_000;
 const MILESTONE_EVERY = 5;
 const MAX_LEADERBOARD_ROWS = 20;
+const GLOBE_THUMBNAIL_URL = 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f30d.png';
 
 function clearTimers(game) {
   if (game.timeout) clearTimeout(game.timeout);
@@ -59,8 +60,13 @@ function chooseQuestion(game) {
   return questionBank[game.deck.pop()];
 }
 function questionEmbed(game) {
-  return new EmbedBuilder().setTitle('🌍 Geography Trivia').setDescription(game.current.question)
-    .setColor(0x3498db).setFooter({ text: '30 seconds • First correct answer wins • +1 point' });
+  const deadline = Math.floor(game.questionEndsAt / 1000);
+  return new EmbedBuilder()
+    .setTitle('🌍 Geography Trivia')
+    .setDescription(game.current.question)
+    .setColor(0x3498db)
+    .setThumbnail(GLOBE_THUMBNAIL_URL)
+    .setFooter({ text: 'First correct answer wins • Ends' + ' <t:' + deadline + ':R>' });
 }
 function rankedPlayers(game) {
   return [...game.points.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
@@ -68,17 +74,17 @@ function rankedPlayers(game) {
 function leaderboardEmbed(game, final) {
   const ranked = rankedPlayers(game);
   const lines = ranked.length ? ranked.slice(0, MAX_LEADERBOARD_ROWS).map(([userId, points], index) => {
-    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : (index + 1) + '.';
+    const medal = index === 0 ? '👑 🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : (index + 1) + '.';
     const streak = game.streaks.get(userId);
-    const best = streak && streak.best ? ' · Best streak: ' + streak.best : '';
-    return medal + ' <@' + userId + '> — **' + points + ' ' + (points === 1 ? 'point' : 'points') + '**' + best;
+    const best = streak && streak.best ? ' · Best: ' + streak.best : '';
+    const player = index === 0 ? '**<@' + userId + '>**' : '<@' + userId + '>';
+    return medal + ' ' + player + ' — **' + points + '**' + best;
   }).join('\n') : 'No points scored yet.';
   const embed = new EmbedBuilder().setTitle(final ? '🏆 Geography Trivia — Final Results' : '🏆 Geography Trivia Leaderboard')
     .setDescription(lines).setColor(final ? 0x2ecc71 : 0xf1c40f)
     .addFields(
-      { name: 'Correct answers', value: String(game.question_counter), inline: true },
-      { name: 'Questions attempted', value: String(game.rounds_started), inline: true },
-      { name: 'Question bank', value: questionBank.length + ' questions', inline: true }
+      { name: 'Correct', value: String(game.question_counter), inline: true },
+      { name: 'Rounds', value: String(game.rounds_started), inline: true }
     );
   if (ranked.length > MAX_LEADERBOARD_ROWS) embed.setFooter({ text: 'Showing the top ' + MAX_LEADERBOARD_ROWS + ' of ' + ranked.length + ' players.' });
   else if (!final) embed.setFooter({ text: 'After ' + game.question_counter + ' successful answers' });
@@ -86,7 +92,7 @@ function leaderboardEmbed(game, final) {
 }
 function createGame(channelId) {
   const game = {
-    active: true, current: null, question_counter: 0, rounds_started: 0,
+    active: true, current: null, questionEndsAt: null, question_counter: 0, rounds_started: 0,
     points: new Map(), streaks: new Map(), unansweredStreak: 0,
     deck: shuffledIndices(), timeout: null, cooldown: null
   };
@@ -104,6 +110,7 @@ async function finish(channel, game, reason) {
   if (!game.active || games.get(channel.id) !== game) return false;
   game.active = false;
   game.current = null;
+  game.questionEndsAt = null;
   clearTimers(game);
   games.delete(channel.id);
   const ending = reason === 'unanswered'
@@ -125,6 +132,7 @@ async function sendQuestion(channel, game) {
   if (!game.active || games.get(channel.id) !== game) return;
   game.current = chooseQuestion(game);
   game.rounds_started += 1;
+  game.questionEndsAt = Date.now() + ROUND_TIMEOUT_MS;
   const question = game.current;
   try {
     await channel.send({ embeds: [questionEmbed(game)] });
@@ -137,6 +145,7 @@ async function sendQuestion(channel, game) {
     if (!game.active || games.get(channel.id) !== game || game.current !== question) return;
     game.timeout = null;
     game.current = null;
+    game.questionEndsAt = null;
     resetCurrentStreaks(game);
     game.unansweredStreak += 1;
     await channel.send("⏰ Time's up! " + revealAnswers(question.answers)).catch(() => {});
@@ -145,7 +154,7 @@ async function sendQuestion(channel, game) {
       return;
     }
     scheduleNext(channel, game, NORMAL_COOLDOWN_MS);
-  }, ROUND_TIMEOUT_MS);
+  }, Math.max(0, game.questionEndsAt - Date.now()));
 }
 async function start(channel) {
   if (!channel || !channel.isTextBased || !channel.isTextBased() || typeof channel.send !== 'function')
@@ -195,6 +204,7 @@ async function onMessage(message) {
   if (game.timeout) clearTimeout(game.timeout);
   game.timeout = null;
   game.current = null;
+  game.questionEndsAt = null;
   const userId = message.author.id;
   game.unansweredStreak = 0;
   for (const [id, streak] of game.streaks.entries()) if (id !== userId) streak.current = 0;
