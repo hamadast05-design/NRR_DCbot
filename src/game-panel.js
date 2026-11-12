@@ -16,6 +16,7 @@ const learningGames = require('./learning-games');
 
 const ACCESS_ROLES = new Set(['1102294809147879465','1113872898726297661','1566684707377119232','1566681749294030881']);
 const BANNER_URL = 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=85';
+const GAME_THUMBNAIL_URL = 'https://cdn.imageurlgenerator.com/uploads/88cfecef-4533-4b21-85f9-69aad6c2f089.jpg';
 const emojiUrl = code => 'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/' + code + '.png';
 
 const GAMES = [
@@ -73,14 +74,14 @@ function buildPanel(ownerId, selectedId = 'home', targetUserId = null) {
   if (!selected) {
     container.addSectionComponents(new SectionBuilder()
       .addTextDisplayComponents(text('# 🎮 NR:R Game Panel'), text('Browse the minigames available in this server. Select a game below to view its description, mechanics and launch options.'))
-      .setThumbnailAccessory(new ThumbnailBuilder().setURL(emojiUrl('1f3ae')).setDescription('Game controller')));
+      .setThumbnailAccessory(new ThumbnailBuilder().setURL(GAME_THUMBNAIL_URL).setDescription('NR:R game thumbnail')));
     container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
     container.addTextDisplayComponents(text('**GAME LIBRARY**'), text('**' + GAMES.length + ' games available**  •  Select a title to explore its page.'));
   } else {
     container.addSectionComponents(new SectionBuilder()
       .addTextDisplayComponents(text('# ' + selected.icon + ' ' + selected.name), text(selected.description),
         text('**Category:** ' + selected.category + '\n**Game details:** ' + selected.details))
-      .setThumbnailAccessory(new ThumbnailBuilder().setURL(emojiUrl(selected.image)).setDescription(selected.name + ' icon')));
+      .setThumbnailAccessory(new ThumbnailBuilder().setURL(GAME_THUMBNAIL_URL).setDescription(selected.name + ' thumbnail')));
     container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
     container.addTextDisplayComponents(text('**GAME PANEL**  •  ' + (GAMES.findIndex(game => game.id === selected.id) + 1) + ' / ' + GAMES.length),
       text('Choose another game from the selector, or use the button below to launch the selected game in this channel.'));
@@ -127,7 +128,8 @@ async function handleInteraction(interaction) {
     return true;
   }
   if (action === 'target' && interaction.isUserSelectMenu()) {
-    await interaction.update({components:[buildPanel(ownerId,'steal',interaction.values[0])],flags:MessageFlags.IsComponentsV2,allowedMentions:{parse:[]}});
+    await interaction.deferUpdate();
+    await interaction.message.edit({components:[buildPanel(ownerId,'steal',interaction.values[0])],flags:MessageFlags.IsComponentsV2,allowedMentions:{parse:[]}});
     return true;
   }
   if (action === 'start' && interaction.isButton()) {
