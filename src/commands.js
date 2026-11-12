@@ -519,7 +519,7 @@ async function handleInteraction(interaction) {
         userId: interaction.user.id,
         guildId: interaction.guildId,
       });
-      return stealOrNoSteal.startCommand(interaction);
+      return runExclusive(interaction.channelId, 'Steal Or No Steal', () => stealOrNoSteal.startCommand(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     }
     if (interaction.commandName === 'start_wordkill') return runExclusive(interaction.channelId, 'WordKill', () => wordkillSystem.startCommand(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     if (interaction.commandName === 'end_wordkill') return wordkillSystem.endCommand(interaction);
