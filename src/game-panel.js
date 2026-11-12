@@ -15,8 +15,9 @@ const stealOrNoSteal = require('./steal-or-no-steal');
 const learningGames = require('./learning-games');
 
 const ACCESS_ROLES = new Set(['1102294809147879465','1113872898726297661','1566684707377119232','1566681749294030881']);
-const BANNER_URL = 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=85';
+const BANNER_URL = 'https://cdn.imageurlgenerator.com/uploads/88cfecef-4533-4b21-85f9-69aad6c2f089.jpg';
 const GAME_THUMBNAIL_URL = 'https://cdn.imageurlgenerator.com/uploads/88cfecef-4533-4b21-85f9-69aad6c2f089.jpg';
+const panelStartedGames = new Map();
 const emojiUrl = code => 'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/' + code + '.png';
 
 const GAMES = [
@@ -74,14 +75,14 @@ function buildPanel(ownerId, selectedId = 'home', targetUserId = null) {
   if (!selected) {
     container.addSectionComponents(new SectionBuilder()
       .addTextDisplayComponents(text('# 🎮 NR:R Game Panel'), text('Browse the minigames available in this server. Select a game below to view its description, mechanics and launch options.'))
-      .setThumbnailAccessory(new ThumbnailBuilder().setURL(GAME_THUMBNAIL_URL).setDescription('NR:R game thumbnail')));
+      .setThumbnailAccessory(new ThumbnailBuilder().setURL(emojiUrl('1f3ae')).setDescription('Game controller')));
     container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
     container.addTextDisplayComponents(text('**GAME LIBRARY**'), text('**' + GAMES.length + ' games available**  •  Select a title to explore its page.'));
   } else {
     container.addSectionComponents(new SectionBuilder()
       .addTextDisplayComponents(text('# ' + selected.icon + ' ' + selected.name), text(selected.description),
         text('**Category:** ' + selected.category + '\n**Game details:** ' + selected.details))
-      .setThumbnailAccessory(new ThumbnailBuilder().setURL(GAME_THUMBNAIL_URL).setDescription(selected.name + ' thumbnail')));
+      .setThumbnailAccessory(new ThumbnailBuilder().setURL(emojiUrl(selected.image)).setDescription(selected.name + ' icon')));
     container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
     container.addTextDisplayComponents(text('**GAME PANEL**  •  ' + (GAMES.findIndex(game => game.id === selected.id) + 1) + ' / ' + GAMES.length),
       text('Choose another game from the selector, or use the button below to launch the selected game in this channel.'));
@@ -142,10 +143,56 @@ async function handleInteraction(interaction) {
     const launch = game.id === 'steal' ? () => launchStealChallenge(interaction.channel,interaction.user,targetUserId) : () => game.launch(interaction.channel,interaction.user);
     await interaction.deferReply({ephemeral:true});
     const result = game.id === 'steal' ? await launch() : await runExclusive(interaction.channelId,game.name,launch);
+    if (!result || result.ok !== false) panelStartedGames.set(interaction.channelId,{ ownerId:interaction.user.id, gameId:game.id, gameName:game.name });
     if (result && result.ok === false) { await interaction.editReply({content:'⛔ ' + result.message}); return true; }
     await interaction.editReply({content:'✅ **' + game.name + '** has been started in this channel.'});
     return true;
   }
   return false;
 }
-module.exports = {command,handleCommand,handleInteraction,buildPanel,GAMES};
+
+async function handleStopMessage(message) {
+  if (!message.guild || message.author.bot || message.webhookId || !/^!stop$/i.test(message.content.trim())) return false;
+  const session = panelStartedGames.get(message.channel.id);
+  if (!session) {
+    await message.reply('ℹ️ There is no active Game Panel game in this channel.').catch(() => {});
+    return true;
+  }
+  if (session.ownerId !== message.author.id) {
+    await message.reply('❌ Only the member who started this game through the Game Panel can stop it.').catch(() => {});
+    return true;
+  }
+  const channel = message.channel;
+  let stopped = false;
+  try {
+    switch (session.gameId) {
+      case 'wordkill': stopped = await wordkill.stop(channel); break;
+      case 'political': stopped = await politicalTrivia.stop(channel); break;
+      case 'geography': stopped = await geographyTrivia.stop(channel); break;
+      case 'flag': stopped = await flagRush.stop(channel); break;
+      case 'politician': stopped = await guessPolitician.stop(channel); break;
+      case 'mystery': stopped = await mysteryGen.stop(channel); break;
+      case 'math': stopped = await learningGames.stopByPanel(channel, message.author.id, 'math'); break;
+      case 'language': stopped = await learningGames.stopByPanel(channel, message.author.id, 'language'); break;
+      case 'academics': stopped = await learningGames.stopByPanel(channel, message.author.id, 'academics'); break;
+      case 'chess': stopped = await chessPuzzle.stop(channel); break;
+      case 'steal':
+        await message.reply('ℹ️ Steal Or No Steal is a two-player challenge; use its challenge controls to finish it.').catch(() => {});
+        return true;
+      default: stopped = false;
+    }
+    if (stopped) {
+      panelStartedGames.delete(channel.id);
+      await message.reply('🛑 **' + session.gameName + '** has been stopped.').catch(() => {});
+    } else {
+      panelStartedGames.delete(channel.id);
+      await message.reply('ℹ️ That Game Panel session is no longer active.').catch(() => {});
+    }
+  } catch (error) {
+    console.error('[GamePanel] !stop failed:', error);
+    await message.reply('❌ I could not stop the Game Panel game cleanly.').catch(() => {});
+  }
+  return true;
+}
+
+module.exports = {command,handleCommand,handleInteraction,handleStopMessage,buildPanel,GAMES};
