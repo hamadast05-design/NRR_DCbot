@@ -66,7 +66,7 @@ const text = content => new TextDisplayBuilder().setContent(content);
 
 function buildPanel(ownerId, selectedId = 'home', targetUserId = null) {
   const selected = GAMES.find(game => game.id === selectedId) || null;
-  const container = new ContainerBuilder().setAccentColor(0x5865f2);
+  const container = new ContainerBuilder().setAccentColor(0xffffff);
   container.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(
     new MediaGalleryItemBuilder().setURL(BANNER_URL).setDescription('NR:R Game Panel banner')
   ));
@@ -139,8 +139,8 @@ async function handleInteraction(interaction) {
     }
     const launch = game.id === 'steal' ? () => launchStealChallenge(interaction.channel,interaction.user,targetUserId) : () => game.launch(interaction.channel,interaction.user);
     await interaction.deferReply({ephemeral:true});
-    const result = await runExclusive(interaction.channelId,game.name,launch);
-    if (!result.ok) { await interaction.editReply({content:'⛔ ' + result.message}); return true; }
+    const result = game.id === 'steal' ? await launch() : await runExclusive(interaction.channelId,game.name,launch);
+    if (result && result.ok === false) { await interaction.editReply({content:'⛔ ' + result.message}); return true; }
     await interaction.editReply({content:'✅ **' + game.name + '** has been started in this channel.'});
     return true;
   }
