@@ -133,9 +133,10 @@ async function handleInteraction(interaction) {
       return true;
     }
     const launch = game.id === 'steal' ? () => launchStealChallenge(interaction.channel,interaction.user,targetUserId) : () => game.launch(interaction.channel,interaction.user);
+    await interaction.deferReply({ephemeral:true});
     const result = await runExclusive(interaction.channelId,game.name,launch);
-    if (!result.ok) { await interaction.reply({content:'⛔ ' + result.message,ephemeral:true}); return true; }
-    await interaction.reply({content:'✅ **' + game.name + '** has been started in this channel.',ephemeral:true});
+    if (!result.ok) { await interaction.editReply({content:'⛔ ' + result.message}); return true; }
+    await interaction.editReply({content:'✅ **' + game.name + '** has been started in this channel.'});
     return true;
   }
   return false;
