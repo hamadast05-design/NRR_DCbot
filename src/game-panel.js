@@ -1,7 +1,7 @@
 const {
   SlashCommandBuilder, PermissionFlagsBits, MessageFlags, ContainerBuilder, TextDisplayBuilder,
   SectionBuilder, ThumbnailBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, SeparatorBuilder,
-  StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle,
+  StringSelectMenuBuilder, UserSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle,
 } = require('discord.js');
 const { runExclusive } = require('./game-sessions');
 const wordkill = require('./wordkill');
@@ -11,6 +11,7 @@ const guessPolitician = require('./guess-the-politician');
 const flagRush = require('./flagrush');
 const mysteryGen = require('./mysterygen');
 const chessPuzzle = require('./chess-puzzle');
+const stealOrNoSteal = require('./steal-or-no-steal');
 const learningGames = require('./learning-games');
 
 const ACCESS_ROLES = new Set(['1102294809147879465','1113872898726297661','1566684707377119232','1566681749294030881']);
@@ -31,6 +32,19 @@ const GAMES = [
   { id:'steal', name:'Steal Or No Steal', category:'Challenge Games', icon:'🧳', image:'1f9f3', description:'Challenge another member to a two-player decision game involving negotiation and a final Steal Or No Steal choice. This game requires a chosen opponent.', details:'Two-player challenge • Requires opponent selection • Start with /steal_or_no_steal', launch: null },
 ];
 
+async function launchStealChallenge(channel, owner, targetId) {
+  const targetMember = await channel.guild.members.fetch(targetId).catch(() => null);
+  if (!targetMember || targetMember.user.bot || targetMember.id === owner.id) return { ok:false, message:'Choose a valid, different server member as your opponent.' };
+  let publicMessage = null;
+  const fakeInteraction = {
+    id:'gamepanel-' + Date.now(), createdTimestamp:Date.now(), guildId:channel.guildId, channelId:channel.id,
+    channel, client:channel.client, user:owner, options:{ getUser:() => targetMember.user },
+    deferReply:async () => { publicMessage = await channel.send('🧳 Preparing your Steal Or No Steal challenge...'); },
+    fetchReply:async () => publicMessage, editReply:async payload => publicMessage.edit(payload),
+  };
+  await stealOrNoSteal.startCommand(fakeInteraction);
+  return { ok:true };
+}
 async function launchLearning(channel, owner, type) {
   const fakeInteraction = {
     channel, channelId:channel.id, guildId:channel.guildId, user:owner, inGuild:() => Boolean(channel.guildId),
@@ -49,7 +63,7 @@ function allowed(interaction) {
 }
 const text = content => new TextDisplayBuilder().setContent(content);
 
-function buildPanel(ownerId, selectedId = 'home') {
+function buildPanel(ownerId, selectedId = 'home', targetUserId = null) {
   const selected = GAMES.find(game => game.id === selectedId) || null;
   const container = new ContainerBuilder().setAccentColor(0x5865f2);
   container.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(
