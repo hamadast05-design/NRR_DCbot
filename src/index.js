@@ -27,12 +27,41 @@ const { registerApplicationCommands } = require('./command-registration');
 validate();
 
 
+const WORK_REMINDER_CHANNEL_ID = '1570764802651983962';
+const WORK_REMINDER_USER_ID = '823983272614559766';
+let workReminderInterval = null;
+
+async function sendWorkReminder(readyClient) {
+  try {
+    const channel = await readyClient.channels.fetch(WORK_REMINDER_CHANNEL_ID);
+    if (!channel?.isTextBased() || typeof channel.send !== 'function') {
+      console.error('Work reminder channel is unavailable or is not a sendable text channel.');
+      return;
+    }
+    await channel.send({
+      content: `<@${WORK_REMINDER_USER_ID}> GET BACK TO WORK`,
+      allowedMentions: { parse: [], users: [WORK_REMINDER_USER_ID] }
+    });
+  } catch (error) {
+    console.error('Work reminder failed:', error);
+  }
+}
+
+function startWorkReminder(readyClient) {
+  if (workReminderInterval) clearInterval(workReminderInterval);
+  workReminderInterval = setInterval(() => {
+    void sendWorkReminder(readyClient);
+  }, 60 * 1000);
+  console.log('Work reminder started (every 60 seconds).');
+}
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions],
 });
 
 client.once(Events.ClientReady, async readyClient => {
   console.log(`Logged in as ${readyClient.user.tag}`);
+  startWorkReminder(readyClient);
   readyClient.user.setPresence({
     status: 'online',
     activities: [
@@ -75,6 +104,34 @@ client.once(Events.ClientReady, async readyClient => {
     console.error('Startup database sync failed:', error);
   }
 });
+
+async function handleWorkReminderControl(message) {
+  if (!message.guild || message.author.bot || message.webhookId) return;
+  if (message.channelId !== WORK_REMINDER_CHANNEL_ID || message.content.trim().toLowerCase() !== '!stopping') return;
+
+  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) {
+    await message.reply({
+      content: '❌ You need the Manage Server permission to stop the work reminder.',
+      allowedMentions: { parse: [] }
+    }).catch(() => {});
+    return;
+  }
+
+  if (!workReminderInterval) {
+    await message.reply({
+      content: 'ℹ️ The work reminder is already stopped.',
+      allowedMentions: { parse: [] }
+    }).catch(() => {});
+    return;
+  }
+
+  clearInterval(workReminderInterval);
+  workReminderInterval = null;
+  await message.reply({
+    content: '⏹️ Work reminder stopped.',
+    allowedMentions: { parse: [] }
+  }).catch(() => {});
+}
 
 async function handleAutomationControlMessage(message) {
   if (!message.guild || message.author.bot || message.webhookId) return;
@@ -125,6 +182,7 @@ client.on(Events.MessageDelete, async message => {
 });
 
 client.on(Events.MessageCreate, async message => {
+  try { await handleWorkReminderControl(message); } catch (error) { console.error('Work reminder control failed:', error); }
   try { await handlePrefixMute(message); } catch (error) { console.error('Prefix mute command failed:', error); }
   try { await gamePanel.handleStopMessage(message); } catch (error) { console.error('Game Panel !stop command failed:', error); }
   try { await staffRanking.handlePrefixMessage(message); } catch (error) { console.error('Staff ranking prefix command failed:', error); }
