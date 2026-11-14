@@ -61,6 +61,7 @@ jobs:
             return totals;
           }, {});
           if (feature.command.toJSON().name !== 'santa_gift') throw new Error('Santa slash command was not registered.');
+          if (typeof feature.handlePrefixMessage !== 'function' || feature.DEFAULT_GIFT_WEIGHT !== 1000) throw new Error('Santa !addgift handler or default gift weight is missing.');
           if (feature.GIFTS.length !== 12 || feature.TOTAL_WEIGHT !== 10000) throw new Error('Santa gift pool or total weight is incorrect.');
           if (categoryWeights.golden !== 500 || categoryWeights.ordinary !== 7000 || categoryWeights.naughty !== 2500) {
             throw new Error('Santa gift category odds do not match 5% / 70% / 25%.');
@@ -69,5 +70,5 @@ jobs:
           if (!message.includes('||') || !message.includes(feature.GIFTS[0].title)) {
             throw new Error('Santa gift result is not wrapped in Discord spoiler formatting.');
           }
-          console.log('Santa command, gift weights, and spoiler reveal verified.');
+          console.log('Santa command, gift weights, spoiler reveal, and addgift handler verified.');
           NODE
