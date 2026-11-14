@@ -181,6 +181,12 @@ async function migrate() {
 
 async function createClaim({ guildId, userId, channelId, claimId }) {
   await db.query(
+    "UPDATE santa_gift_claims SET status = 'completed', completed_at = COALESCE(completed_at, NOW()) " +
+    "WHERE guild_id = $1 AND user_id = $2 AND status = 'opening' " +
+    "AND opened_at <= NOW() - ($3::bigint * INTERVAL '1 millisecond')",
+    [guildId, userId, config.santaGiftCooldownMs]
+  );
+  await db.query(
     "UPDATE santa_gift_claims SET status = 'expired' " +
     "WHERE guild_id = $1 AND user_id = $2 AND status = 'pending' AND expires_at <= NOW()",
     [guildId, userId]
@@ -310,6 +316,9 @@ async function handleButton(interaction) {
   const found = await db.query('SELECT * FROM santa_gift_claims WHERE claim_id = $1 LIMIT 1', [claimId]);
   const claim = found.rows[0];
   if (!claim) return interaction.reply({ content: '🎅 This gift is no longer available.', ephemeral: true });
+  if (claim.guild_id !== interaction.guildId) {
+    return interaction.reply({ content: '❌ This gift belongs to a different server.', ephemeral: true });
+  }
   if (claim.user_id !== interaction.user.id) {
     return interaction.reply({ content: '🎁 This gift belongs to the member who summoned Santa. You can open your own with /santa_gift!', ephemeral: true });
   }
@@ -387,7 +396,7 @@ async function handleButton(interaction) {
 async function recover(client) {
   const result = await db.query(
     "SELECT claim_id, user_id, channel_id, message_id, gift_id FROM santa_gift_claims " +
-    "WHERE status = 'opening' AND message_id IS NOT NULL ORDER BY opened_at ASC LIMIT 100"
+    "WHERE status = 'opening' AND message_id IS NOT NULL ORDER BY opened_at ASC"
   );
   let recovered = 0;
   for (const claim of result.rows) {
