@@ -44,16 +44,12 @@ function buildGiftMessage(userId, gift) {
     ordinary: '🎁 SANTA HAS A PRESENT FOR YOU!',
     naughty: '💀 SANTA HAS CHECKED THE LIST...',
   };
-  const reveal = '||' + gift.emoji + ' **' + gift.title + '**\n' + gift.description + '||';
+  const reveal = '||' + gift.emoji + ' **' + gift.title + '**\\n' + gift.description + '||';
   return [
-    '# 🎅 Santa’s Gift Delivery',
     'Ho ho ho! Santa has arrived for <@' + userId + '>, and he has something in his sack!',
-    'Click the spoiler below to reveal your gift!',
     '## ' + headings[gift.category],
     reveal,
-    '-# A purely cosmetic NRR seasonal surprise. No coins, roles, inventory or member data are changed.',
-    '-# NRR • Santa’s Gift Delivery',
-  ].join('\n');
+  ].join('\\n');
 }
 
 async function handleCommand(interaction) {
