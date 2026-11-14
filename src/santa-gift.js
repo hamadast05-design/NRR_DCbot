@@ -1,5 +1,5 @@
 const { randomInt } = require('node:crypto');
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { config } = require('./config');
 const { hasPermission } = require('./access');
 const { PermissionFlagsBits } = require('discord.js');
@@ -60,8 +60,14 @@ async function handleCommand(interaction) {
   if (!interaction.inGuild() || !interaction.guildId || (config.guildId && interaction.guildId !== config.guildId)) {
     return interaction.reply({ content: '❌ Santa’s Gift Delivery can only be used inside NRR.', ephemeral: true });
   }
+  const gift = await chooseGift(interaction.guildId);
+  const embed = new EmbedBuilder()
+    .setColor(0xE53935)
+    .setTitle('🎅 Santa’s Gift Delivery')
+    .setDescription(buildGiftMessage(interaction.user.id, gift))
+    .setFooter({ text: 'NRR • Santa’s Gift Delivery' });
   return interaction.reply({
-    content: buildGiftMessage(interaction.user.id, await chooseGift(interaction.guildId)),
+    embeds: [embed],
     allowedMentions: { parse: [] },
   });
 }
