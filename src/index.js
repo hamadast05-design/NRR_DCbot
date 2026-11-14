@@ -197,6 +197,7 @@ client.on(Events.MessageDelete, async message => {
 });
 
 client.on(Events.MessageCreate, async message => {
+  try { await boosterPerks.handleMessageCreate(message); } catch (error) { console.error('Booster perk reply command failed:', error); }
   // Keep the NR3 Bot from posting in the NRR staff reminder channel.
   if (message.channelId === WORK_REMINDER_CHANNEL_ID && message.author.id === '1563975512240689272') {
     await message.delete().catch(error => console.error('Could not remove NR3 Bot message:', error));
