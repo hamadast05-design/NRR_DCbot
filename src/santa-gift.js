@@ -69,7 +69,7 @@ async function handleCommand(interaction) {
 
 async function handlePrefixMessage(message) {
   if (!message.guild || message.author.bot || message.webhookId) return;
-  const match = message.content.match(/^!addgift(?:\s+([\s\\S]*))?$/i);
+  const match = message.content.match(/^!addgift(?:\s+([\s\S]*))?$/i);
   if (!match) return;
   if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) {
     return message.reply({ content: '❌ You need Manage Server permission to add gifts.', allowedMentions: { parse: [] } });
