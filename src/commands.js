@@ -23,6 +23,7 @@ const stealOrNoSteal = require('./steal-or-no-steal');
 const { isSuperuser, hasPermission } = require('./access');
 const gamePanel = require('./game-panel');
 const boosterPerks = require('./booster-perks');
+const santaGiftSystem = require('./santa-gift');
 const { runExclusive } = require('./game-sessions');
 
 const COLORS = {
@@ -43,6 +44,7 @@ const staffRankingCommand = new SlashCommandBuilder()
 const commands = [
   ...boosterPerks.commands,
   gamePanel.command,
+  santaGiftSystem.command,
   new SlashCommandBuilder()
     .setName('setup_rolegiver')
     .setDescription('Post a button that lets members receive a role.')
@@ -493,6 +495,7 @@ async function handleRoleGiverButton(interaction) {
 }
 
 async function handleInteraction(interaction) {
+  if (interaction.isButton() && interaction.customId.startsWith('santa:open:')) return santaGiftSystem.handleButton(interaction);
   if (boosterPerks.handles(interaction)) return boosterPerks.handleInteraction(interaction);
   if ((interaction.isStringSelectMenu() || interaction.isUserSelectMenu() || interaction.isButton()) && interaction.customId.startsWith('gamepanel:')) return gamePanel.handleInteraction(interaction);
   if (interaction.isStringSelectMenu() && interaction.customId === 'staff-ranking:category') return staffRanking.handleSelect(interaction);
@@ -503,6 +506,7 @@ async function handleInteraction(interaction) {
   if (interaction.isModalSubmit() && interaction.customId.startsWith('event_submit:modal:')) return eventSystem.submit(interaction, interaction.customId.slice('event_submit:modal:'.length));
 
   if (interaction.isChatInputCommand()) {
+    if (interaction.commandName === 'santa_gift') return santaGiftSystem.handleCommand(interaction);
     if (interaction.commandName === 'setup_rolegiver') return setupRoleGiver(interaction);
     if (interaction.commandName === 'gamepanel') return gamePanel.handleCommand(interaction);
     if (interaction.commandName === 'make_news') return newsSystem.sendCustom(interaction);
