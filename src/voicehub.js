@@ -95,10 +95,18 @@ function privatePanelPayload(channel, ownerId) {
       )
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent("**Moderation & Ownership**"))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent("**Access & Ownership**"))
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(PREFIX + 'claim').setLabel('Claim').setEmoji('👑').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(PREFIX + 'transfer').setLabel('Transfer Ownership').setEmoji('👑').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(PREFIX + 'permit').setLabel('Permit User').setEmoji('✅').setStyle(ButtonStyle.Secondary)
+      )
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent("**Moderation**"))
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(PREFIX + 'claim').setLabel('Claim').setEmoji('🏆').setStyle(ButtonStyle.Secondary),
         new ButtonBuilder().setCustomId(PREFIX + 'disconnect').setLabel('Disconnect User').setEmoji('🔇').setStyle(ButtonStyle.Danger),
         new ButtonBuilder().setCustomId(PREFIX + 'delete').setLabel('Delete Channel').setEmoji('🗑️').setStyle(ButtonStyle.Danger)
       )
@@ -132,6 +140,13 @@ async function migrate() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_voicehub_owner ON voicehub_channels(guild_id, owner_id);
+    CREATE TABLE IF NOT EXISTS voicehub_permits (
+      channel_id TEXT NOT NULL REFERENCES voicehub_channels(channel_id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (channel_id, user_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_voicehub_permits_user ON voicehub_permits(user_id);
   `);
 }
 
@@ -220,6 +235,22 @@ async function onVoiceStateUpdate(oldState, newState) {
   }
 
   const previous = oldState.channel;
+  if (previous && previous.id !== TRIGGER_CHANNEL_ID && previous.id !== newState.channelId) {
+    const managed = await db.query(
+      'SELECT owner_id FROM voicehub_channels WHERE channel_id = $1',
+      [previous.id]
+    ).catch(() => ({ rows: [] }));
+    if (managed.rows[0] && channelPrivacy(previous).hidden) {
+      const userId = oldState.id;
+      const permitted = await db.query(
+        'SELECT 1 FROM voicehub_permits WHERE channel_id = $1 AND user_id = $2',
+        [previous.id, userId]
+      ).catch(() => ({ rows: [] }));
+      if (managed.rows[0].owner_id !== userId && !permitted.rows.length) {
+        await previous.permissionOverwrites.delete(userId, 'VoiceHub hidden channel member left').catch(() => {});
+      }
+    }
+  }
   if (previous && previous.id !== TRIGGER_CHANNEL_ID && previous.members.size === 0) {
     const result = await db.query(
       'DELETE FROM voicehub_channels WHERE channel_id = $1 RETURNING channel_id',
@@ -302,6 +333,23 @@ async function onButton(interaction) {
     return interaction.update(privatePanelPayload(current.channel, interaction.user.id));
   }
 
+  if (action === 'transfer' || action === 'permit') {
+    const current = await requireOwner(interaction);
+    if (current.error) return replyError(interaction, current.error);
+    const menu = new UserSelectMenuBuilder()
+      .setCustomId(PREFIX + (action === 'transfer' ? 'transfer-select' : 'permit-select'))
+      .setPlaceholder(action === 'transfer' ? 'Choose the new channel owner' : 'Choose a member to permit')
+      .setMinValues(1)
+      .setMaxValues(1);
+    return interaction.reply({
+      content: action === 'transfer'
+        ? 'Select the member who should become the new owner of this channel.'
+        : 'Select a member to add to this channel’s permit list. They will be able to see and join it even when it is hidden or locked.',
+      components: [new ActionRowBuilder().addComponents(menu)],
+      ephemeral: true,
+    });
+  }
+
   if (action === 'rename' || action === 'limit') {
     const current = await requireOwner(interaction);
     if (current.error) return replyError(interaction, current.error);
@@ -335,15 +383,37 @@ async function onButton(interaction) {
   if (action === 'toggle-lock') {
     const locked = channelPrivacy(channel).locked;
     await channel.permissionOverwrites.edit(interaction.guild.roles.everyone.id, {
-      Connect: locked ? false : true,
+      Connect: locked ? null : false,
     });
     return interaction.update(privatePanelPayload(channel, current.ownerId));
   }
   if (action === 'toggle-hide') {
     const hidden = channelPrivacy(channel).hidden;
-    await channel.permissionOverwrites.edit(interaction.guild.roles.everyone.id, {
-      ViewChannel: hidden ? false : true,
-    });
+    if (!hidden) {
+      await channel.permissionOverwrites.edit(interaction.guild.roles.everyone.id, {
+        ViewChannel: false,
+      });
+      for (const member of channel.members.values()) {
+        await channel.permissionOverwrites.edit(member.id, {
+          ViewChannel: true,
+          Connect: true,
+        });
+      }
+      const permits = await db.query(
+        'SELECT user_id FROM voicehub_permits WHERE channel_id = $1',
+        [channel.id]
+      );
+      for (const permit of permits.rows) {
+        await channel.permissionOverwrites.edit(permit.user_id, {
+          ViewChannel: true,
+          Connect: true,
+        });
+      }
+    } else {
+      await channel.permissionOverwrites.edit(interaction.guild.roles.everyone.id, {
+        ViewChannel: true,
+      });
+    }
     return interaction.update(privatePanelPayload(channel, current.ownerId));
   }
   if (action === 'info') {
@@ -366,13 +436,69 @@ async function onButton(interaction) {
 }
 
 async function onUserSelect(interaction) {
-  if (interaction.customId !== PREFIX + 'disconnect-select') return false;
+  const selectAction = interaction.customId.slice(PREFIX.length);
+  if (!['disconnect-select', 'transfer-select', 'permit-select'].includes(selectAction)) return false;
   const current = await requireOwner(interaction);
   if (current.error) {
     await replyError(interaction, current.error);
     return true;
   }
   const targetId = interaction.values[0];
+
+  if (selectAction === 'transfer-select') {
+    if (targetId === interaction.user.id) {
+      await replyError(interaction, 'You already own this channel.');
+      return true;
+    }
+    const targetMember = await interaction.guild.members.fetch(targetId).catch(() => null);
+    if (!targetMember || targetMember.user.bot) {
+      await replyError(interaction, 'Choose a valid server member who is not a bot.');
+      return true;
+    }
+    await db.query(
+      'UPDATE voicehub_channels SET owner_id = $1 WHERE channel_id = $2',
+      [targetId, current.channel.id]
+    );
+    await current.channel.permissionOverwrites.edit(targetId, {
+      ViewChannel: true,
+      Connect: true,
+    });
+    await interaction.update({
+      content: `👑 Ownership of <#${current.channel.id}> has been transferred to <@!${targetId}>.`,
+      components: [],
+      allowedMentions: { parse: [] },
+    });
+    return true;
+  }
+
+  if (selectAction === 'permit-select') {
+    if (targetId === current.ownerId) {
+      await replyError(interaction, 'The channel owner already has access.');
+      return true;
+    }
+    const targetMember = await interaction.guild.members.fetch(targetId).catch(() => null);
+    if (!targetMember || targetMember.user.bot) {
+      await replyError(interaction, 'Choose a valid server member who is not a bot.');
+      return true;
+    }
+    const inserted = await db.query(
+      'INSERT INTO voicehub_permits (channel_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING user_id',
+      [current.channel.id, targetId]
+    );
+    await current.channel.permissionOverwrites.edit(targetId, {
+      ViewChannel: true,
+      Connect: true,
+    });
+    await interaction.update({
+      content: inserted.rows.length
+        ? `✅ <@!${targetId}> has been added to your channel’s permit list and can join even when it is locked or hidden.`
+        : `ℹ️ <@!${targetId}> is already on your channel’s permit list.`,
+      components: [],
+      allowedMentions: { parse: [] },
+    });
+    return true;
+  }
+
   const target = current.channel.members.get(targetId);
   if (!target || target.id === interaction.user.id) {
     await replyError(interaction, 'That member is no longer in your channel.');
