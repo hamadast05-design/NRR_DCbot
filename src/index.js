@@ -208,6 +208,7 @@ client.on(Events.MessageCreate, async message => {
   }
   try { await handleWorkReminderControl(message); } catch (error) { console.error('Work reminder control failed:', error); }
   try { await handlePrefixMute(message); } catch (error) { console.error('Prefix mute command failed:', error); }
+  try { await require('./santa-gift').handlePrefixMessage(message); } catch (error) { console.error('Santa gift prefix command failed:', error); }
   try { await gamePanel.handleStopMessage(message); } catch (error) { console.error('Game Panel !stop command failed:', error); }
   try { await staffRanking.handlePrefixMessage(message); } catch (error) { console.error('Staff ranking prefix command failed:', error); }
   try { await staffRanking.handleDiagnosticsMessage(message); } catch (error) { console.error('Staff ranking diagnostics command failed:', error); }
