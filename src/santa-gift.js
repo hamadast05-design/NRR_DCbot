@@ -337,14 +337,28 @@ async function handleButton(interaction) {
     return interaction.reply({ content: '🎁 This gift is already being opened or has expired. Please check the original message.', ephemeral: true });
   }
 
+  const finalPayload = payload(buildResultMessage(interaction.user.id, gift));
   try {
     await interaction.update(payload(buildOpeningMessage()));
   } catch (error) {
-    console.error('[SantaGift] Could not start the opening animation:', error);
-    return interaction.reply({ content: '❌ I could not animate this gift. Your result has been safely saved and will be recovered.', ephemeral: true }).catch(() => {});
+    console.error('[SantaGift] Could not start the opening animation; publishing the saved result directly:', error);
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.deferUpdate().catch(() => {});
+    }
+    try {
+      await interaction.message.edit(finalPayload);
+      await db.query(
+        "UPDATE santa_gift_claims SET status = 'completed', completed_at = NOW() WHERE claim_id = $1 AND status = 'opening'",
+        [claimId]
+      );
+    } catch (recoveryError) {
+      console.error('[SantaGift] Saved result will be recovered on startup:', recoveryError);
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: '❌ The gift is safely saved, but Discord could not display it yet. It will be recovered automatically.', ephemeral: true }).catch(() => {});
+      }
+    }
+    return;
   }
-
-  const finalPayload = payload(buildResultMessage(interaction.user.id, gift));
   try {
     await delay(SHAKE_DURATION_MS);
     if (config.santaGiftRevealGifUrl) {
