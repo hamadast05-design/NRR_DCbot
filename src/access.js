@@ -5,8 +5,18 @@ function isSuperuser(userOrId) {
   return id === SUPERUSER_ID;
 }
 
-function hasPermission(userOrId, memberPermissions, permission) {
-  return isSuperuser(userOrId) || Boolean(memberPermissions?.has?.(permission));
+// Shared feature gate: SuperUser bypasses member-level permissions and role allowlists.
+// It does not bypass the bot's own Discord permissions or platform restrictions.
+function hasFeatureAccess(userOrId, options = {}) {
+  if (isSuperuser(userOrId)) return true;
+  const permissions = options.memberPermissions || options.member?.permissions;
+  if (options.permission && permissions?.has?.(options.permission)) return true;
+  const roleCache = options.member?.roles?.cache;
+  return (options.roleIds || []).some(roleId => roleCache?.has?.(roleId));
 }
 
-module.exports = { SUPERUSER_ID, isSuperuser, hasPermission };
+function hasPermission(userOrId, memberPermissions, permission) {
+  return hasFeatureAccess(userOrId, { memberPermissions, permission });
+}
+
+module.exports = { SUPERUSER_ID, isSuperuser, hasPermission, hasFeatureAccess };
