@@ -57,15 +57,11 @@ function channelPrivacy(channel) {
 
 function privatePanelPayload(channel, ownerId) {
   const privacy = channelPrivacy(channel);
-  const owner = channel.guild.members.cache.get(ownerId);
-  const avatar = owner?.displayAvatarURL({ size: 128 }) || null;
   const container = new ContainerBuilder()
     .setAccentColor(0x2B2D31)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent("### 🎙️ VoiceHub Control Panel")
-    )
-    .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
+        "### 🎙️ VoiceHub Control Panel\n" +
         "**Channel:** <#"+channel.id+">\n" +
         "**Owner:** <@"+ownerId+">\n" +
         "**Members:** "+channel.members.size+"\n" +
@@ -103,12 +99,7 @@ function privatePanelPayload(channel, ownerId) {
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId(PREFIX + 'claim').setLabel('Claim').setEmoji('👑').setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId(PREFIX + 'disconnect').setLabel('Disconnect User').setEmoji('🔇').setStyle(ButtonStyle.Danger)
-      )
-    )
-    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
-    .addActionRowComponents(
-      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(PREFIX + 'disconnect').setLabel('Disconnect User').setEmoji('🔇').setStyle(ButtonStyle.Danger),
         new ButtonBuilder().setCustomId(PREFIX + 'delete').setLabel('Delete Channel').setEmoji('🗑️').setStyle(ButtonStyle.Danger)
       )
     );
