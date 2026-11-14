@@ -50,7 +50,6 @@ async function ensureSchedule() {
 function buildEmbed() {
   return new EmbedBuilder().setColor(EMBED_COLOR)
     .setAuthor({ name: 'NAME THE ALBUM COVER', iconURL: DISC_ICON_URL })
-    .setDescription('🎧 **If this image were an album cover, what would you name the album?**\n\nDrop your creative (or completely unhinged) title below.')
     .setFooter({ text: 'NRR • Name The Album Cover' });
 }
 async function sendRandom(client, channel = null) {
