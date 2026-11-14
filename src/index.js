@@ -22,6 +22,7 @@ const automationControl = require('./automation-control');
 const gameRotationSystem = require('./game-rotation');
 const staffAnalytics = require('./staff-analytics');
 const staffRanking = require('./staff-ranking');
+const boosterPerks = require('./booster-perks');
 const { registerApplicationCommands } = require('./command-registration');
 
 validate();
@@ -79,10 +80,19 @@ client.once(Events.ClientReady, async readyClient => {
   try {
     await registerApplicationCommands();
     await db.migrate();
+    await boosterPerks.migrate();
     await staffAnalytics.migrate();
     await staffRanking.startScheduler(readyClient);
     await qotdSystem.migrate();
     console.log('Database migrations ready.');
+    const boosterGuild = readyClient.guilds.cache.get(config.boosterGuildId || config.guildId);
+    if (boosterGuild) {
+      await boosterPerks.syncGuild(boosterGuild);
+      setInterval(() => boosterPerks.retryCleanup(boosterGuild).catch(error => console.error('Booster asset cleanup retry failed:', error)), 5 * 60 * 1000);
+      console.log('NRR Booster Perks session sync ready.');
+    } else {
+      console.warn('NRR Booster Perks are disabled: set BOOSTER_PERKS_GUILD_ID or DISCORD_GUILD_ID to the NRR server ID.');
+    }
     await staffAnalytics.backfillAuditLogs(readyClient);
     setInterval(() => staffAnalytics.backfillAuditLogs(readyClient).catch(error => console.error('Punishment audit scan failed:', error)), 10 * 60 * 1000);
 
@@ -175,6 +185,11 @@ client.on(Events.GuildMemberAdd, async member => {
 
 client.on(Events.GuildMemberRemove, async member => {
   await db.setMemberActive(member.guild.id, member.id, false).catch(error => console.error('Member remove sync failed:', error));
+  await boosterPerks.onMemberRemove(member).catch(error => console.error('Booster perk member cleanup failed:', error));
+});
+
+client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
+  await boosterPerks.onMemberUpdate(oldMember, newMember).catch(error => console.error('Booster perk boost-session update failed:', error));
 });
 
 client.on(Events.MessageDelete, async message => {
