@@ -69,7 +69,7 @@ async function handleCommand(interaction) {
 
 async function handlePrefixMessage(message) {
   if (!message.guild || message.author.bot || message.webhookId) return;
-  const match = message.content.match(/^!addgift(?:\\s+([\\s\\S]*))?$/i);
+  const match = message.content.match(/^!addgift(?:\s+([\s\\S]*))?$/i);
   if (!match) return;
   if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) {
     return message.reply({ content: '❌ You need Manage Server permission to add gifts.', allowedMentions: { parse: [] } });
@@ -82,8 +82,8 @@ async function handlePrefixMessage(message) {
   if (emoji.length > 64 || rawTitle.length > 80 || rawDescription.length > 300) {
     return message.reply({ content: '❌ Keep the emoji under 64 characters, title under 80, and description under 300.', allowedMentions: { parse: [] } });
   }
-  const title = rawTitle.replace(/\\|\\|/g, '││');
-  const description = rawDescription.replace(/\\|\\|/g, '││');
+  const title = rawTitle.replace(/\|\|/g, '││');
+  const description = rawDescription.replace(/\|\|/g, '││');
   try {
     const gift = await db.addSantaGift({
       guildId: message.guild.id,
@@ -94,7 +94,7 @@ async function handlePrefixMessage(message) {
       weight: DEFAULT_GIFT_WEIGHT,
     });
     return message.reply({
-      content: `🎁 **Added to Santa’s gift bank!**\\n${emoji} **${title}**\\n${description}\\n\\nIt is now included in future random gift draws.`,
+      content: `🎁 **Added to Santa’s gift bank!**\n${emoji} **${title}**\n${description}\n\nIt is now included in future random gift draws.`,
       allowedMentions: { parse: [] },
     });
   } catch (error) {
