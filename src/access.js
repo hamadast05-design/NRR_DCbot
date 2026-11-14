@@ -12,7 +12,8 @@ function hasFeatureAccess(userOrId, options = {}) {
   const permissions = options.memberPermissions || options.member?.permissions;
   if (options.permission && permissions?.has?.(options.permission)) return true;
   const roleCache = options.member?.roles?.cache;
-  return (options.roleIds || []).some(roleId => roleCache?.has?.(roleId));
+  const roleList = Array.isArray(options.member?.roles) ? options.member.roles : [];
+  return (options.roleIds || []).some(roleId => roleCache?.has?.(roleId) || roleList.includes(roleId));
 }
 
 function hasPermission(userOrId, memberPermissions, permission) {
