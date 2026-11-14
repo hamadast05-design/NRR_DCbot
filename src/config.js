@@ -10,15 +10,6 @@ function positiveNumber(value, fallback, minimum = 1) {
   return Number.isFinite(number) && number >= minimum ? number : fallback;
 }
 
-function httpsUrl(value) {
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    return url.protocol === 'https:' ? url.toString() : null;
-  } catch {
-    return null;
-  }
-}
 
 const config = {
   token: process.env.DISCORD_TOKEN,
@@ -35,13 +26,6 @@ const config = {
   eventManagerRoleIds: (process.env.EVENT_MANAGER_ROLE_IDS || '').split(',').map(x => x.trim()).filter(Boolean),
   eventReviewChannelId: process.env.EVENT_REVIEW_CHANNEL_ID || '1561521829661777990',
   eventStickEnabled: bool(process.env.EVENT_STICK_ENABLED, true),
-  santaGiftPendingMs: positiveNumber(process.env.SANTA_GIFT_PENDING_MINUTES, 15) * 60 * 1000,
-  santaGiftSackImageUrl: httpsUrl(process.env.SANTA_GIFT_SACK_IMAGE_URL),
-  santaGiftShakeGifUrl: httpsUrl(process.env.SANTA_GIFT_SHAKE_GIF_URL),
-  santaGiftRevealGifUrl: httpsUrl(process.env.SANTA_GIFT_REVEAL_GIF_URL),
-  santaGiftGoldenImageUrl: httpsUrl(process.env.SANTA_GIFT_GOLDEN_IMAGE_URL),
-  santaGiftOrdinaryImageUrl: httpsUrl(process.env.SANTA_GIFT_ORDINARY_IMAGE_URL),
-  santaGiftNaughtyImageUrl: httpsUrl(process.env.SANTA_GIFT_NAUGHTY_IMAGE_URL),
 };
 
 function validate() {
