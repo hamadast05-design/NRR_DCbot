@@ -14,7 +14,7 @@ const { config } = require('./config');
 const db = require('./db');
 
 const TRIGGER_CHANNEL_ID = config.voiceHubTriggerChannelId;
-const CONTROL_CHANNEL_ID = config.voiceHubControlChannelId;
+const CONTROL_CHANNEL_ID = TRIGGER_CHANNEL_ID;
 const PREFIX = 'voicehub:';
 const creating = new Set();
 
@@ -57,8 +57,8 @@ function panelPayload() {
 
 async function ensurePanel(client) {
   const channel = await client.channels.fetch(CONTROL_CHANNEL_ID).catch(() => null);
-  if (!channel?.isTextBased() || typeof channel.send !== 'function') {
-    console.error('[VoiceHub] Control channel is unavailable or is not a text channel.');
+  if (!channel || typeof channel.send !== 'function' || !channel.messages) {
+    console.error('[VoiceHub] VoiceHub trigger channel is unavailable or does not support channel messages.');
     return;
   }
   const recent = await channel.messages.fetch({ limit: 50 }).catch(() => null);
@@ -368,8 +368,8 @@ async function handleInteraction(interaction) {
 }
 
 async function initialize(client) {
-  if (!TRIGGER_CHANNEL_ID || !CONTROL_CHANNEL_ID) {
-    console.warn('[VoiceHub] Missing trigger/control channel configuration; feature disabled.');
+  if (!TRIGGER_CHANNEL_ID) {
+    console.warn('[VoiceHub] Missing trigger channel configuration; feature disabled.');
     return;
   }
   await migrate();
