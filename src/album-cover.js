@@ -49,6 +49,7 @@ async function ensureSchedule() {
 }
 function buildEmbed() {
   return new EmbedBuilder().setColor(EMBED_COLOR)
+    .setAuthor({ name: '\u200B', iconURL: DISC_ICON_URL })
     .setTitle('NAME THE ALBUM COVER');
 }
 async function sendRandom(client, channel = null) {
