@@ -14,6 +14,7 @@ const config = {
   token: process.env.DISCORD_TOKEN,
   clientId: process.env.DISCORD_CLIENT_ID,
   guildId: process.env.DISCORD_GUILD_ID || null,
+  boosterGuildId: process.env.BOOSTER_PERKS_GUILD_ID || process.env.DISCORD_GUILD_ID || null,
   staffGuildId: process.env.STAFF_GUILD_ID || null,
   staffRankingChannelId: process.env.STAFF_RANKING_CHANNEL_ID || '1567625278014890135',
   cooldownMs: positiveNumber(process.env.REPUTATION_COOLDOWN_MINUTES, 5) * 60 * 1000,
