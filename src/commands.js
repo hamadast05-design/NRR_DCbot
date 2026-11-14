@@ -495,7 +495,6 @@ async function handleRoleGiverButton(interaction) {
 }
 
 async function handleInteraction(interaction) {
-  if (interaction.isButton() && interaction.customId.startsWith('santa:open:')) return santaGiftSystem.handleButton(interaction);
   if (boosterPerks.handles(interaction)) return boosterPerks.handleInteraction(interaction);
   if ((interaction.isStringSelectMenu() || interaction.isUserSelectMenu() || interaction.isButton()) && interaction.customId.startsWith('gamepanel:')) return gamePanel.handleInteraction(interaction);
   if (interaction.isStringSelectMenu() && interaction.customId === 'staff-ranking:category') return staffRanking.handleSelect(interaction);
