@@ -1,7 +1,6 @@
 const { randomInt } = require('node:crypto');
 const { SlashCommandBuilder } = require('discord.js');
 const { config } = require('./config');
-const db = require('./db');
 const { hasPermission } = require('./access');
 const { PermissionFlagsBits } = require('discord.js');
 
@@ -27,6 +26,7 @@ const command = new SlashCommandBuilder()
   .setDescription('See what Santa brought you in a festive mystery gift.');
 
 async function chooseGift(guildId) {
+  const db = require('./db');
   const customGifts = await db.getSantaGifts(guildId);
   const giftBank = [...GIFTS, ...customGifts];
   const totalWeight = giftBank.reduce((total, gift) => total + gift.weight, 0);
@@ -85,6 +85,7 @@ async function handlePrefixMessage(message) {
   const title = rawTitle.replace(/\|\|/g, '││');
   const description = rawDescription.replace(/\|\|/g, '││');
   try {
+    const db = require('./db');
     const gift = await db.addSantaGift({
       guildId: message.guild.id,
       creatorId: message.author.id,
