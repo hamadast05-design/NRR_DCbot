@@ -24,6 +24,7 @@ const staffAnalytics = require('./staff-analytics');
 const staffRanking = require('./staff-ranking');
 const boosterPerks = require('./booster-perks');
 const albumCoverSystem = require('./album-cover');
+const voiceHub = require('./voicehub');
 const { registerApplicationCommands } = require('./command-registration');
 
 validate();
@@ -58,7 +59,7 @@ function startWorkReminder(readyClient) {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions],
 });
 
 client.once(Events.ClientReady, async readyClient => {
@@ -87,6 +88,7 @@ client.once(Events.ClientReady, async readyClient => {
     await staffAnalytics.migrate();
     await staffRanking.startScheduler(readyClient);
     await qotdSystem.migrate();
+    await voiceHub.initialize(readyClient);
     console.log('Database migrations ready.');
     const boosterGuild = readyClient.guilds.cache.get(config.guildId);
     if (boosterGuild) {
@@ -237,6 +239,10 @@ client.on(Events.MessageCreate, async message => {
 });
 
 
+client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+  try { await voiceHub.onVoiceStateUpdate(oldState, newState); } catch (error) { console.error('VoiceHub voice-state handler failed:', error); }
+});
+
 client.on(Events.GuildBanAdd, async ban => {
   try { const logs = await ban.guild.fetchAuditLogs({ type: require('discord.js').AuditLogEvent.MemberBanAdd, limit: 5 }); for (const entry of logs.entries.values()) { if (entry.target?.id === ban.user.id && Date.now() - entry.createdTimestamp < 15000) await staffAnalytics.recordAudit(ban.guild, entry); } } catch (error) { console.error('Ban audit capture failed:', error); }
 });
@@ -247,6 +253,7 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
 
 client.on(Events.InteractionCreate, async interaction => {
   try {
+    if (await voiceHub.handleInteraction(interaction)) return;
     if (interaction.isButton() && interaction.customId.startsWith('mysterygen:')) return await mysteryGenSystem.onButton(interaction);
     if (interaction.isButton() && interaction.customId.startsWith('qotd:')) return await qotdSystem.onButton(interaction);
     if (interaction.isModalSubmit() && interaction.customId.startsWith('qotd:')) return await qotdSystem.onModal(interaction);
