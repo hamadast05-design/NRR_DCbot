@@ -5,6 +5,7 @@ const REVIEW_CHANNEL_ID = '1566109303318913074';
 const QOTD_ROLE_ID = '1106014506041217064';
 const PREFIX = 'qotd:';
 const MANAGE = PermissionFlagsBits.ManageGuild;
+const { hasPermission } = require('./access');
 
 async function migrate() {
   await db.query(`
@@ -22,7 +23,7 @@ async function migrate() {
   `);
 }
 function isManager(i) {
-  return Boolean(i.memberPermissions?.has(MANAGE));
+  return hasPermission(i.user?.id, i.memberPermissions, MANAGE);
 }
 function reviewEmbed(row, status = 'pending') {
   const answers = (row.answers || []).map((a, i) => {
@@ -89,7 +90,7 @@ async function countMessages(guildId, userId) {
 }
 async function sendPanel(message) {
   if (!message.guild) return;
-  if (!message.member?.permissions?.has(MANAGE)) return message.reply('❌ You need Manage Server permission to post the QOTD submission panel.');
+  if (!hasPermission(message.author.id, message.member?.permissions, MANAGE)) return message.reply('❌ You need Manage Server permission to post the QOTD submission panel.');
   const embed = new EmbedBuilder().setColor(0x3c3c3d).setTitle('QOTD Submissions')
     .setDescription('Have a question worth sharing? Submit it for the community Question of the Day.\n\nYour submission will be reviewed by the QOTD managers before it is published.')
     .setFooter({ text: 'NRR • Community QOTD' });
@@ -98,7 +99,7 @@ async function sendPanel(message) {
   await message.reply('✅ QOTD submission panel posted.');
 }
 async function setChannel(message, channelId) {
-  if (!message.member?.permissions?.has(MANAGE)) return message.reply('❌ You need Manage Server permission to set the QOTD channel.');
+  if (!hasPermission(message.author.id, message.member?.permissions, MANAGE)) return message.reply('❌ You need Manage Server permission to set the QOTD channel.');
   if (!/^\d{17,22}$/.test(channelId || '')) return message.reply('Usage: !set_qotd_channel [channel_id]');
   const channel = await message.guild.channels.fetch(channelId).catch(()=>null);
   if (!channel?.isTextBased()) return message.reply('❌ I could not find a text channel with that ID.');

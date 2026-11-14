@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, LabelBuilder, FileUploadBuilder, PermissionFlagsBits, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize, MessageFlags } = require('discord.js');
 const db = require('./db');
 const { config } = require('./config');
-const { isSuperuser } = require('./access');
+const { hasFeatureAccess } = require('./access');
 
 const SUBMIT = 'event_submit:';
 const REVIEW = 'event_review:';
@@ -20,9 +20,12 @@ function channelPermissionIssues(channel, includeManageMessages = false) {
 }
 
 function isManager(i) {
-  if (isSuperuser(i.user?.id)) return true;
-  if (config.eventManagerRoleIds.length) return config.eventManagerRoleIds.some(id => i.member?.roles?.cache?.has(id));
-  return i.memberPermissions?.has(PermissionFlagsBits.ManageGuild);
+  return hasFeatureAccess(i.user?.id, {
+    memberPermissions: i.memberPermissions,
+    permission: PermissionFlagsBits.ManageGuild,
+    member: i.member,
+    roleIds: config.eventManagerRoleIds,
+  });
 }
 
 async function requireManager(i) {

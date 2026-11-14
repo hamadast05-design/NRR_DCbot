@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const { hasFeatureAccess } = require('./access');
 const Parser = require('rss-parser');
 const db = require('./db');
 
@@ -100,10 +101,13 @@ async function sendLatest(client,message){
  else await message.reply('ℹ️ There are no new BBC stories available to post right now.');
 }
 async function sendCustom(interaction) {
- const { isSuperuser } = require('./access');
  const { config } = require('./config');
- const roleAllowed = config.eventManagerRoleIds?.some(id => interaction.member?.roles?.cache?.has(id));
- const allowed = isSuperuser(interaction.user?.id) || roleAllowed || interaction.memberPermissions?.has(require('discord.js').PermissionFlagsBits.ManageGuild);
+ const allowed = hasFeatureAccess(interaction.user?.id, {
+  memberPermissions: interaction.memberPermissions,
+  permission: require('discord.js').PermissionFlagsBits.ManageGuild,
+  member: interaction.member,
+  roleIds: config.eventManagerRoleIds || [],
+ });
  if (!allowed) return interaction.reply({content:'❌ You do not have permission to publish staff-made news posts.',ephemeral:true});
 
  const title=interaction.options.getString('topic',true).trim();
