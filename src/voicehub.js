@@ -60,10 +60,7 @@ async function ensurePanel(client) {
     return;
   }
   const recent = await channel.messages.fetch({ limit: 50 }).catch(() => null);
-  const exists = recent?.some(message =>
-    message.author.id === client.user.id &&
-    message.components.some(row => row.components.some(component => component.customId?.startsWith(PREFIX)))
-  );
+  const exists = false; // Always publish the latest VoiceHub panel on startup.
   if (!exists) {
     await channel.send(panelPayload());
     console.log('[VoiceHub] Control panel posted.');
