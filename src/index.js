@@ -220,6 +220,19 @@ client.on(Events.MessageCreate, async message => {
     if (/^!send_news$/i.test(raw)) { if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) return message.reply('❌ You need Manage Server permission to send manual news.'); try { await newsSystem.sendLatest(client, message); } catch (error) { console.error('Manual news command failed:', error); await message.reply('❌ I could not fetch or post a news story right now.'); } }
     else if (/^!send_qotd$/i.test(raw)) { try { await qotdSystem.sendPanel(message); } catch (error) { console.error('QOTD panel command failed:', error); await message.reply('❌ I could not post the QOTD submission panel.'); } }
     else if (/^!set_qotd_channel\s+/i.test(raw)) { try { await qotdSystem.setChannel(message, raw.split(/\s+/)[1]); } catch (error) { console.error('QOTD channel setup failed:', error); await message.reply('❌ I could not update the QOTD channel.'); } }
+    else if (/^!sendvchub$/i.test(raw)) {
+      if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) {
+        await message.reply({ content: '❌ You need Manage Server permission to send the VoiceHub panel.', allowedMentions: { parse: [] } });
+      } else {
+        try {
+          await voiceHub.sendPanel(client);
+          await message.reply({ content: '✅ VoiceHub control panel sent.', allowedMentions: { parse: [] } });
+        } catch (error) {
+          console.error('Manual VoiceHub panel command failed:', error);
+          await message.reply({ content: '❌ I could not send the VoiceHub panel. Check the bot’s channel permissions and configuration.', allowedMentions: { parse: [] } });
+        }
+      }
+    }
     else if (/^!reveal$/i.test(raw)) { try { await mysteryGenSystem.revealCommand(message); } catch (error) { console.error('MysteryGen reveal command failed:', error); await message.reply('I could not reveal the current MysteryGen item.').catch(() => {}); } }
   }
   try { await handlePrefixRoleCommands(message); } catch (error) { console.error('Hoster Manager role command failed:', error); }
