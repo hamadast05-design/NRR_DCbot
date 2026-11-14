@@ -85,12 +85,12 @@ client.once(Events.ClientReady, async readyClient => {
     await staffRanking.startScheduler(readyClient);
     await qotdSystem.migrate();
     console.log('Database migrations ready.');
-    const boosterGuild = readyClient.guilds.cache.get(config.boosterGuildId || config.guildId);
+    const boosterGuild = readyClient.guilds.cache.get(config.guildId);
     if (boosterGuild) {
       setInterval(() => boosterPerks.retryCleanup(boosterGuild).catch(error => console.error('Booster asset cleanup retry failed:', error)), 5 * 60 * 1000);
       console.log('NRR Booster Perks session sync scheduled.');
     } else {
-      console.warn('NRR Booster Perks are disabled: set BOOSTER_PERKS_GUILD_ID or DISCORD_GUILD_ID to the NRR server ID.');
+      console.warn('NRR Booster Perks are disabled: set DISCORD_GUILD_ID to the NRR server ID.');
     }
     await staffAnalytics.backfillAuditLogs(readyClient);
     setInterval(() => staffAnalytics.backfillAuditLogs(readyClient).catch(error => console.error('Punishment audit scan failed:', error)), 10 * 60 * 1000);
