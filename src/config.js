@@ -15,7 +15,7 @@ const config = {
   clientId: process.env.DISCORD_CLIENT_ID,
   guildId: process.env.DISCORD_GUILD_ID || null,
   voiceHubTriggerChannelId: process.env.VOICEHUB_TRIGGER_CHANNEL_ID || '1571248658660200458',
-  voiceHubControlChannelId: process.env.VOICEHUB_CONTROL_CHANNEL_ID || '1571248658660200458',
+  voiceHubControlChannelId: process.env.VOICEHUB_CONTROL_CHANNEL_ID || '1571249166687150330',
   staffGuildId: process.env.STAFF_GUILD_ID || null,
   staffRankingChannelId: process.env.STAFF_RANKING_CHANNEL_ID || '1567625278014890135',
   cooldownMs: positiveNumber(process.env.REPUTATION_COOLDOWN_MINUTES, 5) * 60 * 1000,
