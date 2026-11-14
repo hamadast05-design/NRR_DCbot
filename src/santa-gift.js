@@ -243,7 +243,7 @@ function formatRemaining(ms) {
 }
 
 async function handleCommand(interaction) {
-  if (!interaction.inGuild() || !interaction.guildId) {
+  if (!interaction.inGuild() || !interaction.guildId || (config.guildId && interaction.guildId !== config.guildId)) {
     return interaction.reply({ content: '❌ Santa’s Gift Delivery can only be used inside NRR.', ephemeral: true });
   }
   if (!interaction.channel?.isTextBased?.()) {
