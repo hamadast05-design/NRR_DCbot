@@ -99,7 +99,7 @@ function privatePanelPayload(channel, ownerId) {
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId(PREFIX + 'transfer').setLabel('Transfer Ownership').setEmoji('👑').setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId(PREFIX + 'permit').setLabel('Permit User').setEmoji('✅').setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder().setCustomId(PREFIX + 'permit').setLabel('Manage Permits').setEmoji('✅').setStyle(ButtonStyle.Secondary)
       )
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
@@ -147,6 +147,11 @@ async function migrate() {
       PRIMARY KEY (channel_id, user_id)
     );
     CREATE INDEX IF NOT EXISTS idx_voicehub_permits_user ON voicehub_permits(user_id);
+    CREATE TABLE IF NOT EXISTS voicehub_hidden_access (
+      channel_id TEXT NOT NULL REFERENCES voicehub_channels(channel_id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL,
+      PRIMARY KEY (channel_id, user_id)
+    );
   `);
 }
 
@@ -246,6 +251,10 @@ async function onVoiceStateUpdate(oldState, newState) {
         'SELECT 1 FROM voicehub_permits WHERE channel_id = $1 AND user_id = $2',
         [previous.id, userId]
       ).catch(() => ({ rows: [] }));
+      await db.query(
+        'DELETE FROM voicehub_hidden_access WHERE channel_id = $1 AND user_id = $2',
+        [previous.id, userId]
+      ).catch(() => {});
       if (managed.rows[0].owner_id !== userId && !permitted.rows.length) {
         await previous.permissionOverwrites.delete(userId, 'VoiceHub hidden channel member left').catch(() => {});
       }
@@ -344,7 +353,7 @@ async function onButton(interaction) {
     return interaction.reply({
       content: action === 'transfer'
         ? 'Select the member who should become the new owner of this channel.'
-        : 'Select a member to add to this channel’s permit list. They will be able to see and join it even when it is hidden or locked.',
+        : 'Select a member to add to or remove from this channel’s permit list. Permitted members can see and join it even when it is hidden or locked.',
       components: [new ActionRowBuilder().addComponents(menu)],
       ephemeral: true,
     });
@@ -394,6 +403,10 @@ async function onButton(interaction) {
         ViewChannel: false,
       });
       for (const member of channel.members.values()) {
+        await db.query(
+          'INSERT INTO voicehub_hidden_access (channel_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+          [channel.id, member.id]
+        );
         await channel.permissionOverwrites.edit(member.id, {
           ViewChannel: true,
           Connect: true,
@@ -413,6 +426,22 @@ async function onButton(interaction) {
       await channel.permissionOverwrites.edit(interaction.guild.roles.everyone.id, {
         ViewChannel: true,
       });
+      const hiddenMembers = await db.query(
+        'SELECT user_id FROM voicehub_hidden_access WHERE channel_id = $1',
+        [channel.id]
+      );
+      for (const hiddenMember of hiddenMembers.rows) {
+        const userId = hiddenMember.user_id;
+        const isOwner = userId === current.ownerId;
+        const permitted = await db.query(
+          'SELECT 1 FROM voicehub_permits WHERE channel_id = $1 AND user_id = $2',
+          [channel.id, userId]
+        );
+        if (!isOwner && !permitted.rows.length) {
+          await channel.permissionOverwrites.delete(userId, 'VoiceHub channel revealed').catch(() => {});
+        }
+      }
+      await db.query('DELETE FROM voicehub_hidden_access WHERE channel_id = $1', [channel.id]);
     }
     return interaction.update(privatePanelPayload(channel, current.ownerId));
   }
@@ -481,8 +510,28 @@ async function onUserSelect(interaction) {
       await replyError(interaction, 'Choose a valid server member who is not a bot.');
       return true;
     }
-    const inserted = await db.query(
-      'INSERT INTO voicehub_permits (channel_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING user_id',
+    const existingPermit = await db.query(
+      'SELECT 1 FROM voicehub_permits WHERE channel_id = $1 AND user_id = $2',
+      [current.channel.id, targetId]
+    );
+    if (existingPermit.rows.length) {
+      await db.query(
+        'DELETE FROM voicehub_permits WHERE channel_id = $1 AND user_id = $2',
+        [current.channel.id, targetId]
+      );
+      const stillInside = current.channel.members.has(targetId);
+      if (!stillInside && targetId !== current.ownerId) {
+        await current.channel.permissionOverwrites.delete(targetId, 'VoiceHub permit removed').catch(() => {});
+      }
+      await interaction.update({
+        content: `➖ <@!${targetId}> has been removed from your channel’s permit list.`,
+        components: [],
+        allowedMentions: { parse: [] },
+      });
+      return true;
+    }
+    await db.query(
+      'INSERT INTO voicehub_permits (channel_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
       [current.channel.id, targetId]
     );
     await current.channel.permissionOverwrites.edit(targetId, {
@@ -490,9 +539,7 @@ async function onUserSelect(interaction) {
       Connect: true,
     });
     await interaction.update({
-      content: inserted.rows.length
-        ? `✅ <@!${targetId}> has been added to your channel’s permit list and can join even when it is locked or hidden.`
-        : `ℹ️ <@!${targetId}> is already on your channel’s permit list.`,
+      content: `✅ <@!${targetId}> has been added to your channel’s permit list and can join even when it is locked or hidden.`,
       components: [],
       allowedMentions: { parse: [] },
     });
