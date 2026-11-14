@@ -22,6 +22,7 @@ const automationControl = require('./automation-control');
 const gameRotationSystem = require('./game-rotation');
 const staffAnalytics = require('./staff-analytics');
 const staffRanking = require('./staff-ranking');
+const boosterPerks = require('./booster-perks');
 const { registerApplicationCommands } = require('./command-registration');
 
 validate();
@@ -79,10 +80,18 @@ client.once(Events.ClientReady, async readyClient => {
   try {
     await registerApplicationCommands();
     await db.migrate();
+    await boosterPerks.migrate();
     await staffAnalytics.migrate();
     await staffRanking.startScheduler(readyClient);
     await qotdSystem.migrate();
     console.log('Database migrations ready.');
+    const boosterGuild = readyClient.guilds.cache.get(config.guildId);
+    if (boosterGuild) {
+      setInterval(() => boosterPerks.retryCleanup(boosterGuild).catch(error => console.error('Booster asset cleanup retry failed:', error)), 5 * 60 * 1000);
+      console.log('NRR Booster Perks session sync scheduled.');
+    } else {
+      console.warn('NRR Booster Perks are disabled: set DISCORD_GUILD_ID to the NRR server ID.');
+    }
     await staffAnalytics.backfillAuditLogs(readyClient);
     setInterval(() => staffAnalytics.backfillAuditLogs(readyClient).catch(error => console.error('Punishment audit scan failed:', error)), 10 * 60 * 1000);
 
@@ -93,6 +102,7 @@ client.once(Events.ClientReady, async readyClient => {
 
     for (const guild of readyClient.guilds.cache.values()) {
       const members = await guild.members.fetch();
+      if (boosterGuild && guild.id === boosterGuild.id) await boosterPerks.syncGuild(guild, members);
       for (const member of members.values()) {
         if (!member.user.bot || config.allowBotTargets) {
           await db.ensureMember(guild.id, member.id, true);
@@ -175,6 +185,11 @@ client.on(Events.GuildMemberAdd, async member => {
 
 client.on(Events.GuildMemberRemove, async member => {
   await db.setMemberActive(member.guild.id, member.id, false).catch(error => console.error('Member remove sync failed:', error));
+  await boosterPerks.onMemberRemove(member).catch(error => console.error('Booster perk member cleanup failed:', error));
+});
+
+client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
+  await boosterPerks.onMemberUpdate(oldMember, newMember).catch(error => console.error('Booster perk boost-session update failed:', error));
 });
 
 client.on(Events.MessageDelete, async message => {
@@ -182,6 +197,7 @@ client.on(Events.MessageDelete, async message => {
 });
 
 client.on(Events.MessageCreate, async message => {
+  try { await boosterPerks.handleMessageCreate(message); } catch (error) { console.error('Booster perk reply command failed:', error); }
   // Keep the NR3 Bot from posting in the NRR staff reminder channel.
   if (message.channelId === WORK_REMINDER_CHANNEL_ID && message.author.id === '1563975512240689272') {
     await message.delete().catch(error => console.error('Could not remove NR3 Bot message:', error));

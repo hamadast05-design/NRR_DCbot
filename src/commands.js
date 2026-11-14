@@ -22,6 +22,7 @@ const learningGames = require('./learning-games');
 const stealOrNoSteal = require('./steal-or-no-steal');
 const { isSuperuser, hasPermission } = require('./access');
 const gamePanel = require('./game-panel');
+const boosterPerks = require('./booster-perks');
 const { runExclusive } = require('./game-sessions');
 
 const COLORS = {
@@ -40,6 +41,7 @@ const staffRankingCommand = new SlashCommandBuilder()
     .addChoices({ name: 'Messages', value: 'messages' }, { name: 'Punishments', value: 'punishments' }));
 
 const commands = [
+  ...boosterPerks.commands,
   gamePanel.command,
   new SlashCommandBuilder()
     .setName('setup_rolegiver')
@@ -491,6 +493,7 @@ async function handleRoleGiverButton(interaction) {
 }
 
 async function handleInteraction(interaction) {
+  if (boosterPerks.handles(interaction)) return boosterPerks.handleInteraction(interaction);
   if ((interaction.isStringSelectMenu() || interaction.isUserSelectMenu() || interaction.isButton()) && interaction.customId.startsWith('gamepanel:')) return gamePanel.handleInteraction(interaction);
   if (interaction.isStringSelectMenu() && interaction.customId === 'staff-ranking:category') return staffRanking.handleSelect(interaction);
   if (interaction.isButton() && interaction.customId.startsWith('stealno:')) return stealOrNoSteal.onButton(interaction);
