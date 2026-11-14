@@ -35,7 +35,6 @@ const config = {
   eventManagerRoleIds: (process.env.EVENT_MANAGER_ROLE_IDS || '').split(',').map(x => x.trim()).filter(Boolean),
   eventReviewChannelId: process.env.EVENT_REVIEW_CHANNEL_ID || '1561521829661777990',
   eventStickEnabled: bool(process.env.EVENT_STICK_ENABLED, true),
-  santaGiftCooldownMs: positiveNumber(process.env.SANTA_GIFT_COOLDOWN_HOURS, 24) * 60 * 60 * 1000,
   santaGiftPendingMs: positiveNumber(process.env.SANTA_GIFT_PENDING_MINUTES, 15) * 60 * 1000,
   santaGiftSackImageUrl: httpsUrl(process.env.SANTA_GIFT_SACK_IMAGE_URL),
   santaGiftShakeGifUrl: httpsUrl(process.env.SANTA_GIFT_SHAKE_GIF_URL),
