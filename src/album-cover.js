@@ -68,17 +68,17 @@ async function sendScheduled(client) {
   const now = new Date(), minute = astMinuteOfDay(now);
   if (minute < 14 * 60) return;
   const dateKey = astDateKey(now), schedule = await ensureSchedule();
-  const sent = await db.query('SELECT sent_at FROM nrr_album_cover_posts WHERE schedule_date=$1 ORDER BY sent_at ASC', [dateKey]);
+  const sent = await db.query('SELECT scheduled_minute, sent_at FROM nrr_album_cover_posts WHERE schedule_date=$1 ORDER BY sent_at ASC', [dateKey]);
   if (sent.rowCount >= MAX_PER_DAY) return;
   if (sent.rows.length && now.getTime() - new Date(sent.rows[sent.rows.length - 1].sent_at).getTime() < MIN_GAP_MS) return;
   const due = schedule.find(value => value <= minute && !sent.rows.some(row => {
     const p = astParts(new Date(row.sent_at));
-    return Number(p.hour) * 60 + Number(p.minute) === value;
+    return Number(row.scheduled_minute) === value;
   }));
   if (due === undefined) return;
   const claim = await db.query(
-    'INSERT INTO nrr_album_cover_posts(schedule_date, sent_at) VALUES($1,NOW()) ON CONFLICT DO NOTHING RETURNING id',
-    [dateKey]
+    'INSERT INTO nrr_album_cover_posts(schedule_date, scheduled_minute, sent_at) VALUES($1,$2,NOW()) ON CONFLICT DO NOTHING RETURNING id',
+    [dateKey, due]
   );
   if (!claim.rowCount) return;
   try { await sendRandom(client); }
@@ -150,7 +150,7 @@ async function migrate() {
       schedule_date DATE PRIMARY KEY, scheduled_minutes JSONB NOT NULL
     );
     CREATE TABLE IF NOT EXISTS nrr_album_cover_posts (
-      id BIGSERIAL PRIMARY KEY, schedule_date DATE NOT NULL, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      id BIGSERIAL PRIMARY KEY, schedule_date DATE NOT NULL, scheduled_minute INTEGER NOT NULL, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), UNIQUE(schedule_date, scheduled_minute)
     );
     CREATE INDEX IF NOT EXISTS idx_nrr_album_cover_posts_date ON nrr_album_cover_posts(schedule_date, sent_at);
   `);
