@@ -71,10 +71,7 @@ async function sendScheduled(client) {
   const sent = await db.query('SELECT scheduled_minute, sent_at FROM nrr_album_cover_posts WHERE schedule_date=$1 ORDER BY sent_at ASC', [dateKey]);
   if (sent.rowCount >= MAX_PER_DAY) return;
   if (sent.rows.length && now.getTime() - new Date(sent.rows[sent.rows.length - 1].sent_at).getTime() < MIN_GAP_MS) return;
-  const due = schedule.find(value => value <= minute && !sent.rows.some(row => {
-    const p = astParts(new Date(row.sent_at));
-    return Number(row.scheduled_minute) === value;
-  }));
+  const due = schedule.find(value => value <= minute && !sent.rows.some(row => Number(row.scheduled_minute) === value));
   if (due === undefined) return;
   const claim = await db.query(
     'INSERT INTO nrr_album_cover_posts(schedule_date, scheduled_minute, sent_at) VALUES($1,$2,NOW()) ON CONFLICT DO NOTHING RETURNING id',
