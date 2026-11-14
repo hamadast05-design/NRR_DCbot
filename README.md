@@ -55,8 +55,8 @@ Sticker uploads support Discord's PNG, APNG, GIF, and Lottie JSON formats within
 
 ## Santa's Gift Delivery
 
-- `/santa_gift` — Open a public, owner-locked seasonal mystery gift. Each member can open one gift every 24 hours.
+- `/santa_gift` — Open a public, owner-locked seasonal mystery gift. Members can open as many gifts as they like.
 - Gifts are cosmetic only; the feature does not modify coins, roles, inventory, or reputation.
 - Unopened gift claims expire after 15 minutes. Opened outcomes are stored in PostgreSQL and survive restarts.
 - Optional HTTPS artwork/GIF settings: `SANTA_GIFT_SACK_IMAGE_URL`, `SANTA_GIFT_SHAKE_GIF_URL`, `SANTA_GIFT_REVEAL_GIF_URL`, `SANTA_GIFT_GOLDEN_IMAGE_URL`, `SANTA_GIFT_ORDINARY_IMAGE_URL`, and `SANTA_GIFT_NAUGHTY_IMAGE_URL`.
-- Timing can be adjusted with `SANTA_GIFT_COOLDOWN_HOURS` and `SANTA_GIFT_PENDING_MINUTES`.
+- Unopened gift claims expire after the configurable `SANTA_GIFT_PENDING_MINUTES` period (15 minutes by default).
