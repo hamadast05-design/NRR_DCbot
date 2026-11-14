@@ -18,7 +18,7 @@ const commands=[
  new MessageContextMenuCommandBuilder().setName('Create NRR Emoji from Message').setType(ApplicationCommandType.Message),
  new MessageContextMenuCommandBuilder().setName('Create NRR Sticker from Message').setType(ApplicationCommandType.Message)
 ];
-const targetGuild=()=>config.boosterGuildId||config.guildId||null;
+const targetGuild=()=>config.guildId||null;
 const text=s=>new TextDisplayBuilder().setContent(s);
 const inNrr=i=>Boolean(targetGuild()&&i.guildId===targetGuild()&&i.guild);
 const isBooster=m=>Boolean(m&&m.premiumSince);
