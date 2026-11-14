@@ -52,15 +52,7 @@ jobs:
           console.log('Components V2 builders and slash command builder verified.');
           NODE
 
-      - name: Verify Santa Gift Delivery builders and reward weights
-        env:
-          DATABASE_URL: postgres://nrr:nrr@127.0.0.1:5432/nrr
-          SANTA_GIFT_SACK_IMAGE_URL: https://example.com/sack.png
-          SANTA_GIFT_SHAKE_GIF_URL: https://example.com/shake.gif
-          SANTA_GIFT_REVEAL_GIF_URL: https://example.com/reveal.gif
-          SANTA_GIFT_GOLDEN_IMAGE_URL: https://example.com/golden.png
-          SANTA_GIFT_ORDINARY_IMAGE_URL: https://example.com/ordinary.png
-          SANTA_GIFT_NAUGHTY_IMAGE_URL: https://example.com/naughty.png
+      - name: Verify Santa Gift spoiler reveal and reward weights
         run: |
           node <<'NODE'
           const feature = require('./src/santa-gift');
@@ -69,19 +61,14 @@ jobs:
             return totals;
           }, {});
           if (feature.command.toJSON().name !== 'santa_gift') throw new Error('Santa slash command was not registered.');
+          if (typeof feature.handlePrefixMessage !== 'function' || feature.DEFAULT_GIFT_WEIGHT !== 1000) throw new Error('Santa !addgift handler or default gift weight is missing.');
           if (feature.GIFTS.length !== 12 || feature.TOTAL_WEIGHT !== 10000) throw new Error('Santa gift pool or total weight is incorrect.');
           if (categoryWeights.golden !== 500 || categoryWeights.ordinary !== 7000 || categoryWeights.naughty !== 2500) {
             throw new Error('Santa gift category odds do not match 5% / 70% / 25%.');
           }
-          const components = [
-            feature.buildWaitingMessage({ claim_id: 'ci-claim' }),
-            feature.buildOpeningMessage(),
-            feature.buildRevealMessage(),
-            feature.buildResultMessage('12345678901234567', feature.GIFTS[0])
-          ];
-          for (const component of components) {
-            const json = component.toJSON();
-            if (!json.components || !json.components.length) throw new Error('A Santa Components V2 state rendered no components.');
+          const message = feature.buildGiftMessage('12345678901234567', feature.GIFTS[0]);
+          if (!message.includes('||') || !message.includes(feature.GIFTS[0].title)) {
+            throw new Error('Santa gift result is not wrapped in Discord spoiler formatting.');
           }
-          console.log('Santa command, gift weights, and all four Components V2 states verified.');
+          console.log('Santa command, gift weights, spoiler reveal, and addgift handler verified.');
           NODE

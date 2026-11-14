@@ -23,7 +23,6 @@ const gameRotationSystem = require('./game-rotation');
 const staffAnalytics = require('./staff-analytics');
 const staffRanking = require('./staff-ranking');
 const boosterPerks = require('./booster-perks');
-const santaGiftSystem = require('./santa-gift');
 const albumCoverSystem = require('./album-cover');
 const { registerApplicationCommands } = require('./command-registration');
 
@@ -82,14 +81,12 @@ client.once(Events.ClientReady, async readyClient => {
   try {
     await registerApplicationCommands();
     await db.migrate();
-    await santaGiftSystem.migrate();
     await albumCoverSystem.migrate();
     albumCoverSystem.startScheduler(readyClient);
     await boosterPerks.migrate();
     await staffAnalytics.migrate();
     await staffRanking.startScheduler(readyClient);
     await qotdSystem.migrate();
-    await santaGiftSystem.recover(readyClient);
     console.log('Database migrations ready.');
     const boosterGuild = readyClient.guilds.cache.get(config.guildId);
     if (boosterGuild) {
@@ -211,6 +208,7 @@ client.on(Events.MessageCreate, async message => {
   }
   try { await handleWorkReminderControl(message); } catch (error) { console.error('Work reminder control failed:', error); }
   try { await handlePrefixMute(message); } catch (error) { console.error('Prefix mute command failed:', error); }
+  try { await require('./santa-gift').handlePrefixMessage(message); } catch (error) { console.error('Santa gift prefix command failed:', error); }
   try { await gamePanel.handleStopMessage(message); } catch (error) { console.error('Game Panel !stop command failed:', error); }
   try { await staffRanking.handlePrefixMessage(message); } catch (error) { console.error('Staff ranking prefix command failed:', error); }
   try { await staffRanking.handleDiagnosticsMessage(message); } catch (error) { console.error('Staff ranking diagnostics command failed:', error); }
