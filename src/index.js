@@ -87,9 +87,8 @@ client.once(Events.ClientReady, async readyClient => {
     console.log('Database migrations ready.');
     const boosterGuild = readyClient.guilds.cache.get(config.boosterGuildId || config.guildId);
     if (boosterGuild) {
-      await boosterPerks.syncGuild(boosterGuild);
       setInterval(() => boosterPerks.retryCleanup(boosterGuild).catch(error => console.error('Booster asset cleanup retry failed:', error)), 5 * 60 * 1000);
-      console.log('NRR Booster Perks session sync ready.');
+      console.log('NRR Booster Perks session sync scheduled.');
     } else {
       console.warn('NRR Booster Perks are disabled: set BOOSTER_PERKS_GUILD_ID or DISCORD_GUILD_ID to the NRR server ID.');
     }
@@ -103,6 +102,7 @@ client.once(Events.ClientReady, async readyClient => {
 
     for (const guild of readyClient.guilds.cache.values()) {
       const members = await guild.members.fetch();
+      if (boosterGuild && guild.id === boosterGuild.id) await boosterPerks.syncGuild(guild, members);
       for (const member of members.values()) {
         if (!member.user.bot || config.allowBotTargets) {
           await db.ensureMember(guild.id, member.id, true);
