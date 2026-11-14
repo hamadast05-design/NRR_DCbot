@@ -3,6 +3,10 @@ const {
   ButtonBuilder,
   ButtonStyle,
   ChannelType,
+  ContainerBuilder,
+  TextDisplayBuilder,
+  SeparatorBuilder,
+  MessageFlags,
   EmbedBuilder,
   ModalBuilder,
   PermissionFlagsBits,
@@ -19,38 +23,96 @@ const PREFIX = 'voicehub:';
 const creating = new Set();
 
 function panelPayload() {
-  const embed = new EmbedBuilder()
-    .setColor(0x2B2D31)
-    .setTitle('VoiceHub Panel')
-    .setDescription([
-      '> 🔊 \`Lock\` - Deny members from joining',
-      '> 🔉 \`Unlock\` - Allow members to join',
-      '> #️⃣ \`Hide\` - Hide from channel list',
-      '> #️⃣ \`Reveal\` - Show in channel list',
-      '> 📞 \`Disconnect\` - Remove members',
-      '> 👑 \`Claim\` - Take ownership',
-      '> ✏️ \`Rename\` - Change channel name',
-      '> 👤 \`Update Limit\` - Set user limit',
-      '> 📋 \`Information\` - View details',
-      '> 🗑️ \`Delete\` - Remove channel',
-    ].join('\\n'));
-  const rows = [
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(PREFIX + 'lock').setEmoji('🔊').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'unlock').setEmoji('🔉').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'hide').setEmoji('🔒').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'reveal').setEmoji('👁️').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'disconnect').setEmoji('📞').setStyle(ButtonStyle.Secondary),
-    ),
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(PREFIX + 'claim').setEmoji('👑').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'rename').setEmoji('✏️').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'limit').setEmoji('👤').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'info').setEmoji('📋').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'delete').setEmoji('🗑️').setStyle(ButtonStyle.Secondary),
-    ),
-  ];
-  return { embeds: [embed], components: rows };
+  const container = new ContainerBuilder()
+    .setAccentColor(0x2B2D31)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent("### 🎙️ VoiceHub")
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        "Create your own temporary voice channel by joining <#"+TRIGGER_CHANNEL_ID+">.\n\n" +
+        "Once inside your channel, open your personal controls to manage its privacy, members, and settings."
+      )
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(PREFIX + 'open')
+          .setLabel('Open My Controls')
+          .setEmoji('🎛️')
+          .setStyle(ButtonStyle.Primary)
+      )
+    );
+  return { components: [container], flags: MessageFlags.IsComponentsV2 };
+}
+
+function channelPrivacy(channel) {
+  const everyone = channel.permissionOverwrites.cache.get(channel.guild.roles.everyone.id);
+  return {
+    locked: Boolean(everyone?.deny.has(PermissionFlagsBits.Connect)),
+    hidden: Boolean(everyone?.deny.has(PermissionFlagsBits.ViewChannel)),
+  };
+}
+
+function privatePanelPayload(channel, ownerId) {
+  const privacy = channelPrivacy(channel);
+  const owner = channel.guild.members.cache.get(ownerId);
+  const avatar = owner?.displayAvatarURL({ size: 128 }) || null;
+  const container = new ContainerBuilder()
+    .setAccentColor(0x2B2D31)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent("### 🎙️ VoiceHub Control Panel")
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        "**Channel:** <#"+channel.id+">\n" +
+        "**Owner:** <@"+ownerId+">\n" +
+        "**Members:** "+channel.members.size+"\n" +
+        "**User Limit:** "+(channel.userLimit || "Unlimited")+"\n" +
+        "**Join Access:** "+(privacy.locked ? "🔒 Locked" : "🔓 Open")+"\n" +
+        "**Visibility:** "+(privacy.hidden ? "🙈 Hidden" : "👁️ Visible")
+      )
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent("**Privacy & Access**"))
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(PREFIX + 'toggle-lock')
+          .setLabel(privacy.locked ? 'Unlock' : 'Lock')
+          .setEmoji(privacy.locked ? '🔓' : '🔒')
+          .setStyle(privacy.locked ? ButtonStyle.Success : ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId(PREFIX + 'toggle-hide')
+          .setLabel(privacy.hidden ? 'Reveal' : 'Hide')
+          .setEmoji(privacy.hidden ? '👁️' : '🙈')
+          .setStyle(ButtonStyle.Secondary)
+      )
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent("**Channel Customization**"))
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(PREFIX + 'rename').setLabel('Rename').setEmoji('✏️').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(PREFIX + 'limit').setLabel('Set Limit').setEmoji('👥').setStyle(ButtonStyle.Primary)
+      )
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent("**Moderation & Ownership**"))
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(PREFIX + 'claim').setLabel('Claim').setEmoji('👑').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(PREFIX + 'disconnect').setLabel('Disconnect User').setEmoji('🔇').setStyle(ButtonStyle.Danger)
+      )
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(PREFIX + 'delete').setLabel('Delete Channel').setEmoji('🗑️').setStyle(ButtonStyle.Danger)
+      )
+    );
+  return { components: [container], flags: MessageFlags.IsComponentsV2 };
 }
 
 async function sendPanel(client) {
@@ -223,6 +285,15 @@ function makeModal(kind, title, label, value, placeholder) {
 
 async function onButton(interaction) {
   const action = interaction.customId.slice(PREFIX.length);
+  if (action === 'open') {
+    const current = await getCurrentManagedChannel(interaction);
+    if (current.error) return replyError(interaction, current.error);
+    return interaction.reply({
+      ...privatePanelPayload(current.channel, current.ownerId),
+      ephemeral: true,
+    });
+  }
+
   if (action === 'claim') {
     const current = await getCurrentManagedChannel(interaction);
     if (current.error) return replyError(interaction, current.error);
@@ -267,17 +338,19 @@ async function onButton(interaction) {
   if (current.error) return replyError(interaction, current.error);
   const { channel } = current;
 
-  if (action === 'lock' || action === 'unlock') {
+  if (action === 'toggle-lock') {
+    const locked = channelPrivacy(channel).locked;
     await channel.permissionOverwrites.edit(interaction.guild.roles.everyone.id, {
-      Connect: action === 'lock' ? false : true,
+      Connect: locked ? false : true,
     });
-    return interaction.reply({ content: action === 'lock' ? '🔒 Your channel is now locked.' : '🔓 Your channel is now unlocked.', ephemeral: true });
+    return interaction.update(privatePanelPayload(channel, current.ownerId));
   }
-  if (action === 'hide' || action === 'reveal') {
+  if (action === 'toggle-hide') {
+    const hidden = channelPrivacy(channel).hidden;
     await channel.permissionOverwrites.edit(interaction.guild.roles.everyone.id, {
-      ViewChannel: action === 'hide' ? false : true,
+      ViewChannel: hidden ? false : true,
     });
-    return interaction.reply({ content: action === 'hide' ? '🙈 Your channel is now hidden.' : '👁️ Your channel is now visible.', ephemeral: true });
+    return interaction.update(privatePanelPayload(channel, current.ownerId));
   }
   if (action === 'info') {
     const embed = new EmbedBuilder()
@@ -336,7 +409,7 @@ async function onModal(interaction) {
       return true;
     }
     await current.channel.setName(value.slice(0, 100), 'Renamed by its VoiceHub owner');
-    await interaction.reply({ content: '✏️ Your channel name has been updated.', ephemeral: true });
+    await interaction.reply({ content: '✏️ Your channel name has been updated. Reopen your VoiceHub controls to see the refreshed status.', ephemeral: true });
     return true;
   }
   const limit = Number(value);
@@ -345,7 +418,7 @@ async function onModal(interaction) {
     return true;
   }
   await current.channel.setUserLimit(limit);
-  await interaction.reply({ content: `👤 Your channel limit is now ${limit === 0 ? 'unlimited' : limit}.`, ephemeral: true });
+  await interaction.reply({ content: `👤 Your channel limit is now ${limit === 0 ? 'unlimited' : limit}. Reopen your VoiceHub controls to see the refreshed status.`, ephemeral: true });
   return true;
 }
 
