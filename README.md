@@ -48,6 +48,6 @@ The bot uses PostgreSQL. Tables and indexes are created automatically on startup
 - `/booster-sticker` — Create one sticker per active boost session from a supported attachment.
 - Message context actions: **Create NRR Emoji from Message** and **Create NRR Sticker from Message** import an asset from a selected message (Apps menu).
 
-Set `BOOSTER_PERKS_GUILD_ID` to the NRR server ID. It defaults to `DISCORD_GUILD_ID` when omitted. The bot needs **Manage Expressions** permission in NRR, and the application must have the Guild Members intent enabled. The system records boost sessions and created asset IDs in PostgreSQL, resets quotas only on a new boost session, and removes tracked assets when the member stops boosting or leaves NRR. Failed cleanup attempts are retried.
+Set `DISCORD_GUILD_ID` to the NRR server ID. The bot needs **Manage Expressions** permission in NRR, and the application must have the Guild Members intent enabled. The system records boost sessions and created asset IDs in PostgreSQL, resets quotas only on a new boost session, and removes tracked assets when the member stops boosting or leaves NRR. Failed cleanup attempts are retried.
 
 Sticker uploads support Discord's PNG, APNG, GIF, and Lottie JSON formats within Discord's size, dimension, and animation limits. Lottie uploads may additionally require the guild to meet Discord's eligibility requirements.
