@@ -228,8 +228,19 @@ client.on(Events.MessageCreate, async message => {
           await voiceHub.sendPanel(client);
           await message.reply({ content: '✅ VoiceHub control panel sent.', allowedMentions: { parse: [] } });
         } catch (error) {
-          console.error('Manual VoiceHub panel command failed:', error);
-          await message.reply({ content: '❌ I could not send the VoiceHub panel. Check the bot’s channel permissions and configuration.', allowedMentions: { parse: [] } });
+          console.error('[VoiceHub] Manual panel send failed:', {
+            message: error?.message,
+            code: error?.code,
+            status: error?.status,
+            channelId: config.voiceHubTriggerChannelId,
+            channelType: error?.rawError?.channel_type,
+          }, error);
+          const detail = String(error?.message || 'Unknown error').slice(0, 700);
+          const code = error?.code ? ` (code: ${error.code})` : '';
+          await message.reply({
+            content: `❌ VoiceHub panel send failed${code}: ${detail}`,
+            allowedMentions: { parse: [] }
+          });
         }
       }
     }
