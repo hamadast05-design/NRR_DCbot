@@ -53,19 +53,20 @@ function panelPayload() {
   return { embeds: [embed], components: rows };
 }
 
-async function ensurePanel(client) {
+async function sendPanel(client) {
   const channel = await client.channels.fetch(CONTROL_CHANNEL_ID).catch(() => null);
-  if (!channel || typeof channel.send !== 'function' || !channel.messages) {
-    console.error('[VoiceHub] VoiceHub trigger channel is unavailable or does not support channel messages.');
-    return;
+  if (!channel || typeof channel.send !== 'function') {
+    throw new Error('[VoiceHub] Configured VoiceHub channel is unavailable or does not support sending messages.');
   }
-  const recent = await channel.messages.fetch({ limit: 50 }).catch(() => null);
-  const exists = false; // Always publish the latest VoiceHub panel on startup.
-  if (!exists) {
-    await channel.send(panelPayload());
+  return channel.send(panelPayload());
+}
+
+async function ensurePanel(client) {
+  try {
+    await sendPanel(client);
     console.log('[VoiceHub] Control panel posted.');
-  } else {
-    console.log('[VoiceHub] Existing control panel found.');
+  } catch (error) {
+    console.error('[VoiceHub] Could not post control panel:', error);
   }
 }
 
@@ -373,4 +374,4 @@ async function initialize(client) {
   console.log('[VoiceHub] Ready.');
 }
 
-module.exports = { initialize, onVoiceStateUpdate, handleInteraction };
+module.exports = { initialize, onVoiceStateUpdate, handleInteraction, sendPanel };
