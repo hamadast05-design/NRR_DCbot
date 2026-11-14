@@ -14,7 +14,7 @@ const chessPuzzle = require('./chess-puzzle');
 const stealOrNoSteal = require('./steal-or-no-steal');
 const learningGames = require('./learning-games');
 
-const { isSuperuser } = require('./access');
+const { hasFeatureAccess } = require('./access');
 
 const ACCESS_ROLES = new Set(['1102294809147879465','1113872898726297661','1566684707377119232','1566681749294030881']);
 const BANNER_URL = 'https://cdn.imageurlgenerator.com/uploads/88cfecef-4533-4b21-85f9-69aad6c2f089.jpg';
@@ -61,10 +61,12 @@ async function launchLearning(channel, owner, type) {
 }
 
 function allowed(interaction) {
-  if (isSuperuser(interaction.user?.id) || interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) return true;
-  const roleCache = interaction.member?.roles?.cache;
-  const roleIds = roleCache ? [...roleCache.keys()] : (interaction.member?.roles || []);
-  return [...ACCESS_ROLES].some(id => roleIds.includes(id));
+  return hasFeatureAccess(interaction.user?.id, {
+    memberPermissions: interaction.memberPermissions,
+    permission: PermissionFlagsBits.Administrator,
+    member: interaction.member,
+    roleIds: [...ACCESS_ROLES],
+  });
 }
 const text = content => new TextDisplayBuilder().setContent(content);
 
