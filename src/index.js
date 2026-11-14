@@ -23,7 +23,6 @@ const gameRotationSystem = require('./game-rotation');
 const staffAnalytics = require('./staff-analytics');
 const staffRanking = require('./staff-ranking');
 const boosterPerks = require('./booster-perks');
-const santaGiftSystem = require('./santa-gift');
 const { registerApplicationCommands } = require('./command-registration');
 
 validate();
