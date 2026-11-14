@@ -399,9 +399,8 @@ async function onButton(interaction) {
   if (action === 'toggle-hide') {
     const hidden = channelPrivacy(channel).hidden;
     if (!hidden) {
-      await channel.permissionOverwrites.edit(interaction.guild.roles.everyone.id, {
-        ViewChannel: false,
-      });
+      // Grant existing members and permitted users access before hiding the
+      // channel from @everyone, so current occupants are not displaced.
       for (const member of channel.members.values()) {
         await db.query(
           'INSERT INTO voicehub_hidden_access (channel_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
@@ -422,6 +421,9 @@ async function onButton(interaction) {
           Connect: true,
         });
       }
+      await channel.permissionOverwrites.edit(interaction.guild.roles.everyone.id, {
+        ViewChannel: false,
+      });
     } else {
       await channel.permissionOverwrites.edit(interaction.guild.roles.everyone.id, {
         ViewChannel: true,
