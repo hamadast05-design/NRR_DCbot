@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, AuditLogEvent } = require('discord.js');
-const { isSuperuser } = require('./access');
+const { hasFeatureAccess } = require('./access');
 const db = require('./db');
 
 const STAFF_ROLE_ID = '1180415723164668044';
@@ -31,7 +31,7 @@ async function onMessage(message) {
     VALUES($1,$2,$3,$4,$5) ON CONFLICT(guild_id,message_id) DO NOTHING`,
     [message.guild.id,message.author.id,message.channel.id,message.id,message.createdAt || new Date()]);
 }
-function isStaff(member) { return isSuperuser(member?.id) || Boolean(member?.roles?.cache?.has(STAFF_ROLE_ID)); }
+function isStaff(member) { return hasFeatureAccess(member?.id, { member, roleIds: [STAFF_ROLE_ID] }); }
 async function countMessages(guildId,userId,days) {
   const result = await db.query(`SELECT COUNT(*)::int AS count FROM nrr_message_activity
     WHERE guild_id=$1 AND user_id=$2 AND created_at >= NOW() - ($3::text || ' days')::interval`,[guildId,userId,String(days)]);
