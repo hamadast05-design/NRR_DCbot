@@ -421,4 +421,7 @@ async function recover(client) {
   if (recovered) console.log('[SantaGift] Recovered ' + recovered + ' interrupted gift reveal(s).');
 }
 
-module.exports = { command, migrate, handleCommand, handleButton, recover, GIFTS };
+module.exports = {
+  command, migrate, handleCommand, handleButton, recover, GIFTS, TOTAL_WEIGHT, chooseGift,
+  buildWaitingMessage, buildOpeningMessage, buildRevealMessage, buildResultMessage,
+};
