@@ -18,7 +18,7 @@ const { config } = require('./config');
 const db = require('./db');
 
 const TRIGGER_CHANNEL_ID = config.voiceHubTriggerChannelId;
-const CONTROL_CHANNEL_ID = TRIGGER_CHANNEL_ID;
+const CONTROL_CHANNEL_ID = config.voiceHubControlChannelId;
 const PREFIX = 'voicehub:';
 const creating = new Set();
 
@@ -237,7 +237,10 @@ async function onVoiceStateUpdate(oldState, newState) {
 }
 
 async function getCurrentManagedChannel(interaction) {
-  const channel = interaction.guild?.voiceStates?.cache?.get(interaction.user.id)?.channel || null;
+  const voiceState = interaction.guild?.voiceStates
+    ? await interaction.guild.voiceStates.fetch(interaction.user.id).catch(() => null)
+    : null;
+  const channel = voiceState?.channel || interaction.guild?.voiceStates?.cache?.get(interaction.user.id)?.channel || null;
   if (!channel || channel.type !== ChannelType.GuildVoice) return { error: 'Join your VoiceHub channel first.' };
   const result = await db.query(
     'SELECT owner_id FROM voicehub_channels WHERE guild_id = $1 AND channel_id = $2',
