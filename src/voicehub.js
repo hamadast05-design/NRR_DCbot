@@ -39,7 +39,7 @@ function panelPayload() {
       new ButtonBuilder().setCustomId(PREFIX + 'lock').setEmoji('🔊').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId(PREFIX + 'unlock').setEmoji('🔉').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId(PREFIX + 'hide').setEmoji('🔒').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'reveal').setEmoji('＃').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(PREFIX + 'reveal').setEmoji('👁️').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId(PREFIX + 'disconnect').setEmoji('📞').setStyle(ButtonStyle.Secondary),
     ),
     new ActionRowBuilder().addComponents(
