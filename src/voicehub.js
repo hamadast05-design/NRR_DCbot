@@ -188,7 +188,7 @@ async function onVoiceStateUpdate(oldState, newState) {
 }
 
 async function getCurrentManagedChannel(interaction) {
-  const channel = interaction.member?.voice?.channel;
+  const channel = interaction.guild?.voiceStates?.cache?.get(interaction.user.id)?.channel || null;
   if (!channel || channel.type !== ChannelType.GuildVoice) return { error: 'Join your VoiceHub channel first.' };
   const result = await db.query(
     'SELECT owner_id FROM voicehub_channels WHERE guild_id = $1 AND channel_id = $2',
