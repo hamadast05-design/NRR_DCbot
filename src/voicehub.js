@@ -20,36 +20,34 @@ const creating = new Set();
 
 function panelPayload() {
   const embed = new EmbedBuilder()
-    .setColor(0x5865F2)
+    .setColor(0x2B2D31)
     .setTitle('VoiceHub Panel')
     .setDescription([
-      'Manage your temporary voice channel using the buttons below.',
-      '',
-      '🔊 **Lock** — Deny members from joining',
-      '🔉 **Unlock** — Allow members to join',
-      '🔒 **Hide** — Hide the channel from the channel list',
-      '🔓 **Reveal** — Show the channel in the channel list',
-      '📞 **Disconnect** — Remove a member from your channel',
-      '👑 **Claim** — Take ownership when the owner has left',
-      '✏️ **Rename** — Change your channel name',
-      '👤 **Update Limit** — Set the user limit',
-      '📋 **Information** — View channel details',
-      '🗑️ **Delete** — Remove your channel',
-    ].join('\n'));
+      '> 🔊 \`Lock\` - Deny members from joining',
+      '> 🔉 \`Unlock\` - Allow members to join',
+      '> #️⃣ \`Hide\` - Hide from channel list',
+      '> #️⃣ \`Reveal\` - Show in channel list',
+      '> 📞 \`Disconnect\` - Remove members',
+      '> 👑 \`Claim\` - Take ownership',
+      '> ✏️ \`Rename\` - Change channel name',
+      '> 👤 \`Update Limit\` - Set user limit',
+      '> 📋 \`Information\` - View details',
+      '> 🗑️ \`Delete\` - Remove channel',
+    ].join('\\n'));
   const rows = [
     new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(PREFIX + 'lock').setLabel('Lock').setEmoji('🔊').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'unlock').setLabel('Unlock').setEmoji('🔉').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'hide').setLabel('Hide').setEmoji('🔒').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'reveal').setLabel('Reveal').setEmoji('🔓').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'disconnect').setLabel('Disconnect').setEmoji('📞').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(PREFIX + 'lock').setEmoji('🔊').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(PREFIX + 'unlock').setEmoji('🔉').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(PREFIX + 'hide').setEmoji('🔒').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(PREFIX + 'reveal').setEmoji('＃').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(PREFIX + 'disconnect').setEmoji('📞').setStyle(ButtonStyle.Secondary),
     ),
     new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(PREFIX + 'claim').setLabel('Claim').setEmoji('👑').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'rename').setLabel('Rename').setEmoji('✏️').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'limit').setLabel('Update Limit').setEmoji('👤').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'info').setLabel('Information').setEmoji('📋').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(PREFIX + 'delete').setLabel('Delete').setEmoji('🗑️').setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId(PREFIX + 'claim').setEmoji('👑').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(PREFIX + 'rename').setEmoji('✏️').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(PREFIX + 'limit').setEmoji('👤').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(PREFIX + 'info').setEmoji('📋').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(PREFIX + 'delete').setEmoji('🗑️').setStyle(ButtonStyle.Secondary),
     ),
   ];
   return { embeds: [embed], components: rows };
