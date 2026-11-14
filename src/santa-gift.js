@@ -171,6 +171,7 @@ async function migrate() {
   await db.query(
     'CREATE UNIQUE INDEX IF NOT EXISTS idx_santa_gift_message ON santa_gift_claims (message_id) WHERE message_id IS NOT NULL'
   );
+  await db.query('DROP INDEX IF EXISTS idx_santa_gift_cooldown');
   await db.query(
     "UPDATE santa_gift_claims SET status = 'expired' WHERE status = 'pending' AND expires_at <= NOW()"
   );
