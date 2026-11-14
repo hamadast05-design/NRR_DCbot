@@ -49,8 +49,7 @@ async function ensureSchedule() {
 }
 function buildEmbed() {
   return new EmbedBuilder().setColor(EMBED_COLOR)
-    .setAuthor({ name: 'NAME THE ALBUM COVER', iconURL: DISC_ICON_URL })
-    .setFooter({ text: 'NRR • Name The Album Cover' });
+    .setTitle('NAME THE ALBUM COVER');
 }
 async function sendRandom(client, channel = null) {
   const destination = channel || await client.channels.fetch(CHANNEL_ID);
@@ -125,9 +124,12 @@ async function handlePrefixMessage(message) {
     }
     return true;
   }
+  // Keep manual album drops discreet: remove the trigger before posting, with no success reply.
+  await message.delete().catch(error => {
+    console.warn('[AlbumCover] Could not delete !sendalbum command message:', error.message);
+  });
   try {
     await sendRandom(message.client, message.channel);
-    await message.reply('✅ Album Cover posted!');
   } catch (error) {
     console.error('[AlbumCover] Manual send failed:', error);
     await message.reply(error.message.includes('bank is empty')
