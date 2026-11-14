@@ -46,7 +46,8 @@ The bot uses PostgreSQL. Tables and indexes are created automatically on startup
 - `/booster-perks` — Open the private Components V2 quota panel.
 - `/booster-emoji` — Create up to two emojis per active boost session from an image attachment or pasted custom Discord emoji.
 - `/booster-sticker` — Create one sticker per active boost session from a supported attachment.
-- Message context actions: **Create NRR Emoji from Message** and **Create NRR Sticker from Message** import an asset from a selected message (Apps menu).
+- Reply shortcuts: reply to a message and send `!booster-emoji name` or `!booster-sticker name` to import its single custom emoji or sticker.
+- Message context actions: **Create NRR Emoji from Message** and **Create NRR Sticker from Message** import an asset from a selected message (Apps menu), with selection support when a message contains multiple assets.
 
 Set `DISCORD_GUILD_ID` to the NRR server ID. The bot needs **Manage Expressions** permission in NRR, and the application must have the Guild Members intent enabled. The system records boost sessions and created asset IDs in PostgreSQL, resets quotas only on a new boost session, and removes tracked assets when the member stops boosting or leaves NRR. Failed cleanup attempts are retried.
 
