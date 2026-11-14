@@ -24,6 +24,7 @@ const staffAnalytics = require('./staff-analytics');
 const staffRanking = require('./staff-ranking');
 const boosterPerks = require('./booster-perks');
 const santaGiftSystem = require('./santa-gift');
+const albumCoverSystem = require('./album-cover');
 const { registerApplicationCommands } = require('./command-registration');
 
 validate();
@@ -82,6 +83,8 @@ client.once(Events.ClientReady, async readyClient => {
     await registerApplicationCommands();
     await db.migrate();
     await santaGiftSystem.migrate();
+    await albumCoverSystem.migrate();
+    albumCoverSystem.startScheduler(readyClient);
     await boosterPerks.migrate();
     await staffAnalytics.migrate();
     await staffRanking.startScheduler(readyClient);
@@ -211,6 +214,7 @@ client.on(Events.MessageCreate, async message => {
   try { await gamePanel.handleStopMessage(message); } catch (error) { console.error('Game Panel !stop command failed:', error); }
   try { await staffRanking.handlePrefixMessage(message); } catch (error) { console.error('Staff ranking prefix command failed:', error); }
   try { await staffRanking.handleDiagnosticsMessage(message); } catch (error) { console.error('Staff ranking diagnostics command failed:', error); }
+  try { await albumCoverSystem.handlePrefixMessage(message); } catch (error) { console.error('Album Cover command failed:', error); }
   if (message.guild && !message.author.bot && !message.webhookId) {
     const raw = message.content.trim();
     if (/^!send_news$/i.test(raw)) { if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) return message.reply('❌ You need Manage Server permission to send manual news.'); try { await newsSystem.sendLatest(client, message); } catch (error) { console.error('Manual news command failed:', error); await message.reply('❌ I could not fetch or post a news story right now.'); } }
