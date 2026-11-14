@@ -55,7 +55,7 @@ Sticker uploads support Discord's PNG, APNG, GIF, and Lottie JSON formats within
 
 ## Santa's Gift Delivery
 
-- `/santa_gift` — Open a public, owner-locked seasonal mystery gift. Members can open as many gifts as they like.
-- Gifts are cosmetic only; the feature does not modify coins, roles, inventory, or reputation.
-- Unopened gift claims expire after the configurable 15-minute default. Opened outcomes are stored in PostgreSQL and survive restarts.
-- Optional HTTPS artwork/GIF settings: `SANTA_GIFT_SACK_IMAGE_URL`, `SANTA_GIFT_SHAKE_GIF_URL`, `SANTA_GIFT_REVEAL_GIF_URL`, `SANTA_GIFT_GOLDEN_IMAGE_URL`, `SANTA_GIFT_ORDINARY_IMAGE_URL`, and `SANTA_GIFT_NAUGHTY_IMAGE_URL`.
+- `/santa_gift` — Post a public, random seasonal gift reveal. Members can open as many gifts as they like.
+- The gift name and description are hidden behind Discord spoiler formatting (`||like this||`) until clicked.
+- Gift outcomes are cosmetic only; the feature does not modify coins, roles, inventory, or reputation.
+- Golden gifts have a 5% chance, ordinary gifts have a 70% chance, and unlucky gifts have a 25% chance.
