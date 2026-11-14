@@ -182,6 +182,11 @@ client.on(Events.MessageDelete, async message => {
 });
 
 client.on(Events.MessageCreate, async message => {
+  // Keep the NR3 Bot from posting in the NRR staff reminder channel.
+  if (message.channelId === WORK_REMINDER_CHANNEL_ID && message.author.id === '1563975512240689272') {
+    await message.delete().catch(error => console.error('Could not remove NR3 Bot message:', error));
+    return;
+  }
   try { await handleWorkReminderControl(message); } catch (error) { console.error('Work reminder control failed:', error); }
   try { await handlePrefixMute(message); } catch (error) { console.error('Prefix mute command failed:', error); }
   try { await gamePanel.handleStopMessage(message); } catch (error) { console.error('Game Panel !stop command failed:', error); }
