@@ -172,20 +172,11 @@ async function migrate() {
     'CREATE UNIQUE INDEX IF NOT EXISTS idx_santa_gift_message ON santa_gift_claims (message_id) WHERE message_id IS NOT NULL'
   );
   await db.query(
-    'CREATE INDEX IF NOT EXISTS idx_santa_gift_cooldown ON santa_gift_claims (guild_id, user_id, opened_at DESC) WHERE opened_at IS NOT NULL'
-  );
-  await db.query(
     "UPDATE santa_gift_claims SET status = 'expired' WHERE status = 'pending' AND expires_at <= NOW()"
   );
 }
 
 async function createClaim({ guildId, userId, channelId, claimId }) {
-  await db.query(
-    "UPDATE santa_gift_claims SET status = 'completed', completed_at = COALESCE(completed_at, NOW()) " +
-    "WHERE guild_id = $1 AND user_id = $2 AND status = 'opening' " +
-    "AND opened_at <= NOW() - ($3::bigint * INTERVAL '1 millisecond')",
-    [guildId, userId, config.santaGiftCooldownMs]
-  );
   await db.query(
     "UPDATE santa_gift_claims SET status = 'expired' " +
     "WHERE guild_id = $1 AND user_id = $2 AND status = 'pending' AND expires_at <= NOW()",
@@ -199,18 +190,6 @@ async function createClaim({ guildId, userId, channelId, claimId }) {
     [guildId, userId]
   );
   if (pending.rows[0]) return { ok: false, reason: 'pending', claim: pending.rows[0] };
-
-  const recent = await db.query(
-    "SELECT opened_at FROM santa_gift_claims " +
-    "WHERE guild_id = $1 AND user_id = $2 AND status IN ('opening','completed') " +
-    "AND opened_at > NOW() - ($3::bigint * INTERVAL '1 millisecond') " +
-    'ORDER BY opened_at DESC LIMIT 1',
-    [guildId, userId, config.santaGiftCooldownMs]
-  );
-  if (recent.rows[0]) {
-    const elapsed = Date.now() - new Date(recent.rows[0].opened_at).getTime();
-    return { ok: false, reason: 'cooldown', remainingMs: Math.max(0, config.santaGiftCooldownMs - elapsed) };
-  }
 
   try {
     const inserted = await db.query(
@@ -228,24 +207,8 @@ async function createClaim({ guildId, userId, channelId, claimId }) {
       [guildId, userId]
     );
     if (active.rows[0]) return { ok: false, reason: 'pending', claim: active.rows[0] };
-    const cooldown = await db.query(
-      "SELECT opened_at FROM santa_gift_claims WHERE guild_id = $1 AND user_id = $2 " +
-      "AND status IN ('opening','completed') ORDER BY opened_at DESC LIMIT 1",
-      [guildId, userId]
-    );
-    if (cooldown.rows[0]) {
-      const elapsed = Date.now() - new Date(cooldown.rows[0].opened_at).getTime();
-      return { ok: false, reason: 'cooldown', remainingMs: Math.max(0, config.santaGiftCooldownMs - elapsed) };
-    }
     throw error;
   }
-}
-
-function formatRemaining(ms) {
-  const minutes = Math.max(1, Math.ceil(ms / 60000));
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return hours ? hours + 'h ' + remainingMinutes + 'm' : minutes + 'm';
 }
 
 async function handleCommand(interaction) {
@@ -270,12 +233,6 @@ async function handleCommand(interaction) {
     return interaction.reply({ content: '❌ Santa could not prepare your gift right now. Please try again later.', ephemeral: true });
   }
 
-  if (!claimResult.ok && claimResult.reason === 'cooldown') {
-    return interaction.reply({
-      content: '🎅 Santa already visited you recently! You can open another gift in **' + formatRemaining(claimResult.remainingMs) + '**.',
-      ephemeral: true,
-    });
-  }
   if (!claimResult.ok && claimResult.reason === 'pending') {
     const existing = claimResult.claim;
     const link = existing.message_id
