@@ -296,7 +296,7 @@ async function onButton(interaction) {
     await current.channel.permissionOverwrites.edit(interaction.user.id, {
       ViewChannel: true, Connect: true,
     }).catch(() => {});
-    return interaction.reply({ content: '👑 You are now the owner of this VoiceHub channel.', ephemeral: true });
+    return interaction.update(privatePanelPayload(current.channel, interaction.user.id));
   }
 
   if (action === 'rename' || action === 'limit') {
