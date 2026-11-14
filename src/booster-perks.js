@@ -84,5 +84,35 @@ async function handleInteraction(i){
  if(i.isModalSubmit()&&i.customId.startsWith(PREFIX+'name:')){const id=i.customId.split(':')[2],p=pending.get(id);if(!p||p.user!==i.user.id)return i.reply({content:'❌ Import request expired. Select the message again.',ephemeral:true});pending.delete(id);return createAsset(i,p.type,i.fields.getTextInputValue('name'),p.source,p.type==='sticker'?i.fields.getTextInputValue('description'):'','✨');}
  return false;
 }
+async function handleMessageCreate(message){
+ if(!message.guild||message.guild.id!==targetGuild()||message.author.bot||message.webhookId)return false;
+ const match=message.content.trim().match(/^!booster-(emoji|sticker)\s+([A-Za-z0-9_]{2,32})$/i);
+ if(!match)return false;
+ if(!message.reference||!message.reference.messageId){await message.reply('Reply to a message containing one custom emoji or sticker. Usage: !booster-emoji name or !booster-sticker name.');return true;}
+ const target=await message.fetchReference().catch(()=>null);
+ if(!target){await message.reply('❌ I could not retrieve the message you replied to.');return true;}
+ const type=match[1].toLowerCase(),name=match[2];
+ let source;
+ if(type==='emoji'){
+  const sources=emojisIn(target.content);
+  if(sources.length!==1){await message.reply(sources.length?'This message contains multiple custom emojis. Use the message Apps menu to choose one.':'I could not find a custom emoji in that message.');return true;}
+  source=sources[0];
+ }else{
+  const stickers=[...target.stickers.values()];
+  if(stickers.length!==1){await message.reply(stickers.length?'This message contains multiple stickers. Use the message Apps menu to choose one.':'I could not find a sticker in that message.');return true;}
+  const sticker=stickers[0];
+  source={url:sticker.url,ext:sticker.format===3?'json':sticker.format===2?'apng':sticker.format===4?'gif':'png'};
+ }
+ let response=null;
+ const fake={
+  guild:message.guild,guildId:message.guild.id,user:message.author,deferred:false,replied:false,
+  reply:async payload=>{fake.replied=true;return message.reply(typeof payload==='string'?payload:payload.content);},
+  deferReply:async()=>{fake.deferred=true;response=await message.reply('⏳ Processing your booster asset...');},
+  editReply:async payload=>response?response.edit(payload):message.reply(payload.content),
+ };
+ await createAsset(fake,type,name,source,'','✨');
+ return true;
+}
+
 function handles(i){return (i.isChatInputCommand()&&['booster-perks','booster-emoji','booster-sticker'].includes(i.commandName))||(i.isMessageContextMenuCommand()&&['Create NRR Emoji from Message','Create NRR Sticker from Message'].includes(i.commandName))||(i.isButton()&&i.customId.startsWith(PREFIX))||(i.isStringSelectMenu()&&i.customId.startsWith(PREFIX))||(i.isModalSubmit()&&i.customId.startsWith(PREFIX));}
-module.exports={commands,migrate,syncGuild,retryCleanup,onMemberUpdate,onMemberRemove,handles,handleInteraction};
+module.exports={commands,migrate,syncGuild,retryCleanup,onMemberUpdate,onMemberRemove,handleMessageCreate,handles,handleInteraction};
