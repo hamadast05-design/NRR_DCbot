@@ -29,7 +29,7 @@ async function migrate(){
 async function getAccount(g,u){const r=await db.query('SELECT * FROM nrr_booster_perk_accounts WHERE guild_id=$1 AND user_id=$2',[g,u]);return r.rows[0]||null;}
 async function startSession(m){
  if(!isBooster(m))return;
- await db.query('INSERT INTO nrr_booster_perk_accounts(guild_id,user_id,session_id,boost_started_at,emoji_used,sticker_used,eligible) VALUES($1,$2,$3,$4,0,0,TRUE) ON CONFLICT(guild_id,user_id) DO UPDATE SET session_id=EXCLUDED.session_id,boost_started_at=EXCLUDED.boost_started_at,emoji_used=0,sticker_used=0,eligible=TRUE,updated_at=NOW() WHERE nrr_booster_perk_accounts.access_type<>'superuser' AND (nrr_booster_perk_accounts.eligible=FALSE OR nrr_booster_perk_accounts.boost_started_at IS DISTINCT FROM EXCLUDED.boost_started_at)',[m.guild.id,m.id,crypto.randomUUID(),m.premiumSince]);
+ await db.query("INSERT INTO nrr_booster_perk_accounts(guild_id,user_id,session_id,boost_started_at,emoji_used,sticker_used,eligible) VALUES($1,$2,$3,$4,0,0,TRUE) ON CONFLICT(guild_id,user_id) DO UPDATE SET session_id=EXCLUDED.session_id,boost_started_at=EXCLUDED.boost_started_at,emoji_used=0,sticker_used=0,eligible=TRUE,updated_at=NOW() WHERE nrr_booster_perk_accounts.access_type<>'superuser' AND (nrr_booster_perk_accounts.eligible=FALSE OR nrr_booster_perk_accounts.boost_started_at IS DISTINCT FROM EXCLUDED.boost_started_at)",[m.guild.id,m.id,crypto.randomUUID(),m.premiumSince]);
 }
 async function ensureSuperuserSession(m){
  const current=await getAccount(m.guild.id,m.id);
