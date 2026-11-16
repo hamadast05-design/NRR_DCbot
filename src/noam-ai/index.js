@@ -3,6 +3,7 @@ const { config } = require('./config');
 const store = require('./database');
 const collector = require('./collector');
 const ai = require('./ai');
+const ranking = require('./ranking');
 const cooldowns=new Map(), activeUsers=new Set(), webhookCache=new Map();
 
 async function migrate(){await store.migrate();}
@@ -83,7 +84,8 @@ async function handleChat(message){
     const history=await store.getHistory(message.channelId,message.author.id);
     const knowledge=await store.searchKnowledge(message.guild.id,message.content,6);
     const examples=await store.recentNoamMessages(message.guild.id,config.noamUserIds,8);
-    const reply=await ai.generateReply({question:message.content.slice(0,2000),history,knowledge,noamExamples:examples,
+    const rankingContext=await ranking.getRankingContext(message.guild);
+    const reply=await ai.generateReply({question:message.content.slice(0,2000),history,knowledge,noamExamples:examples,rankingContext,
       memberName:message.member?.displayName||message.author.username});
     await sendAsNoam(message.channel,reply);
     await store.saveHistory(message.channelId,message.author.id,[...history,
