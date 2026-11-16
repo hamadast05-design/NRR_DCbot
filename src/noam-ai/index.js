@@ -1,4 +1,4 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { PermissionFlagsBits, WebhookClient } = require('discord.js');
 const { config } = require('./config');
 const store = require('./database');
 const collector = require('./collector');
@@ -9,10 +9,18 @@ async function migrate(){await store.migrate();}
 function isManager(message){return Boolean(message.member?.permissions?.has(PermissionFlagsBits.ManageGuild));}
 async function getWebhook(channel){
   if(webhookCache.has(channel.id)) return webhookCache.get(channel.id);
-  const hooks=await channel.fetchWebhooks();
-  let hook=hooks.find(item=>item.name==='Noam AI'&&item.token);
-  if(!hook) hook=await channel.createWebhook({name:'Noam AI',avatar:config.avatarUrl,reason:'Talk to Noam AI character webhook'});
-  webhookCache.set(channel.id,hook); return hook;
+  const saved=await store.getWebhookCredentials(channel.id);
+  if(saved?.webhook_id&&saved?.webhook_token){
+    const client=new WebhookClient({id:saved.webhook_id,token:saved.webhook_token});
+    webhookCache.set(channel.id,client);
+    return client;
+  }
+  const created=await channel.createWebhook({name:'Noam AI',reason:'Talk to Noam AI character webhook'});
+  if(!created.token) throw new Error('Discord did not return a webhook token.');
+  await store.saveWebhookCredentials(channel.id,created.id,created.token);
+  const client=new WebhookClient({id:created.id,token:created.token});
+  webhookCache.set(channel.id,client);
+  return client;
 }
 async function sendAsNoam(channel,content){
   const hook=await getWebhook(channel);
@@ -96,7 +104,7 @@ async function handleMessage(message){
   return handleChat(message);
 }
 async function handleMessageDelete(message){
-  if(!message?.id||message.partial) return;
+  if(!message?.id) return;
   await store.deleteMessage(message.id).catch(error=>console.error('[NoamAI] Deleted-message cleanup failed:',error?.message||error));
 }
 module.exports={migrate,handleMessage,handleMessageDelete};
