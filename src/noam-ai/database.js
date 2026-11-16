@@ -62,13 +62,15 @@ async function isOptedOut(userId) {
   const r=await db.query('SELECT 1 FROM noam_ai_optouts WHERE user_id=$1',[userId]); return Boolean(r.rowCount);
 }
 async function optOut(userId) {
-  await db.query('BEGIN');
-  try {
-    await db.query('INSERT INTO noam_ai_optouts(user_id) VALUES($1) ON CONFLICT(user_id) DO NOTHING',[userId]);
-    await db.query('DELETE FROM noam_knowledge_messages WHERE user_id=$1',[userId]);
-    await db.query('DELETE FROM noam_ai_conversations WHERE user_id=$1',[userId]);
-    await db.query('COMMIT');
-  } catch(error) { await db.query('ROLLBACK').catch(()=>{}); throw error; }
+  await db.query(`
+    WITH optout AS (
+      INSERT INTO noam_ai_optouts(user_id) VALUES($1)
+      ON CONFLICT(user_id) DO NOTHING
+      RETURNING user_id
+    )
+    DELETE FROM noam_knowledge_messages WHERE user_id=$1
+  `,[userId]);
+  await db.query('DELETE FROM noam_ai_conversations WHERE user_id=$1',[userId]);
 }
 async function optIn(userId) { await db.query('DELETE FROM noam_ai_optouts WHERE user_id=$1',[userId]); }
 async function deleteMessage(messageId) { await db.query('DELETE FROM noam_knowledge_messages WHERE message_id=$1',[messageId]); }
