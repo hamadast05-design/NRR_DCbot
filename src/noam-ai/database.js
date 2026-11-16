@@ -16,7 +16,7 @@ async function migrate() {
       channel_id TEXT NOT NULL, user_id TEXT NOT NULL, history JSONB NOT NULL DEFAULT '[]'::jsonb,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY(channel_id, user_id)
     );
-    CREATE TABLE IF NOT EXISTS noam_ai_collection_state (
+    CREATE TABLE IF NOT EXISTS noam_ai_webhooks (\n      channel_id TEXT PRIMARY KEY, webhook_id TEXT NOT NULL, webhook_token TEXT NOT NULL,\n      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()\n    );\n    CREATE TABLE IF NOT EXISTS noam_ai_collection_state (
       channel_id TEXT PRIMARY KEY, before_message_id TEXT, completed BOOLEAN NOT NULL DEFAULT FALSE,
       messages_collected BIGINT NOT NULL DEFAULT 0, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
@@ -65,10 +65,11 @@ async function optOut(userId) {
   await db.query(`
     WITH optout AS (
       INSERT INTO noam_ai_optouts(user_id) VALUES($1)
-      ON CONFLICT(user_id) DO NOTHING
+      ON CONFLICT(user_id) DO UPDATE SET opted_out_at=NOW()
       RETURNING user_id
     )
-    DELETE FROM noam_knowledge_messages WHERE user_id=$1
+    DELETE FROM noam_knowledge_messages
+    WHERE user_id IN (SELECT user_id FROM optout)
   `,[userId]);
   await db.query('DELETE FROM noam_ai_conversations WHERE user_id=$1',[userId]);
 }
@@ -103,6 +104,18 @@ async function saveHistory(channelId,userId,history) {
     ON CONFLICT(channel_id,user_id) DO UPDATE SET history=EXCLUDED.history,updated_at=NOW()
   `,[channelId,userId,JSON.stringify(history.slice(-16))]);
 }
+async function getWebhookCredentials(channelId) {
+  const r=await db.query('SELECT webhook_id,webhook_token FROM noam_ai_webhooks WHERE channel_id=$1',[channelId]);
+  return r.rows[0]||null;
+}
+async function saveWebhookCredentials(channelId,webhookId,webhookToken) {
+  await db.query(`
+    INSERT INTO noam_ai_webhooks(channel_id,webhook_id,webhook_token,updated_at)
+    VALUES($1,$2,$3,NOW())
+    ON CONFLICT(channel_id) DO UPDATE SET webhook_id=EXCLUDED.webhook_id,
+      webhook_token=EXCLUDED.webhook_token,updated_at=NOW()
+  `,[channelId,webhookId,webhookToken]);
+}
 async function collectionStats() {
   const r=await db.query(`
     SELECT COUNT(*)::bigint AS total,COUNT(*) FILTER(WHERE is_noam)::bigint AS noam_messages,
@@ -126,4 +139,4 @@ async function updateCollectionState(channelId,beforeMessageId,completed,increme
   `,[channelId,beforeMessageId,completed,increment]);
 }
 module.exports={migrate,storeMessages,isOptedOut,optOut,optIn,deleteMessage,searchKnowledge,recentNoamMessages,
-  getHistory,saveHistory,collectionStats,getCollectionState,updateCollectionState};
+  getHistory,saveHistory,getWebhookCredentials,saveWebhookCredentials,collectionStats,getCollectionState,updateCollectionState};
