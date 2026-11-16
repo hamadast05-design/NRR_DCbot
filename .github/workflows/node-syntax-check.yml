@@ -17,7 +17,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           set -e
-          for file in src/*.js; do
+          for file in $(find src -name "*.js"); do
             node --check "$file"
           done
       - name: Verify Discord Components V2 builders
