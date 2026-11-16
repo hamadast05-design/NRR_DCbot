@@ -42,6 +42,7 @@ async function handleOptCommands(message){
   return false;
 }
 async function handleAdminCommands(message){
+  if(message.guild?.id!==config.guildId) return false;
   const command=message.content.trim().toLowerCase();
   if(!['!noam-collect','!noam-status'].includes(command)) return false;
   if(!isManager(message)){await message.reply({content:'You need Manage Server permission to use this control.',allowedMentions:{parse:[]}});return true;}
