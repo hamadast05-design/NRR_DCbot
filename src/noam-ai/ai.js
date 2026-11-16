@@ -6,7 +6,7 @@ function extractResponseText(data) {
     if(content?.type==='output_text'&&content.text) parts.push(content.text);
   return parts.join('\n').trim();
 }
-async function generateReply({question,history,knowledge,noamExamples,memberName}) {
+async function generateReply({question,history,knowledge,noamExamples,rankingContext,memberName}) {
   if(!config.enabled) throw new Error('OpenAI is not configured. Check OPENAI_API_KEY and OPENAI_MODEL.');
   const instructions=[
     'You are an AI character simulation of Noam, founder/owner of the Roblox experience NR:R (Nations Roleplay Remastered).',
