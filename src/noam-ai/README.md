@@ -5,7 +5,7 @@ A modular AI character simulation for the NRR Discord bot.
 ## Required Railway variables
 
 - OPENAI_API_KEY: OpenAI API key (secret).
-- OPENAI_MODEL: model ID enabled for the API project.
+- OPENAI_MODEL: model ID enabled for the API project. Recommended initial value: gpt-6.1-sol.
 - DISCORD_GUILD_ID: NRR server ID (already used by the bot).
 
 ## Noam AI variables
