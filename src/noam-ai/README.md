@@ -26,7 +26,7 @@ A modular AI character simulation for the NRR Discord bot.
 5. Use !noam-status to view collection progress.
 6. Members can use !noam-optout to delete their stored messages and conversation history, or !noam-optin to participate again. Deleted historical messages are not restored.
 
-The historical collector indexes public guild text and announcement channels visible to @everyone. It excludes DMs, private channels, bots, webhooks, and messages matching basic sensitive-data patterns. The first version does not index forum posts, private threads, or voice transcripts.
+The historical collector indexes public guild text and announcement channels visible to @everyone, plus active and archived public threads (including forum posts) that are discoverable through Discord. It excludes DMs, private channels, private threads, bots, webhooks, and messages matching basic sensitive-data patterns. Voice transcripts are not collected.
 
 ## Runtime behavior
 
