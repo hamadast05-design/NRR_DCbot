@@ -97,6 +97,7 @@ async function collectGuild(guild) {
   const cutoff=Date.now()-config.lookbackDays*86400000;
   const report={started:true,discovered:0,completed:0,failed:0,skipped:0,newlyStored:0,discoveryFailures:[]};
   try {
+    await store.clearCollectionErrors();
     const channels=await guild.channels.fetch();
     const parents=[...channels.values()].filter(isPublicParent);
     const targets=[];
