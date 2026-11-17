@@ -19,10 +19,19 @@ async function migrate() {
     CREATE TABLE IF NOT EXISTS noam_ai_webhooks (
       channel_id TEXT PRIMARY KEY, webhook_id TEXT NOT NULL, webhook_token TEXT NOT NULL,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );\n    CREATE TABLE IF NOT EXISTS noam_ai_collection_state (
+    );
+    CREATE TABLE IF NOT EXISTS noam_ai_collection_state (
       channel_id TEXT PRIMARY KEY, before_message_id TEXT, completed BOOLEAN NOT NULL DEFAULT FALSE,
       messages_collected BIGINT NOT NULL DEFAULT 0, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE noam_ai_collection_state ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
+    ALTER TABLE noam_ai_collection_state ADD COLUMN IF NOT EXISTS target_type TEXT NOT NULL DEFAULT 'public_channel';
+    ALTER TABLE noam_ai_collection_state ADD COLUMN IF NOT EXISTS last_error TEXT;
+    CREATE TABLE IF NOT EXISTS noam_ai_collection_errors (
+      id BIGSERIAL PRIMARY KEY, parent_channel_id TEXT NOT NULL, stage TEXT NOT NULL, error TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    UPDATE noam_ai_collection_state SET status=CASE WHEN completed THEN 'completed' ELSE 'pending' END WHERE status='pending' AND completed=TRUE;
   `);
 }
 
@@ -125,21 +134,42 @@ async function collectionStats() {
       COUNT(DISTINCT channel_id)::int AS channels,MAX(created_at) AS newest FROM noam_knowledge_messages
   `);
   const s=await db.query(`
-    SELECT COUNT(*) FILTER(WHERE completed)::int AS completed_channels,COUNT(*)::int AS total_channels,
-      COALESCE(SUM(messages_collected),0)::bigint AS collected FROM noam_ai_collection_state
+    SELECT COUNT(*)::int AS total_targets,
+      COUNT(*) FILTER(WHERE status='completed' OR completed)::int AS completed_channels,
+      COUNT(*) FILTER(WHERE status='failed')::int AS failed_channels,
+      COUNT(*) FILTER(WHERE status='pending' OR status='running')::int AS pending_channels,
+      COALESCE(SUM(messages_collected),0)::bigint AS collected
+    FROM noam_ai_collection_state
   `);
-  return {...(r.rows[0]||{}),...(s.rows[0]||{})};
+  const e=await db.query(`SELECT channel_id,target_type,last_error,updated_at FROM noam_ai_collection_state WHERE status='failed' ORDER BY updated_at DESC LIMIT 8`);
+  return {...(r.rows[0]||{}),...(s.rows[0]||{}),failures:e.rows};
+}
+async function databaseCheck() { await db.query('SELECT 1 AS ok'); return true; }
+async function clearCollectionErrors() { await db.query('DELETE FROM noam_ai_collection_errors'); }
+async function recordCollectionError(parentChannelId,stage,error) {
+  await db.query('INSERT INTO noam_ai_collection_errors(parent_channel_id,stage,error) VALUES($1,$2,$3)',[parentChannelId,stage,String(error||'Unknown error').slice(0,500)]);
 }
 async function getCollectionState(channelId) {
   const r=await db.query('SELECT * FROM noam_ai_collection_state WHERE channel_id=$1',[channelId]); return r.rows[0]||null;
 }
-async function updateCollectionState(channelId,beforeMessageId,completed,increment=0) {
+async function registerCollectionTarget(channelId,targetType='public_channel') {
   await db.query(`
-    INSERT INTO noam_ai_collection_state(channel_id,before_message_id,completed,messages_collected,updated_at)
-    VALUES($1,$2,$3,$4,NOW())
-    ON CONFLICT(channel_id) DO UPDATE SET before_message_id=EXCLUDED.before_message_id,completed=EXCLUDED.completed,
-      messages_collected=noam_ai_collection_state.messages_collected+EXCLUDED.messages_collected,updated_at=NOW()
-  `,[channelId,beforeMessageId,completed,increment]);
+    INSERT INTO noam_ai_collection_state(channel_id,target_type,status,completed,updated_at)
+    VALUES($1,$2,'pending',FALSE,NOW())
+    ON CONFLICT(channel_id) DO UPDATE SET target_type=EXCLUDED.target_type,
+      status=CASE WHEN noam_ai_collection_state.completed THEN 'completed' ELSE noam_ai_collection_state.status END,
+      updated_at=NOW()
+  `,[channelId,targetType]);
+}
+async function updateCollectionState(channelId,beforeMessageId,completed,increment=0,error=null) {
+  const status=completed?'completed':(error?'failed':'running');
+  await db.query(`
+    INSERT INTO noam_ai_collection_state(channel_id,before_message_id,completed,messages_collected,status,last_error,updated_at)
+    VALUES($1,$2,$3,$4,$5,$6,NOW())
+    ON CONFLICT(channel_id) DO UPDATE SET before_message_id=COALESCE(EXCLUDED.before_message_id,noam_ai_collection_state.before_message_id),
+      completed=EXCLUDED.completed,messages_collected=noam_ai_collection_state.messages_collected+EXCLUDED.messages_collected,
+      status=EXCLUDED.status,last_error=EXCLUDED.last_error,updated_at=NOW()
+  `,[channelId,beforeMessageId,completed,increment,status,error]);
 }
 module.exports={migrate,storeMessages,isOptedOut,optOut,optIn,deleteMessage,searchKnowledge,recentNoamMessages,
-  getHistory,saveHistory,getWebhookCredentials,saveWebhookCredentials,collectionStats,getCollectionState,updateCollectionState};
+  getHistory,saveHistory,getWebhookCredentials,saveWebhookCredentials,collectionStats,getCollectionState,registerCollectionTarget,updateCollectionState,databaseCheck,clearCollectionErrors,recordCollectionError};

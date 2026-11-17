@@ -41,17 +41,58 @@ async function handleOptCommands(message){
   }
   return false;
 }
+async function runDiagnostics(message) {
+  const lines=['**Noam AI diagnostics**'];
+  lines.push('Configuration: '+(config.enabled?'✅ API key and model variables are present':'❌ GEMINI_API_KEY or GEMINI_MODEL is missing'));
+  try { await store.databaseCheck(); lines.push('PostgreSQL: ✅ Connected'); }
+  catch(error) { lines.push('PostgreSQL: ❌ '+String(error?.message||error).slice(0,180)); }
+  try {
+    const channel=await message.guild.channels.fetch(config.channelId);
+    if(!channel?.isTextBased()) lines.push('Discord channel: ❌ Configured Noam channel is missing or not text-based');
+    else {
+      const me=message.guild.members.me;
+      const perms=me?channel.permissionsFor(me):null;
+      const canView=Boolean(perms?.has(PermissionFlagsBits.ViewChannel));
+      const canSend=Boolean(perms?.has(PermissionFlagsBits.SendMessages));
+      const canHistory=Boolean(perms?.has(PermissionFlagsBits.ReadMessageHistory));
+      lines.push('Discord channel: '+(canView&&canSend?'✅ View and send permissions OK':'❌ Missing View Channel or Send Messages'));
+      lines.push('Message history permission: '+(canHistory?'✅ Available':'⚠️ Missing Read Message History'));
+      const hook=await store.getWebhookCredentials(channel.id);
+      lines.push('Webhook: '+(hook?.webhook_id&&hook?.webhook_token?'✅ Saved credentials found':(perms?.has(PermissionFlagsBits.ManageWebhooks)?'⚠️ No saved webhook; bot can create one':'❌ No saved webhook and Manage Webhooks is missing')));
+    }
+  } catch(error) { lines.push('Discord channel: ❌ '+String(error?.message||error).slice(0,160)); }
+  try {
+    const stats=await store.collectionStats();
+    lines.push('Knowledge database: ✅ '+Number(stats.total||0).toLocaleString()+' messages; '+Number(stats.channels||0)+' channels');
+    lines.push('Historical targets: '+Number(stats.completed_channels||0)+' completed / '+Number(stats.total_targets||0)+' discovered; '+Number(stats.failed_channels||0)+' failed');
+    if(Number(stats.failed_channels||0)>0) lines.push('Latest target error: '+String(stats.failures?.[0]?.last_error||'See server logs').slice(0,150));
+    lines.push('Thread discovery errors: '+Number(stats.discovery_error_count||0));
+    if(stats.discovery_failures?.[0]) lines.push('Latest discovery error: '+String(stats.discovery_failures[0].stage+': '+stats.discovery_failures[0].error).slice(0,150));
+  } catch(error) { lines.push('Knowledge database: ❌ '+String(error?.message||error).slice(0,180)); }
+  const api=await ai.diagnoseGemini();
+  if(api.ok) lines.push('Gemini API: ✅ '+api.detail);
+  else {
+    const labels={invalid_key:'Invalid API key',quota:'Free-tier quota or rate limit reached',billing:'Billing issue',rate_limit:'Rate limit reached',model:'Model unavailable or not found',permissions:'API project permission issue',timeout:'API request timed out',configuration:'Missing API configuration'};
+    lines.push('Gemini API: ❌ '+(labels[api.category]||'Request failed')+' — '+api.detail);
+    if(api.category==='quota') lines.push('Next step: check the Gemini project rate limits and daily quota in Google AI Studio.');
+    if(api.category==='billing') lines.push('Next step: the project owner should check the linked Google Cloud billing account and Gemini API tier.');
+  }
+  await message.reply({content:lines.join('\n').slice(0,1900),allowedMentions:{parse:[]}});
+}
 async function handleAdminCommands(message){
   if(message.guild?.id!==config.guildId) return false;
   const command=message.content.trim().toLowerCase();
-  if(!['!noam-collect','!noam-status'].includes(command)) return false;
+  if(!['!noam-collect','!noam-status','!noam-diagnose'].includes(command)) return false;
   if(!isManager(message)){await message.reply({content:'You need Manage Server permission to use this control.',allowedMentions:{parse:[]}});return true;}
+  if(command==='!noam-diagnose'){ await runDiagnostics(message); return true; }
   if(command==='!noam-status'){
     const s=await store.collectionStats();
     await message.reply({content:[
       '**Noam AI knowledge status**','Stored messages: '+Number(s.total||0).toLocaleString(),
       'Noam messages: '+Number(s.noam_messages||0).toLocaleString(),'Channels indexed: '+Number(s.channels||0),
-      'Historical channels completed: '+Number(s.completed_channels||0)+'/'+Number(s.total_channels||0),
+      'Historical targets completed: '+Number(s.completed_channels||0)+'/'+Number(s.total_targets||0),
+      'Failed targets: '+Number(s.failed_channels||0),'Pending/running targets: '+Number(s.pending_channels||0),
+      'Thread discovery errors: '+Number(s.discovery_error_count||0),
       'Collection notice acknowledged: '+(config.collectionNoticeAcknowledged?'Yes':'No'),
       'Live collection enabled: '+(config.collectionEnabled?'Yes':'No'),
     ].join('\n'),allowedMentions:{parse:[]}});
@@ -92,7 +133,7 @@ async function handleChat(message){
     await store.saveHistory(message.channelId,message.author.id,[...history,
       {role:'user',content:message.content.slice(0,2000)},{role:'assistant',content:reply}]);
   }catch(error){
-    console.error('[NoamAI] Chat response failed:',error?.message||error);
+    console.error('[NoamAI] Chat response failed:',{category:error?.category||'unknown',httpStatus:error?.httpStatus||null,apiCode:error?.apiCode||null,message:error?.message||String(error)});
     await message.reply({content:'I ran into a problem generating a response. Please try again in a little while.',allowedMentions:{parse:[]}}).catch(()=>{});
   }finally{activeUsers.delete(message.author.id);}
   return true;

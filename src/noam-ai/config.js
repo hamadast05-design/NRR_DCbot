@@ -1,7 +1,7 @@
 const config = {
-  enabled: Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL),
-  apiKey: process.env.OPENAI_API_KEY || null,
-  model: process.env.OPENAI_MODEL || null,
+  enabled: Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL),
+  apiKey: process.env.GEMINI_API_KEY || null,
+  model: process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite',
   guildId: process.env.DISCORD_GUILD_ID || null,
   channelId: process.env.NOAM_AI_CHANNEL_ID || '1572013456092045423',
   avatarUrl: process.env.NOAM_AI_AVATAR_URL || 'https://cdn.imageurlgenerator.com/uploads/9835b4aa-ea4b-4a13-97a8-254f69c2c4e5.png',
