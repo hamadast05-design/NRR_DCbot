@@ -10,7 +10,9 @@ const config = {
     .split(',').map(value => value.trim()).filter(Boolean),
   lookbackDays: 365,
   cooldownMs: 7000,
-  maxOutputTokens: 450,
+  // Gemini 3 counts internal thinking tokens against maxOutputTokens.
+  // 1024 leaves room for minimal thinking and a useful Discord response.
+  maxOutputTokens: Math.max(256, Number.parseInt(process.env.NOAM_AI_MAX_OUTPUT_TOKENS || '1024', 10) || 1024),
   historyLimit: 8,
   collectionNoticeAcknowledged: process.env.NOAM_COLLECTION_NOTICE_ACKNOWLEDGED === 'true',
   collectionEnabled: process.env.NOAM_COLLECTION_ENABLED === 'true',
