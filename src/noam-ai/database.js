@@ -6,7 +6,7 @@ async function migrate() {
       message_id TEXT PRIMARY KEY, guild_id TEXT NOT NULL, channel_id TEXT NOT NULL,
       user_id TEXT NOT NULL, username TEXT NOT NULL DEFAULT 'Unknown', content TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL, is_noam BOOLEAN NOT NULL DEFAULT FALSE,
-      search_vector TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple'::regconfig, coalesce(content, ''))) STORED
+      search_vector TSVECTOR NOT NULL DEFAULT ''::tsvector
     );
     CREATE INDEX IF NOT EXISTS idx_noam_knowledge_search ON noam_knowledge_messages USING GIN(search_vector);
     CREATE INDEX IF NOT EXISTS idx_noam_knowledge_user_date ON noam_knowledge_messages(user_id, created_at DESC);
@@ -20,8 +20,7 @@ async function migrate() {
       created_by TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      search_vector TSVECTOR GENERATED ALWAYS AS
-        (to_tsvector('simple'::regconfig, coalesce(title, '') || ' ' || coalesce(category, '') || ' ' || coalesce(content, ''))) STORED
+      search_vector TSVECTOR NOT NULL DEFAULT ''::tsvector
     );
     CREATE INDEX IF NOT EXISTS idx_noam_curated_search ON noam_ai_curated_knowledge USING GIN(search_vector);
     CREATE INDEX IF NOT EXISTS idx_noam_curated_guild_date ON noam_ai_curated_knowledge(guild_id, updated_at DESC);
@@ -37,24 +36,34 @@ async function migrate() {
       status TEXT NOT NULL DEFAULT 'active',
       bio TEXT NOT NULL DEFAULT '',
       achievements TEXT NOT NULL DEFAULT '',
-      search_vector TSVECTOR GENERATED ALWAYS AS (
-        to_tsvector('simple'::regconfig, coalesce(display_name, '') || ' ' || coalesce(position, '') || ' ' ||
-          coalesce(group_name, '') || ' ' || array_to_string(aliases, ' ') || ' ' ||
-          coalesce(bio, '') || ' ' || coalesce(achievements, ''))
-      ) STORED,
+      search_vector TSVECTOR NOT NULL DEFAULT ''::tsvector,
       created_by TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       UNIQUE(guild_id, discord_id)
     );
     CREATE INDEX IF NOT EXISTS idx_noam_directory_rank ON noam_ai_member_directory(guild_id, authority_rank, display_name);
-    ALTER TABLE noam_ai_member_directory ADD COLUMN IF NOT EXISTS search_vector TSVECTOR GENERATED ALWAYS AS (
-      to_tsvector('simple'::regconfig, coalesce(display_name, '') || ' ' || coalesce(position, '') || ' ' ||
-        coalesce(group_name, '') || ' ' || array_to_string(aliases, ' ') || ' ' ||
-        coalesce(bio, '') || ' ' || coalesce(achievements, ''))
-    ) STORED;
+    ALTER TABLE noam_ai_member_directory ADD COLUMN IF NOT EXISTS search_vector TSVECTOR NOT NULL DEFAULT ''::tsvector;
+    DO $migration$
+    BEGIN
+      IF EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='noam_knowledge_messages'::regclass AND attname='search_vector' AND attgenerated <> '') THEN
+        ALTER TABLE noam_knowledge_messages ALTER COLUMN search_vector DROP EXPRESSION;
+      END IF;
+      IF EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='noam_ai_curated_knowledge'::regclass AND attname='search_vector' AND attgenerated <> '') THEN
+        ALTER TABLE noam_ai_curated_knowledge ALTER COLUMN search_vector DROP EXPRESSION;
+      END IF;
+      IF EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='noam_ai_member_directory'::regclass AND attname='search_vector' AND attgenerated <> '') THEN
+        ALTER TABLE noam_ai_member_directory ALTER COLUMN search_vector DROP EXPRESSION;
+      END IF;
+    END
+    $migration$;
+    UPDATE noam_knowledge_messages SET search_vector=to_tsvector('simple'::regconfig,coalesce(content,'')) WHERE search_vector=''::tsvector;
+    UPDATE noam_ai_curated_knowledge SET search_vector=to_tsvector('simple'::regconfig,coalesce(title,'') || ' ' || coalesce(category,'') || ' ' || coalesce(content,'')) WHERE search_vector=''::tsvector;
+    UPDATE noam_ai_member_directory SET search_vector=to_tsvector('simple'::regconfig,coalesce(display_name,'') || ' ' || coalesce(position,'') || ' ' || coalesce(group_name,'') || ' ' || coalesce(array_to_string(aliases,' '),'') || ' ' || coalesce(bio,'') || ' ' || coalesce(achievements,'')) WHERE search_vector=''::tsvector;
     DROP INDEX IF EXISTS idx_noam_directory_name;
     CREATE INDEX IF NOT EXISTS idx_noam_directory_name ON noam_ai_member_directory USING GIN(search_vector);
+    CREATE INDEX IF NOT EXISTS idx_noam_knowledge_search ON noam_knowledge_messages USING GIN(search_vector);
+    CREATE INDEX IF NOT EXISTS idx_noam_curated_search ON noam_ai_curated_knowledge USING GIN(search_vector);
     CREATE TABLE IF NOT EXISTS noam_ai_optouts (user_id TEXT PRIMARY KEY, opted_out_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
     CREATE TABLE IF NOT EXISTS noam_ai_conversations (
       channel_id TEXT NOT NULL, user_id TEXT NOT NULL, history JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -101,14 +110,15 @@ async function storeMessages(messages) {
   }));
   const result = await db.query(`
     INSERT INTO noam_knowledge_messages
-      (message_id,guild_id,channel_id,user_id,username,content,created_at,is_noam)
-    SELECT x.message_id,x.guild_id,x.channel_id,x.user_id,x.username,x.content,x.created_at::timestamptz,x.is_noam
+      (message_id,guild_id,channel_id,user_id,username,content,created_at,is_noam,search_vector)
+    SELECT x.message_id,x.guild_id,x.channel_id,x.user_id,x.username,x.content,x.created_at::timestamptz,x.is_noam,
+      to_tsvector('simple'::regconfig,coalesce(x.content,''))
     FROM jsonb_to_recordset($1::jsonb) AS x(
       message_id text,guild_id text,channel_id text,user_id text,username text,
       content text,created_at text,is_noam boolean
     )
     WHERE NOT EXISTS (SELECT 1 FROM noam_ai_optouts o WHERE o.user_id=x.user_id)
-    ON CONFLICT (message_id) DO UPDATE SET content=EXCLUDED.content, username=EXCLUDED.username, is_noam=EXCLUDED.is_noam
+    ON CONFLICT (message_id) DO UPDATE SET content=EXCLUDED.content, username=EXCLUDED.username, is_noam=EXCLUDED.is_noam, search_vector=EXCLUDED.search_vector
     RETURNING message_id
   `, [JSON.stringify(payload)]);
   return result.rowCount || 0;
@@ -170,8 +180,8 @@ async function searchKnowledge(guildId, queryText, limit=10, officialChannelIds=
 }
 async function addCuratedKnowledge(guildId,category,title,content,createdBy) {
   const result=await db.query(`
-    INSERT INTO noam_ai_curated_knowledge(guild_id,category,title,content,created_by)
-    VALUES($1,$2,$3,$4,$5) RETURNING id,category,title,created_at
+    INSERT INTO noam_ai_curated_knowledge(guild_id,category,title,content,created_by,search_vector)
+    VALUES($1,$2,$3,$4,$5,to_tsvector('simple'::regconfig,$3 || ' ' || $2 || ' ' || $4)) RETURNING id,category,title,created_at
   `,[guildId,String(category).slice(0,60),String(title).slice(0,120),String(content).slice(0,3500),createdBy]);
   return result.rows[0];
 }
@@ -189,12 +199,12 @@ async function deleteCuratedKnowledge(guildId,id) {
 async function upsertDirectoryMember(guildId,record,createdBy) {
   const result=await db.query(`
     INSERT INTO noam_ai_member_directory
-      (guild_id,discord_id,display_name,aliases,position,group_name,authority_rank,status,bio,achievements,created_by)
-    VALUES($1,$2,$3,$4::text[],$5,$6,$7,$8,$9,$10,$11)
+      (guild_id,discord_id,display_name,aliases,position,group_name,authority_rank,status,bio,achievements,created_by,search_vector)
+    VALUES($1,$2,$3,$4::text[],$5,$6,$7,$8,$9,$10,$11,to_tsvector('simple'::regconfig,coalesce($3,'') || ' ' || coalesce($5,'') || ' ' || coalesce($6,'') || ' ' || coalesce(array_to_string($4::text[],' '),'') || ' ' || coalesce($9,'') || ' ' || coalesce($10,''))
     ON CONFLICT(guild_id,discord_id) DO UPDATE SET
       display_name=EXCLUDED.display_name,aliases=EXCLUDED.aliases,position=EXCLUDED.position,
       group_name=EXCLUDED.group_name,authority_rank=EXCLUDED.authority_rank,status=EXCLUDED.status,
-      bio=EXCLUDED.bio,achievements=EXCLUDED.achievements,updated_at=NOW()
+      bio=EXCLUDED.bio,achievements=EXCLUDED.achievements,search_vector=EXCLUDED.search_vector,updated_at=NOW()
     RETURNING discord_id,display_name,position,group_name,authority_rank,status
   `,[guildId,record.discordId,record.displayName,record.aliases,record.position,record.groupName,
     record.authorityRank,record.status,record.bio,record.achievements,createdBy]);
@@ -278,7 +288,48 @@ async function collectionStats() {
   const k=await db.query('SELECT COUNT(*)::int AS curated_count FROM noam_ai_curated_knowledge WHERE guild_id=$1',[process.env.DISCORD_GUILD_ID || '']);
   return {...(r.rows[0]||{}),...(s.rows[0]||{}),failures:e.rows,curated_count:k.rows[0]?.curated_count||0};
 }
-async function databaseCheck() { await db.query('SELECT 1 AS ok'); return true; }
+async function databaseDiagnostics() {
+  const result = await db.query(`
+    SELECT current_database() AS database_name,
+      current_schema() AS schema_name,
+      to_regclass('noam_knowledge_messages')::text AS knowledge_table,
+      to_regclass('noam_ai_curated_knowledge')::text AS curated_table,
+      to_regclass('noam_ai_member_directory')::text AS directory_table,
+      to_regclass('noam_ai_conversations')::text AS conversations_table,
+      to_regclass('noam_ai_optouts')::text AS optouts_table
+  `);
+  const schema = result.rows[0] || {};
+  const checks = [
+    ['knowledge', schema.knowledge_table],
+    ['curated', schema.curated_table],
+    ['member_directory', schema.directory_table],
+    ['conversations', schema.conversations_table],
+    ['optouts', schema.optouts_table],
+  ];
+  const missing = checks.filter(([, table]) => !table).map(([name]) => name);
+  let searchVectors = {};
+  if (!missing.length) {
+    const vectors = await db.query(`
+      SELECT
+        (SELECT COUNT(*)::int FROM noam_knowledge_messages WHERE search_vector IS NULL) AS knowledge_null_vectors,
+        (SELECT COUNT(*)::int FROM noam_ai_curated_knowledge WHERE search_vector IS NULL) AS curated_null_vectors,
+        (SELECT COUNT(*)::int FROM noam_ai_member_directory WHERE search_vector IS NULL) AS directory_null_vectors
+    `);
+    searchVectors = vectors.rows[0] || {};
+  }
+  return { ...schema, missing, searchVectors, ok: missing.length === 0 };
+}
+async function databaseCheck() {
+  await db.query('SELECT 1 AS ok');
+  const result = await databaseDiagnostics();
+  if (!result.ok) {
+    const error = new Error('Noam database schema is incomplete: ' + result.missing.join(', '));
+    error.code = 'NOAM_SCHEMA_INCOMPLETE';
+    error.diagnostics = result;
+    throw error;
+  }
+  return result;
+}
 async function clearCollectionErrors() { await db.query('DELETE FROM noam_ai_collection_errors'); }
 async function recordCollectionError(parentChannelId,stage,error) {
   await db.query('INSERT INTO noam_ai_collection_errors(parent_channel_id,stage,error) VALUES($1,$2,$3)',[parentChannelId,stage,String(error||'Unknown error').slice(0,500)]);
@@ -308,5 +359,5 @@ async function updateCollectionState(channelId,beforeMessageId,completed,increme
 module.exports={migrate,storeMessages,isOptedOut,optOut,optIn,deleteMessage,searchKnowledge,addCuratedKnowledge,
   listCuratedKnowledge,deleteCuratedKnowledge,recentNoamMessages,getHistory,saveHistory,getWebhookCredentials,
   saveWebhookCredentials,collectionStats,getCollectionState,registerCollectionTarget,updateCollectionState,
-  databaseCheck,clearCollectionErrors,recordCollectionError,upsertDirectoryMember,listDirectoryMembers,
+  databaseCheck,databaseDiagnostics,clearCollectionErrors,recordCollectionError,upsertDirectoryMember,listDirectoryMembers,
   deleteDirectoryMember,searchDirectory};

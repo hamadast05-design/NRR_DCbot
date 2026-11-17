@@ -1,4 +1,5 @@
 const { PermissionFlagsBits, WebhookClient } = require('discord.js');
+const { randomUUID } = require('crypto');
 const { config } = require('./config');
 const store = require('./database');
 const collector = require('./collector');
@@ -119,8 +120,18 @@ async function handleDirectoryCommands(message,command) {
 async function runDiagnostics(message) {
   const lines=['**Noam AI diagnostics**'];
   lines.push('Configuration: '+(config.enabled?'✅ API key and model variables are present':'❌ GEMINI_API_KEY or GEMINI_MODEL is missing'));
-  try { await store.databaseCheck(); lines.push('PostgreSQL: ✅ Connected'); }
-  catch(error) { lines.push('PostgreSQL: ❌ '+String(error?.message||error).slice(0,180)); }
+  try {
+    const dbHealth=await store.databaseCheck();
+    lines.push('PostgreSQL: ✅ Connected ('+dbHealth.database_name+'/'+dbHealth.schema_name+')');
+    lines.push('Schema tables: ✅ '+['knowledge_table','curated_table','directory_table','conversations_table','optouts_table'].length+'/5 present');
+    lines.push('Search vectors: '+(Object.values(dbHealth.searchVectors||{}).every(value=>Number(value)===0)?'✅ no NULL vectors':'⚠️ '+JSON.stringify(dbHealth.searchVectors)));
+  } catch(error) {
+    lines.push('PostgreSQL/schema: ❌ '+String(error?.message||error).slice(0,180));
+    if(error?.diagnostics?.missing?.length) lines.push('Missing tables: '+error.diagnostics.missing.join(', '));
+    lines.push('Database error code: '+String(error?.code||'unknown'));
+  }
+  lines.push('Directory search function: '+(typeof store.searchDirectory==='function'?'✅ exported':'❌ missing export'));
+  lines.push('Knowledge search function: '+(typeof store.searchKnowledge==='function'?'✅ exported':'❌ missing export'));
   try {
     const channel=await message.guild.channels.fetch(config.channelId);
     if(!channel?.isTextBased()) lines.push('Discord channel: ❌ Configured Noam channel is missing or not text-based');
@@ -205,21 +216,64 @@ async function handleChat(message){
   const now=Date.now();
   if(now-(cooldowns.get(message.author.id)||0)<config.cooldownMs||activeUsers.has(message.author.id)) return true;
   activeUsers.add(message.author.id); cooldowns.set(message.author.id,now);
+  const requestId=randomUUID();
+  const startedAt=Date.now();
+  let stage='typing';
+  const timings={};
+  const mark=(name,at)=>{timings[name]=Date.now()-at;};
   try{
+    let at=Date.now();
     await message.channel.sendTyping().catch(()=>{});
+    mark('typing',at);
+    stage='conversation_history';
+    at=Date.now();
     const history=await store.getHistory(message.channelId,message.author.id);
+    mark('conversation_history',at);
+    stage='knowledge_retrieval';
+    at=Date.now();
     const knowledge=await store.searchKnowledge(message.guild.id,message.content,10,config.officialChannelIds);
+    mark('knowledge_retrieval',at);
+    stage='member_directory_lookup';
+    at=Date.now();
     const directory=await store.searchDirectory(message.guild.id,message.content,12);
+    mark('member_directory_lookup',at);
+    stage='noam_style_examples';
+    at=Date.now();
     const examples=await store.recentNoamMessages(message.guild.id,config.noamUserIds,8);
+    mark('noam_style_examples',at);
+    stage='ranking_context';
+    at=Date.now();
     const rankingContext=await ranking.getRankingContext(message.guild);
+    mark('ranking_context',at);
+    stage='gemini_generation';
+    at=Date.now();
     const reply=await ai.generateReply({question:message.content.slice(0,2000),history,knowledge,directory,noamExamples:examples,rankingContext,
       memberName:message.member?.displayName||message.author.username});
+    mark('gemini_generation',at);
+    stage='discord_webhook_delivery';
+    at=Date.now();
     await sendAsNoam(message.channel,reply);
+    mark('discord_webhook_delivery',at);
+    stage='conversation_history_save';
+    at=Date.now();
     await store.saveHistory(message.channelId,message.author.id,[...history,
       {role:'user',content:message.content.slice(0,2000)},{role:'assistant',content:reply}]);
+    mark('conversation_history_save',at);
+    console.log('[NoamAI][CHAT_OK]',{requestId,stage:'complete',totalMs:Date.now()-startedAt,timings,
+      knowledgeHits:knowledge.length,directoryHits:directory.length,styleExamples:examples.length,replyLength:reply.length});
   }catch(error){
-    console.error('[NoamAI] Chat response failed:',{category:error?.category||'unknown',httpStatus:error?.httpStatus||null,apiCode:error?.apiCode||null,finishReason:error?.finishReason||null,usageMetadata:error?.usageMetadata||null,message:error?.message||String(error)});
-    await message.reply({content:'I ran into a problem generating a response. Please try again in a little while.',allowedMentions:{parse:[]}}).catch(()=>{});
+    const diagnostic={
+      requestId,stage,totalMs:Date.now()-startedAt,timings,
+      category:error?.category||'internal_error',name:error?.name||'Error',
+      message:String(error?.message||error).slice(0,500),code:error?.code||null,
+      httpStatus:error?.httpStatus||null,apiCode:error?.apiCode||null,
+      finishReason:error?.finishReason||null,usageMetadata:error?.usageMetadata||null,
+      stack:String(error?.stack||'').split('\\n').slice(0,6).join(' | '),
+    };
+    console.error('[NoamAI][CHAT_FAILURE]',diagnostic);
+    await message.reply({content:'I ran into a problem generating a response. Please try again in a little while. (Ref: '+requestId.slice(0,8)+')',allowedMentions:{parse:[]}}).catch(replyError=>{
+      console.error('[NoamAI][ERROR_NOTICE_FAILURE]',{requestId,message:String(replyError?.message||replyError).slice(0,250)});
+    });
   }finally{activeUsers.delete(message.author.id);}
   return true;
 }
