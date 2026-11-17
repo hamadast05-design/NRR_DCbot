@@ -288,7 +288,48 @@ async function collectionStats() {
   const k=await db.query('SELECT COUNT(*)::int AS curated_count FROM noam_ai_curated_knowledge WHERE guild_id=$1',[process.env.DISCORD_GUILD_ID || '']);
   return {...(r.rows[0]||{}),...(s.rows[0]||{}),failures:e.rows,curated_count:k.rows[0]?.curated_count||0};
 }
-async function databaseCheck() { await db.query('SELECT 1 AS ok'); return true; }
+async function databaseDiagnostics() {
+  const result = await db.query(`
+    SELECT current_database() AS database_name,
+      current_schema() AS schema_name,
+      to_regclass('noam_knowledge_messages')::text AS knowledge_table,
+      to_regclass('noam_ai_curated_knowledge')::text AS curated_table,
+      to_regclass('noam_ai_member_directory')::text AS directory_table,
+      to_regclass('noam_ai_conversations')::text AS conversations_table,
+      to_regclass('noam_ai_optouts')::text AS optouts_table
+  `);
+  const schema = result.rows[0] || {};
+  const checks = [
+    ['knowledge', schema.knowledge_table],
+    ['curated', schema.curated_table],
+    ['member_directory', schema.directory_table],
+    ['conversations', schema.conversations_table],
+    ['optouts', schema.optouts_table],
+  ];
+  const missing = checks.filter(([, table]) => !table).map(([name]) => name);
+  let searchVectors = {};
+  if (!missing.length) {
+    const vectors = await db.query(`
+      SELECT
+        (SELECT COUNT(*)::int FROM noam_knowledge_messages WHERE search_vector IS NULL) AS knowledge_null_vectors,
+        (SELECT COUNT(*)::int FROM noam_ai_curated_knowledge WHERE search_vector IS NULL) AS curated_null_vectors,
+        (SELECT COUNT(*)::int FROM noam_ai_member_directory WHERE search_vector IS NULL) AS directory_null_vectors
+    `);
+    searchVectors = vectors.rows[0] || {};
+  }
+  return { ...schema, missing, searchVectors, ok: missing.length === 0 };
+}
+async function databaseCheck() {
+  await db.query('SELECT 1 AS ok');
+  const result = await databaseDiagnostics();
+  if (!result.ok) {
+    const error = new Error('Noam database schema is incomplete: ' + result.missing.join(', '));
+    error.code = 'NOAM_SCHEMA_INCOMPLETE';
+    error.diagnostics = result;
+    throw error;
+  }
+  return result;
+}
 async function clearCollectionErrors() { await db.query('DELETE FROM noam_ai_collection_errors'); }
 async function recordCollectionError(parentChannelId,stage,error) {
   await db.query('INSERT INTO noam_ai_collection_errors(parent_channel_id,stage,error) VALUES($1,$2,$3)',[parentChannelId,stage,String(error||'Unknown error').slice(0,500)]);
@@ -318,5 +359,5 @@ async function updateCollectionState(channelId,beforeMessageId,completed,increme
 module.exports={migrate,storeMessages,isOptedOut,optOut,optIn,deleteMessage,searchKnowledge,addCuratedKnowledge,
   listCuratedKnowledge,deleteCuratedKnowledge,recentNoamMessages,getHistory,saveHistory,getWebhookCredentials,
   saveWebhookCredentials,collectionStats,getCollectionState,registerCollectionTarget,updateCollectionState,
-  databaseCheck,clearCollectionErrors,recordCollectionError,upsertDirectoryMember,listDirectoryMembers,
+  databaseCheck,databaseDiagnostics,clearCollectionErrors,recordCollectionError,upsertDirectoryMember,listDirectoryMembers,
   deleteDirectoryMember,searchDirectory};
