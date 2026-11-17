@@ -25,6 +25,26 @@ async function migrate() {
     );
     CREATE INDEX IF NOT EXISTS idx_noam_curated_search ON noam_ai_curated_knowledge USING GIN(search_vector);
     CREATE INDEX IF NOT EXISTS idx_noam_curated_guild_date ON noam_ai_curated_knowledge(guild_id, updated_at DESC);
+    CREATE TABLE IF NOT EXISTS noam_ai_member_directory (
+      id BIGSERIAL PRIMARY KEY,
+      guild_id TEXT NOT NULL,
+      discord_id TEXT NOT NULL,
+      display_name TEXT NOT NULL,
+      aliases TEXT[] NOT NULL DEFAULT '{}',
+      position TEXT NOT NULL,
+      group_name TEXT NOT NULL DEFAULT 'community',
+      authority_rank INTEGER NOT NULL DEFAULT 50,
+      status TEXT NOT NULL DEFAULT 'active',
+      bio TEXT NOT NULL DEFAULT '',
+      achievements TEXT NOT NULL DEFAULT '',
+      created_by TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(guild_id, discord_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_noam_directory_rank ON noam_ai_member_directory(guild_id, authority_rank, display_name);
+    CREATE INDEX IF NOT EXISTS idx_noam_directory_name ON noam_ai_member_directory USING GIN
+      (to_tsvector('simple', display_name || ' ' || position || ' ' || group_name || ' ' || array_to_string(aliases, ' ') || ' ' || bio || ' ' || achievements));
     CREATE TABLE IF NOT EXISTS noam_ai_optouts (user_id TEXT PRIMARY KEY, opted_out_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
     CREATE TABLE IF NOT EXISTS noam_ai_conversations (
       channel_id TEXT NOT NULL, user_id TEXT NOT NULL, history JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -155,6 +175,54 @@ async function listCuratedKnowledge(guildId,limit=15) {
 async function deleteCuratedKnowledge(guildId,id) {
   const result=await db.query('DELETE FROM noam_ai_curated_knowledge WHERE guild_id=$1 AND id=$2 RETURNING id',[guildId,id]);
   return Boolean(result.rowCount);
+}
+async function upsertDirectoryMember(guildId,record,createdBy) {
+  const result=await db.query(`
+    INSERT INTO noam_ai_member_directory
+      (guild_id,discord_id,display_name,aliases,position,group_name,authority_rank,status,bio,achievements,created_by)
+    VALUES($1,$2,$3,$4::text[],$5,$6,$7,$8,$9,$10,$11)
+    ON CONFLICT(guild_id,discord_id) DO UPDATE SET
+      display_name=EXCLUDED.display_name,aliases=EXCLUDED.aliases,position=EXCLUDED.position,
+      group_name=EXCLUDED.group_name,authority_rank=EXCLUDED.authority_rank,status=EXCLUDED.status,
+      bio=EXCLUDED.bio,achievements=EXCLUDED.achievements,updated_at=NOW()
+    RETURNING discord_id,display_name,position,group_name,authority_rank,status
+  `,[guildId,record.discordId,record.displayName,record.aliases,record.position,record.groupName,
+    record.authorityRank,record.status,record.bio,record.achievements,createdBy]);
+  return result.rows[0];
+}
+async function listDirectoryMembers(guildId,limit=30) {
+  const r=await db.query(`
+    SELECT discord_id,display_name,position,group_name,authority_rank,status
+    FROM noam_ai_member_directory WHERE guild_id=$1
+    ORDER BY authority_rank ASC,display_name ASC LIMIT $2
+  `,[guildId,limit]);
+  return r.rows;
+}
+async function deleteDirectoryMember(guildId,discordId) {
+  const r=await db.query('DELETE FROM noam_ai_member_directory WHERE guild_id=$1 AND discord_id=$2 RETURNING discord_id',[guildId,discordId]);
+  return Boolean(r.rowCount);
+}
+function buildDirectoryQuery(value) {
+  return String(value||'').replace(/[^\\p{L}\\p{N}\\s]/gu,' ').trim().split(/\\s+/).filter(Boolean).slice(0,12).join(' | ');
+}
+async function searchDirectory(guildId,queryText,limit=12) {
+  const terms=buildDirectoryQuery(queryText);
+  const ids=[...String(queryText||'').matchAll(/\\b\\d{17,20}\\b/g)].map(match=>match[0]);
+  const r=await db.query(`
+    SELECT discord_id,display_name,aliases,position,group_name,authority_rank,status,bio,achievements,
+      CASE WHEN discord_id=ANY($3::text[]) THEN 100 ELSE ts_rank(
+        to_tsvector('simple',display_name || ' ' || position || ' ' || group_name || ' ' ||
+          array_to_string(aliases,' ') || ' ' || bio || ' ' || achievements),
+        to_tsquery('simple',NULLIF($2,''))) END AS relevance
+    FROM noam_ai_member_directory
+    WHERE guild_id=$1 AND (
+      discord_id=ANY($3::text[]) OR
+      (NULLIF($2,'') IS NOT NULL AND to_tsvector('simple',display_name || ' ' || position || ' ' || group_name || ' ' ||
+        array_to_string(aliases,' ') || ' ' || bio || ' ' || achievements) @@ to_tsquery('simple',$2))
+    )
+    ORDER BY relevance DESC,authority_rank ASC LIMIT $4
+  `,[guildId,terms,ids,limit]);
+  return r.rows;
 }
 async function recentNoamMessages(guildId,noamIds,limit=8) {
   const r=await db.query(`
