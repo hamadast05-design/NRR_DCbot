@@ -41,6 +41,38 @@ async function handleOptCommands(message){
   }
   return false;
 }
+async function handleKnowledgeCommands(message,command){
+  if(command==='!noam-knowledge-list'){
+    const docs=await store.listCuratedKnowledge(message.guild.id,15);
+    const lines=['**Curated NRR knowledge** ('+docs.length+' recent entries)'];
+    lines.push(...docs.map(doc=>'#'+doc.id+' ['+doc.category+'] '+doc.title));
+    if(!docs.length) lines.push('No curated entries yet. Add one with !noam-knowledge-add category | title | content');
+    await message.reply({content:lines.join('\n').slice(0,1900),allowedMentions:{parse:[]}});
+    return true;
+  }
+  if(command.startsWith('!noam-knowledge-delete ')){
+    const id=Number.parseInt(command.slice('!noam-knowledge-delete '.length).trim(),10);
+    if(!Number.isSafeInteger(id)||id<1){await message.reply({content:'Usage: !noam-knowledge-delete ID',allowedMentions:{parse:[]}});return true;}
+    const deleted=await store.deleteCuratedKnowledge(message.guild.id,id);
+    await message.reply({content:deleted?'✅ Deleted curated knowledge entry #'+id+'.':'No curated knowledge entry with that ID was found.',allowedMentions:{parse:[]}});
+    return true;
+  }
+  if(command.startsWith('!noam-knowledge-add ')){
+    const raw=message.content.slice('!noam-knowledge-add '.length);
+    const parts=raw.split('|').map(value=>value.trim());
+    if(parts.length<3||!parts[0]||!parts[1]||!parts.slice(2).join(' | ')){
+      await message.reply({content:'Usage: !noam-knowledge-add category | title | content\nExample: !noam-knowledge-add history | NRR founding | Add verified facts and dates here.',allowedMentions:{parse:[]}});
+      return true;
+    }
+    const [category,title,...contentParts]=parts;
+    const content=contentParts.join(' | ');
+    if(content.length<20){await message.reply({content:'Please provide at least 20 characters of factual content. Add one focused topic per entry.',allowedMentions:{parse:[]}});return true;}
+    const saved=await store.addCuratedKnowledge(message.guild.id,category,title,content,message.author.id);
+    await message.reply({content:'✅ Added curated NRR knowledge #'+saved.id+' — **'+saved.title+'**. Curated entries receive the highest retrieval priority.',allowedMentions:{parse:[]}});
+    return true;
+  }
+  return false;
+}
 async function runDiagnostics(message) {
   const lines=['**Noam AI diagnostics**'];
   lines.push('Configuration: '+(config.enabled?'✅ API key and model variables are present':'❌ GEMINI_API_KEY or GEMINI_MODEL is missing'));
@@ -63,11 +95,12 @@ async function runDiagnostics(message) {
   } catch(error) { lines.push('Discord channel: ❌ '+String(error?.message||error).slice(0,160)); }
   try {
     const stats=await store.collectionStats();
-    lines.push('Knowledge database: ✅ '+Number(stats.total||0).toLocaleString()+' messages; '+Number(stats.channels||0)+' channels');
+    lines.push('Knowledge database: ✅ '+Number(stats.total||0).toLocaleString()+' Discord messages; '+Number(stats.channels||0)+' channels; '+Number(stats.curated_count||0)+' curated entries');
     lines.push('Historical targets: '+Number(stats.completed_channels||0)+' completed / '+Number(stats.total_targets||0)+' discovered; '+Number(stats.failed_channels||0)+' failed');
     if(Number(stats.failed_channels||0)>0) lines.push('Latest target error: '+String(stats.failures?.[0]?.last_error||'See server logs').slice(0,150));
     lines.push('Thread discovery errors: '+Number(stats.discovery_error_count||0));
     if(stats.discovery_failures?.[0]) lines.push('Latest discovery error: '+String(stats.discovery_failures[0].stage+': '+stats.discovery_failures[0].error).slice(0,150));
+    lines.push('Official Discord sources configured: '+config.officialChannelIds.length);
   } catch(error) { lines.push('Knowledge database: ❌ '+String(error?.message||error).slice(0,180)); }
   const api=await ai.diagnoseGemini();
   if(api.ok) {
@@ -79,24 +112,24 @@ async function runDiagnostics(message) {
     if(api.finishReason) lines.push('Gemini finish reason: '+api.finishReason);
     if(api.blockReason) lines.push('Gemini block reason: '+api.blockReason);
     if(api.usageMetadata?.totalTokenCount) lines.push('Diagnostic tokens: '+api.usageMetadata.totalTokenCount+' total');
-    if(api.category==='max_tokens') lines.push('Next step: inspect NOAM_AI_MAX_OUTPUT_TOKENS; the diagnostic uses a 256-token budget and minimal thinking.');
-    if(api.category==='quota') lines.push('Next step: check the Gemini project rate limits and daily quota in Google AI Studio.');
-    if(api.category==='billing') lines.push('Next step: the project owner should check the linked Google Cloud billing account and Gemini API tier.');
   }
   await message.reply({content:lines.join('\n').slice(0,1900),allowedMentions:{parse:[]}});
 }
 async function handleAdminCommands(message){
   if(message.guild?.id!==config.guildId) return false;
-  const command=message.content.trim().toLowerCase();
-  if(!['!noam-collect','!noam-status','!noam-diagnose'].includes(command)) return false;
+  const command=message.content.trim();
+  const normalized=command.toLowerCase();
+  const knowledgeCommand=normalized==='!noam-knowledge-list'||normalized.startsWith('!noam-knowledge-add ')||normalized.startsWith('!noam-knowledge-delete ');
+  if(!['!noam-collect','!noam-status','!noam-diagnose'].includes(normalized)&&!knowledgeCommand) return false;
   if(!isManager(message)){await message.reply({content:'You need Manage Server permission to use this control.',allowedMentions:{parse:[]}});return true;}
-  if(command==='!noam-diagnose'){ await runDiagnostics(message); return true; }
-  if(command==='!noam-status'){
+  if(knowledgeCommand){await handleKnowledgeCommands(message,normalized);return true;}
+  if(normalized==='!noam-diagnose'){ await runDiagnostics(message); return true; }
+  if(normalized==='!noam-status'){
     const s=await store.collectionStats();
     await message.reply({content:[
-      '**Noam AI knowledge status**','Stored messages: '+Number(s.total||0).toLocaleString(),
-      'Noam messages: '+Number(s.noam_messages||0).toLocaleString(),'Channels indexed: '+Number(s.channels||0),
-      'Historical targets completed: '+Number(s.completed_channels||0)+'/'+Number(s.total_targets||0),
+      '**Noam AI knowledge status**','Stored Discord messages: '+Number(s.total||0).toLocaleString(),
+      'Curated knowledge entries: '+Number(s.curated_count||0),'Noam messages: '+Number(s.noam_messages||0).toLocaleString(),
+      'Channels indexed: '+Number(s.channels||0),'Historical targets completed: '+Number(s.completed_channels||0)+'/'+Number(s.total_targets||0),
       'Failed targets: '+Number(s.failed_channels||0),'Pending/running targets: '+Number(s.pending_channels||0),
       'Thread discovery errors: '+Number(s.discovery_error_count||0),
       'Collection notice acknowledged: '+(config.collectionNoticeAcknowledged?'Yes':'No'),
@@ -130,7 +163,7 @@ async function handleChat(message){
   try{
     await message.channel.sendTyping().catch(()=>{});
     const history=await store.getHistory(message.channelId,message.author.id);
-    const knowledge=await store.searchKnowledge(message.guild.id,message.content,6);
+    const knowledge=await store.searchKnowledge(message.guild.id,message.content,10,config.officialChannelIds);
     const examples=await store.recentNoamMessages(message.guild.id,config.noamUserIds,8);
     const rankingContext=await ranking.getRankingContext(message.guild);
     const reply=await ai.generateReply({question:message.content.slice(0,2000),history,knowledge,noamExamples:examples,rankingContext,

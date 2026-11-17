@@ -11,6 +11,20 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_noam_knowledge_search ON noam_knowledge_messages USING GIN(search_vector);
     CREATE INDEX IF NOT EXISTS idx_noam_knowledge_user_date ON noam_knowledge_messages(user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_noam_knowledge_channel_date ON noam_knowledge_messages(channel_id, created_at DESC);
+    CREATE TABLE IF NOT EXISTS noam_ai_curated_knowledge (
+      id BIGSERIAL PRIMARY KEY,
+      guild_id TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'general',
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_by TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      search_vector TSVECTOR GENERATED ALWAYS AS
+        (to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(category, '') || ' ' || coalesce(content, ''))) STORED
+    );
+    CREATE INDEX IF NOT EXISTS idx_noam_curated_search ON noam_ai_curated_knowledge USING GIN(search_vector);
+    CREATE INDEX IF NOT EXISTS idx_noam_curated_guild_date ON noam_ai_curated_knowledge(guild_id, updated_at DESC);
     CREATE TABLE IF NOT EXISTS noam_ai_optouts (user_id TEXT PRIMARY KEY, opted_out_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
     CREATE TABLE IF NOT EXISTS noam_ai_conversations (
       channel_id TEXT NOT NULL, user_id TEXT NOT NULL, history JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -88,15 +102,59 @@ async function optOut(userId) {
 async function optIn(userId) { await db.query('DELETE FROM noam_ai_optouts WHERE user_id=$1',[userId]); }
 async function deleteMessage(messageId) { await db.query('DELETE FROM noam_knowledge_messages WHERE message_id=$1',[messageId]); }
 
-async function searchKnowledge(guildId, queryText, limit=6) {
-  const normalized=String(queryText||'').replace(/[^\p{L}\p{N}\s]/gu,' ').trim().slice(0,300);
-  if(!normalized) return [];
+function buildSearchQuery(queryText) {
+  return String(queryText || '').replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean).slice(0, 12).join(' | ');
+}
+async function searchKnowledge(guildId, queryText, limit=10, officialChannelIds=[]) {
+  const tsQuery=buildSearchQuery(queryText);
+  if(!tsQuery) return [];
   const r=await db.query(`
-    SELECT username,user_id,content,created_at,is_noam,ts_rank(search_vector,plainto_tsquery('simple',$2)) AS relevance
-    FROM noam_knowledge_messages WHERE guild_id=$1 AND search_vector @@ plainto_tsquery('simple',$2)
-    ORDER BY relevance DESC,created_at DESC LIMIT $3
-  `,[guildId,normalized,limit]);
+    WITH q AS (SELECT to_tsquery('simple',$2) AS tsq),
+    message_hits AS (
+      SELECT m.username,m.user_id,m.content,m.created_at,m.is_noam,
+        CASE WHEN m.channel_id=ANY($4::text[]) THEN 'official_discord' ELSE 'community_history' END AS source_type,
+        CASE WHEN m.channel_id=ANY($4::text[]) THEN 'Official NRR Discord channel' ELSE 'Public Discord history' END AS source_label,
+        ts_rank(m.search_vector,q.tsq) *
+          CASE WHEN m.channel_id=ANY($4::text[]) THEN 2.5 ELSE 1.0 END AS relevance
+      FROM noam_knowledge_messages m CROSS JOIN q
+      WHERE m.guild_id=$1 AND m.search_vector @@ q.tsq
+      ORDER BY relevance DESC,m.created_at DESC LIMIT 30
+    ),
+    curated_hits AS (
+      SELECT 'NRR Knowledge Base'::text AS username,NULL::text AS user_id,k.content,
+        k.updated_at AS created_at,FALSE AS is_noam,'curated_document'::text AS source_type,
+        (k.category || ' — ' || k.title) AS source_label,
+        ts_rank(k.search_vector,q.tsq)*5.0 AS relevance
+      FROM noam_ai_curated_knowledge k CROSS JOIN q
+      WHERE k.guild_id=$1 AND k.search_vector @@ q.tsq
+      ORDER BY relevance DESC,k.updated_at DESC LIMIT 30
+    )
+    SELECT * FROM (
+      SELECT * FROM curated_hits
+      UNION ALL
+      SELECT * FROM message_hits
+    ) results
+    ORDER BY CASE source_type WHEN 'curated_document' THEN 1 WHEN 'official_discord' THEN 2 ELSE 3 END, relevance DESC,created_at DESC LIMIT $3
+  `,[guildId,tsQuery,limit,officialChannelIds]);
   return r.rows;
+}
+async function addCuratedKnowledge(guildId,category,title,content,createdBy) {
+  const result=await db.query(`
+    INSERT INTO noam_ai_curated_knowledge(guild_id,category,title,content,created_by)
+    VALUES($1,$2,$3,$4,$5) RETURNING id,category,title,created_at
+  `,[guildId,String(category).slice(0,60),String(title).slice(0,120),String(content).slice(0,3500),createdBy]);
+  return result.rows[0];
+}
+async function listCuratedKnowledge(guildId,limit=15) {
+  const result=await db.query(`
+    SELECT id,category,title,updated_at FROM noam_ai_curated_knowledge
+    WHERE guild_id=$1 ORDER BY updated_at DESC LIMIT $2
+  `,[guildId,limit]);
+  return result.rows;
+}
+async function deleteCuratedKnowledge(guildId,id) {
+  const result=await db.query('DELETE FROM noam_ai_curated_knowledge WHERE guild_id=$1 AND id=$2 RETURNING id',[guildId,id]);
+  return Boolean(result.rowCount);
 }
 async function recentNoamMessages(guildId,noamIds,limit=8) {
   const r=await db.query(`
@@ -142,7 +200,8 @@ async function collectionStats() {
     FROM noam_ai_collection_state
   `);
   const e=await db.query(`SELECT channel_id,target_type,last_error,updated_at FROM noam_ai_collection_state WHERE status='failed' ORDER BY updated_at DESC LIMIT 8`);
-  return {...(r.rows[0]||{}),...(s.rows[0]||{}),failures:e.rows};
+  const k=await db.query('SELECT COUNT(*)::int AS curated_count FROM noam_ai_curated_knowledge WHERE guild_id=$1',[process.env.DISCORD_GUILD_ID || '']);
+  return {...(r.rows[0]||{}),...(s.rows[0]||{}),failures:e.rows,curated_count:k.rows[0]?.curated_count||0};
 }
 async function databaseCheck() { await db.query('SELECT 1 AS ok'); return true; }
 async function clearCollectionErrors() { await db.query('DELETE FROM noam_ai_collection_errors'); }
@@ -171,5 +230,7 @@ async function updateCollectionState(channelId,beforeMessageId,completed,increme
       status=EXCLUDED.status,last_error=EXCLUDED.last_error,updated_at=NOW()
   `,[channelId,beforeMessageId,completed,increment,status,error]);
 }
-module.exports={migrate,storeMessages,isOptedOut,optOut,optIn,deleteMessage,searchKnowledge,recentNoamMessages,
-  getHistory,saveHistory,getWebhookCredentials,saveWebhookCredentials,collectionStats,getCollectionState,registerCollectionTarget,updateCollectionState,databaseCheck,clearCollectionErrors,recordCollectionError};
+module.exports={migrate,storeMessages,isOptedOut,optOut,optIn,deleteMessage,searchKnowledge,addCuratedKnowledge,
+  listCuratedKnowledge,deleteCuratedKnowledge,recentNoamMessages,getHistory,saveHistory,getWebhookCredentials,
+  saveWebhookCredentials,collectionStats,getCollectionState,registerCollectionTarget,updateCollectionState,
+  databaseCheck,clearCollectionErrors,recordCollectionError};
