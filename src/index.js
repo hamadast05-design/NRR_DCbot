@@ -25,6 +25,7 @@ const staffRanking = require('./staff-ranking');
 const boosterPerks = require('./booster-perks');
 const albumCoverSystem = require('./album-cover');
 const voiceHub = require('./voicehub');
+const noamAI = require('./noam-ai');
 const { registerApplicationCommands } = require('./command-registration');
 
 validate();
@@ -82,6 +83,7 @@ client.once(Events.ClientReady, async readyClient => {
   try {
     await registerApplicationCommands();
     await db.migrate();
+    await noamAI.migrate();
     await albumCoverSystem.migrate();
     albumCoverSystem.startScheduler(readyClient);
     await boosterPerks.migrate();
@@ -199,9 +201,11 @@ client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
 
 client.on(Events.MessageDelete, async message => {
   // Chat Revival is intentionally disabled; do not trigger message deletion/revival logic.
+  try { await noamAI.handleMessageDelete(message); } catch (error) { console.error('[NoamAI] Message deletion cleanup failed:', error); }
 });
 
 client.on(Events.MessageCreate, async message => {
+  try { await noamAI.handleMessage(message); } catch (error) { console.error('[NoamAI] Message handler failed:', error); }
   try { await boosterPerks.handleMessageCreate(message); } catch (error) { console.error('Booster perk reply command failed:', error); }
   // Keep the NR3 Bot from posting in the NRR staff reminder channel.
   if (message.channelId === WORK_REMINDER_CHANNEL_ID && message.author.id === '1563975512240689272') {
