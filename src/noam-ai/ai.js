@@ -46,15 +46,43 @@ async function diagnoseGemini() {
     return { ok: false, category: 'configuration', detail: 'GEMINI_API_KEY or GEMINI_MODEL is missing.' };
   }
   try {
+    // Gemini 3 counts thinking tokens against maxOutputTokens. Keep the test
+    // budget generous and thinking minimal so the diagnostic measures API
+    // connectivity rather than exhausting its budget before visible text.
     const data = await requestGemini({
-      contents: [{ role: 'user', parts: [{ text: 'Reply with OK.' }] }],
-      generationConfig: { maxOutputTokens: 8, thinkingConfig: { thinkingLevel: 'low' } },
+      contents: [{ role: 'user', parts: [{ text: 'Reply with the single word OK.' }] }],
+      generationConfig: {
+        maxOutputTokens: 256,
+        thinkingConfig: { thinkingLevel: 'minimal' },
+      },
     }, 15000);
-    if (!extractResponseText(data)) {
-      const reason = data?.promptFeedback?.blockReason || data?.candidates?.[0]?.finishReason;
-      return { ok: false, category: 'empty_response', detail: 'The API accepted the request but returned no text' + (reason ? ' (' + reason + ').' : '.') };
+    const text = extractResponseText(data);
+    const candidate = data?.candidates?.[0] || {};
+    const finishReason = candidate.finishReason || null;
+    const blockReason = data?.promptFeedback?.blockReason || null;
+    if (!text) {
+      const category = finishReason === 'MAX_TOKENS' ? 'max_tokens' : blockReason ? 'blocked' : 'empty_response';
+      const detail = finishReason === 'MAX_TOKENS'
+        ? 'Gemini exhausted the 256-token diagnostic budget before returning visible text.'
+        : blockReason
+          ? 'Gemini blocked the diagnostic prompt (' + blockReason + ').'
+          : 'Gemini accepted the request but returned no visible text' + (finishReason ? ' (' + finishReason + ').' : '.');
+      return {
+        ok: false,
+        category,
+        detail,
+        finishReason,
+        blockReason,
+        usageMetadata: data?.usageMetadata || null,
+      };
     }
-    return { ok: true, category: 'healthy', detail: 'Gemini API accepted a small test request.' };
+    return {
+      ok: true,
+      category: 'healthy',
+      detail: 'Gemini API accepted the test request and returned text.',
+      finishReason,
+      usageMetadata: data?.usageMetadata || null,
+    };
   } catch (error) {
     if (error.name === 'TimeoutError' || error.name === 'AbortError') {
       return { ok: false, category: 'timeout', detail: 'The Gemini API test timed out.' };
@@ -64,6 +92,7 @@ async function diagnoseGemini() {
       category: error.category || 'network',
       detail: String(error.message || 'Gemini request failed').slice(0, 350),
       httpStatus: error.httpStatus,
+      apiCode: error.apiCode,
     };
   }
 }
@@ -103,15 +132,21 @@ async function generateReply({ question, history, knowledge, noamExamples, ranki
     systemInstruction: { parts: [{ text: instructions }] },
     contents: [{ role: 'user', parts: [{ text: input }] }],
     generationConfig: {
+      // Gemini 3 includes internal thinking tokens in this hard output cap.
+      // Minimal thinking preserves most of the budget for the Discord reply.
       maxOutputTokens: config.maxOutputTokens,
-      thinkingConfig: { thinkingLevel: 'low' },
+      thinkingConfig: { thinkingLevel: 'minimal' },
     },
   });
   const reply = extractResponseText(data);
   if (!reply) {
-    const reason = data?.promptFeedback?.blockReason || data?.candidates?.[0]?.finishReason;
-    const error = new Error('Gemini returned an empty response' + (reason ? ' (' + reason + ')' : '.'));
-    error.category = 'empty_response';
+    const candidate = data?.candidates?.[0] || {};
+    const reason = data?.promptFeedback?.blockReason || candidate.finishReason;
+    const error = new Error('Gemini returned no visible text' + (reason ? ' (' + reason + ')' : '.') +
+      (candidate.finishReason === 'MAX_TOKENS' ? '; increase NOAM_AI_MAX_OUTPUT_TOKENS or shorten the prompt.' : ''));
+    error.category = candidate.finishReason === 'MAX_TOKENS' ? 'max_tokens' : 'empty_response';
+    error.finishReason = candidate.finishReason || null;
+    error.usageMetadata = data?.usageMetadata || null;
     throw error;
   }
   return reply.slice(0, 1900);
