@@ -61,6 +61,7 @@ async function fetchPublicThreads(parent,cutoff) {
   if(typeof parent.threads?.fetchArchived!=='function') return {threads,failures};
   let before=new Date();
   let pageCount=0;
+  const seenCursors=new Set();
   while(true) {
     try {
       const archived=await parent.threads.fetchArchived({type:'public',limit:100,before});
@@ -71,11 +72,12 @@ async function fetchPublicThreads(parent,cutoff) {
       }
       const oldest=values.reduce((a,b)=>a.createdTimestamp<b.createdTimestamp?a:b);
       if(oldest.createdTimestamp<cutoff||!archived.hasMore) break;
-      const nextBefore=new Date(oldest.createdTimestamp);
-      if(nextBefore.getTime()>=before.getTime()) {
+      const nextBefore=oldest.id;
+      if(seenCursors.has(nextBefore)) {
         failures.push({parentId:parent.id,stage:'archived_threads',error:'Discord archive pagination cursor did not move; stopped to prevent a repeated-page loop.'});
         break;
       }
+      seenCursors.add(nextBefore);
       before=nextBefore;
       pageCount++;
       if(pageCount%10===0) await sleep(500);
