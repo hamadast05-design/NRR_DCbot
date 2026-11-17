@@ -134,7 +134,7 @@ async function searchKnowledge(guildId, queryText, limit=10, officialChannelIds=
       UNION ALL
       SELECT * FROM message_hits
     ) results
-    ORDER BY relevance DESC,created_at DESC LIMIT $3
+    ORDER BY CASE source_type WHEN 'curated_document' THEN 1 WHEN 'official_discord' THEN 2 ELSE 3 END, relevance DESC,created_at DESC LIMIT $3
   `,[guildId,tsQuery,limit,officialChannelIds]);
   return r.rows;
 }
