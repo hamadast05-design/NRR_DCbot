@@ -19,13 +19,18 @@ async function migrate() {
     CREATE TABLE IF NOT EXISTS noam_ai_webhooks (
       channel_id TEXT PRIMARY KEY, webhook_id TEXT NOT NULL, webhook_token TEXT NOT NULL,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );\n    CREATE TABLE IF NOT EXISTS noam_ai_collection_state (
+    );
+    CREATE TABLE IF NOT EXISTS noam_ai_collection_state (
       channel_id TEXT PRIMARY KEY, before_message_id TEXT, completed BOOLEAN NOT NULL DEFAULT FALSE,
       messages_collected BIGINT NOT NULL DEFAULT 0, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     ALTER TABLE noam_ai_collection_state ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
     ALTER TABLE noam_ai_collection_state ADD COLUMN IF NOT EXISTS target_type TEXT NOT NULL DEFAULT 'public_channel';
-    ALTER TABLE noam_ai_collection_state ADD COLUMN IF NOT EXISTS last_error TEXT;\n    CREATE TABLE IF NOT EXISTS noam_ai_collection_errors (\n      id BIGSERIAL PRIMARY KEY, parent_channel_id TEXT NOT NULL, stage TEXT NOT NULL, error TEXT NOT NULL,\n      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()\n    );
+    ALTER TABLE noam_ai_collection_state ADD COLUMN IF NOT EXISTS last_error TEXT;
+    CREATE TABLE IF NOT EXISTS noam_ai_collection_errors (
+      id BIGSERIAL PRIMARY KEY, parent_channel_id TEXT NOT NULL, stage TEXT NOT NULL, error TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
     UPDATE noam_ai_collection_state SET status=CASE WHEN completed THEN 'completed' ELSE 'pending' END WHERE status='pending' AND completed=TRUE;
   `);
 }
@@ -139,7 +144,10 @@ async function collectionStats() {
   const e=await db.query(`SELECT channel_id,target_type,last_error,updated_at FROM noam_ai_collection_state WHERE status='failed' ORDER BY updated_at DESC LIMIT 8`);
   return {...(r.rows[0]||{}),...(s.rows[0]||{}),failures:e.rows};
 }
-async function databaseCheck() { await db.query('SELECT 1 AS ok'); return true; }\nasync function recordCollectionError(parentChannelId,stage,error) {\n  await db.query('INSERT INTO noam_ai_collection_errors(parent_channel_id,stage,error) VALUES($1,$2,$3)',[parentChannelId,stage,String(error||'Unknown error').slice(0,500)]);\n}
+async function databaseCheck() { await db.query('SELECT 1 AS ok'); return true; }
+async function recordCollectionError(parentChannelId,stage,error) {
+  await db.query('INSERT INTO noam_ai_collection_errors(parent_channel_id,stage,error) VALUES($1,$2,$3)',[parentChannelId,stage,String(error||'Unknown error').slice(0,500)]);
+}
 async function getCollectionState(channelId) {
   const r=await db.query('SELECT * FROM noam_ai_collection_state WHERE channel_id=$1',[channelId]); return r.rows[0]||null;
 }
