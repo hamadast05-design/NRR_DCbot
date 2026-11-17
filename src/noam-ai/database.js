@@ -6,7 +6,7 @@ async function migrate() {
       message_id TEXT PRIMARY KEY, guild_id TEXT NOT NULL, channel_id TEXT NOT NULL,
       user_id TEXT NOT NULL, username TEXT NOT NULL DEFAULT 'Unknown', content TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL, is_noam BOOLEAN NOT NULL DEFAULT FALSE,
-      search_vector TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', coalesce(content, ''))) STORED
+      search_vector TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple'::regconfig, coalesce(content, ''))) STORED
     );
     CREATE INDEX IF NOT EXISTS idx_noam_knowledge_search ON noam_knowledge_messages USING GIN(search_vector);
     CREATE INDEX IF NOT EXISTS idx_noam_knowledge_user_date ON noam_knowledge_messages(user_id, created_at DESC);
@@ -21,7 +21,7 @@ async function migrate() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       search_vector TSVECTOR GENERATED ALWAYS AS
-        (to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(category, '') || ' ' || coalesce(content, ''))) STORED
+        (to_tsvector('simple'::regconfig, coalesce(title, '') || ' ' || coalesce(category, '') || ' ' || coalesce(content, ''))) STORED
     );
     CREATE INDEX IF NOT EXISTS idx_noam_curated_search ON noam_ai_curated_knowledge USING GIN(search_vector);
     CREATE INDEX IF NOT EXISTS idx_noam_curated_guild_date ON noam_ai_curated_knowledge(guild_id, updated_at DESC);
@@ -38,7 +38,7 @@ async function migrate() {
       bio TEXT NOT NULL DEFAULT '',
       achievements TEXT NOT NULL DEFAULT '',
       search_vector TSVECTOR GENERATED ALWAYS AS (
-        to_tsvector('simple', coalesce(display_name, '') || ' ' || coalesce(position, '') || ' ' ||
+        to_tsvector('simple'::regconfig, coalesce(display_name, '') || ' ' || coalesce(position, '') || ' ' ||
           coalesce(group_name, '') || ' ' || array_to_string(aliases, ' ') || ' ' ||
           coalesce(bio, '') || ' ' || coalesce(achievements, ''))
       ) STORED,
@@ -49,7 +49,7 @@ async function migrate() {
     );
     CREATE INDEX IF NOT EXISTS idx_noam_directory_rank ON noam_ai_member_directory(guild_id, authority_rank, display_name);
     ALTER TABLE noam_ai_member_directory ADD COLUMN IF NOT EXISTS search_vector TSVECTOR GENERATED ALWAYS AS (
-      to_tsvector('simple', coalesce(display_name, '') || ' ' || coalesce(position, '') || ' ' ||
+      to_tsvector('simple'::regconfig, coalesce(display_name, '') || ' ' || coalesce(position, '') || ' ' ||
         coalesce(group_name, '') || ' ' || array_to_string(aliases, ' ') || ' ' ||
         coalesce(bio, '') || ' ' || coalesce(achievements, ''))
     ) STORED;
