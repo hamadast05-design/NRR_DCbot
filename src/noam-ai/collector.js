@@ -103,6 +103,7 @@ async function collectGuild(guild) {
       const discovery=await fetchPublicThreads(parent,cutoff);
       targets.push(...discovery.threads);
       report.discoveryFailures.push(...discovery.failures);
+      for(const failure of discovery.failures) await store.recordCollectionError(failure.parentId,failure.stage,failure.error);
     }
     const uniqueTargets=[...new Map(targets.map(channel=>[channel.id,channel])).values()];
     report.discovered=uniqueTargets.length;
