@@ -37,14 +37,24 @@ async function migrate() {
       status TEXT NOT NULL DEFAULT 'active',
       bio TEXT NOT NULL DEFAULT '',
       achievements TEXT NOT NULL DEFAULT '',
+      search_vector TSVECTOR GENERATED ALWAYS AS (
+        to_tsvector('simple', coalesce(display_name, '') || ' ' || coalesce(position, '') || ' ' ||
+          coalesce(group_name, '') || ' ' || array_to_string(aliases, ' ') || ' ' ||
+          coalesce(bio, '') || ' ' || coalesce(achievements, ''))
+      ) STORED,
       created_by TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       UNIQUE(guild_id, discord_id)
     );
     CREATE INDEX IF NOT EXISTS idx_noam_directory_rank ON noam_ai_member_directory(guild_id, authority_rank, display_name);
-    CREATE INDEX IF NOT EXISTS idx_noam_directory_name ON noam_ai_member_directory USING GIN
-      (to_tsvector('simple', display_name || ' ' || position || ' ' || group_name || ' ' || array_to_string(aliases, ' ') || ' ' || bio || ' ' || achievements));
+    ALTER TABLE noam_ai_member_directory ADD COLUMN IF NOT EXISTS search_vector TSVECTOR GENERATED ALWAYS AS (
+      to_tsvector('simple', coalesce(display_name, '') || ' ' || coalesce(position, '') || ' ' ||
+        coalesce(group_name, '') || ' ' || array_to_string(aliases, ' ') || ' ' ||
+        coalesce(bio, '') || ' ' || coalesce(achievements, ''))
+    ) STORED;
+    DROP INDEX IF EXISTS idx_noam_directory_name;
+    CREATE INDEX IF NOT EXISTS idx_noam_directory_name ON noam_ai_member_directory USING GIN(search_vector);
     CREATE TABLE IF NOT EXISTS noam_ai_optouts (user_id TEXT PRIMARY KEY, opted_out_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
     CREATE TABLE IF NOT EXISTS noam_ai_conversations (
       channel_id TEXT NOT NULL, user_id TEXT NOT NULL, history JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -203,22 +213,19 @@ async function deleteDirectoryMember(guildId,discordId) {
   return Boolean(r.rowCount);
 }
 function buildDirectoryQuery(value) {
-  return String(value||'').replace(/[^\\p{L}\\p{N}\\s]/gu,' ').trim().split(/\\s+/).filter(Boolean).slice(0,12).join(' | ');
+  return String(value||'').replace(/[^\p{L}\p{N}\s]/gu,' ').trim().split(/\s+/).filter(Boolean).slice(0,12).join(' | ');
 }
 async function searchDirectory(guildId,queryText,limit=12) {
   const terms=buildDirectoryQuery(queryText);
-  const ids=[...String(queryText||'').matchAll(/\\b\\d{17,20}\\b/g)].map(match=>match[0]);
+  const ids=[...String(queryText||'').matchAll(/\b\d{17,20}\b/g)].map(match=>match[0]);
   const r=await db.query(`
     SELECT discord_id,display_name,aliases,position,group_name,authority_rank,status,bio,achievements,
-      CASE WHEN discord_id=ANY($3::text[]) THEN 100 ELSE ts_rank(
-        to_tsvector('simple',display_name || ' ' || position || ' ' || group_name || ' ' ||
-          array_to_string(aliases,' ') || ' ' || bio || ' ' || achievements),
+      CASE WHEN discord_id=ANY($3::text[]) THEN 100 ELSE ts_rank(search_vector,
         to_tsquery('simple',NULLIF($2,''))) END AS relevance
     FROM noam_ai_member_directory
     WHERE guild_id=$1 AND (
       discord_id=ANY($3::text[]) OR
-      (NULLIF($2,'') IS NOT NULL AND to_tsvector('simple',display_name || ' ' || position || ' ' || group_name || ' ' ||
-        array_to_string(aliases,' ') || ' ' || bio || ' ' || achievements) @@ to_tsquery('simple',$2))
+      (NULLIF($2,'') IS NOT NULL AND search_vector @@ to_tsquery('simple',$2))
     )
     ORDER BY relevance DESC,authority_rank ASC LIMIT $4
   `,[guildId,terms,ids,limit]);
@@ -301,4 +308,5 @@ async function updateCollectionState(channelId,beforeMessageId,completed,increme
 module.exports={migrate,storeMessages,isOptedOut,optOut,optIn,deleteMessage,searchKnowledge,addCuratedKnowledge,
   listCuratedKnowledge,deleteCuratedKnowledge,recentNoamMessages,getHistory,saveHistory,getWebhookCredentials,
   saveWebhookCredentials,collectionStats,getCollectionState,registerCollectionTarget,updateCollectionState,
-  databaseCheck,clearCollectionErrors,recordCollectionError};
+  databaseCheck,clearCollectionErrors,recordCollectionError,upsertDirectoryMember,listDirectoryMembers,
+  deleteDirectoryMember,searchDirectory};
