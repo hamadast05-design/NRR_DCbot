@@ -145,7 +145,7 @@ async function collectionStats() {
   return {...(r.rows[0]||{}),...(s.rows[0]||{}),failures:e.rows};
 }
 async function databaseCheck() { await db.query('SELECT 1 AS ok'); return true; }
-async function recordCollectionError(parentChannelId,stage,error) {
+async function clearCollectionErrors() { await db.query('DELETE FROM noam_ai_collection_errors'); }\nasync function recordCollectionError(parentChannelId,stage,error) {
   await db.query('INSERT INTO noam_ai_collection_errors(parent_channel_id,stage,error) VALUES($1,$2,$3)',[parentChannelId,stage,String(error||'Unknown error').slice(0,500)]);
 }
 async function getCollectionState(channelId) {
@@ -171,4 +171,4 @@ async function updateCollectionState(channelId,beforeMessageId,completed,increme
   `,[channelId,beforeMessageId,completed,increment,status,error]);
 }
 module.exports={migrate,storeMessages,isOptedOut,optOut,optIn,deleteMessage,searchKnowledge,recentNoamMessages,
-  getHistory,saveHistory,getWebhookCredentials,saveWebhookCredentials,collectionStats,getCollectionState,registerCollectionTarget,updateCollectionState,databaseCheck,recordCollectionError};
+  getHistory,saveHistory,getWebhookCredentials,saveWebhookCredentials,collectionStats,getCollectionState,registerCollectionTarget,updateCollectionState,databaseCheck,clearCollectionErrors,recordCollectionError};
