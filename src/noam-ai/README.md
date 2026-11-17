@@ -11,7 +11,7 @@ A modular AI character simulation for the NRR Discord bot, powered by the Gemini
 ## Noam AI variables
 
 - NOAM_AI_CHANNEL_ID=1572013456092045423
-- NOAM_AI_AVATAR_URL=https://cdn.imageurlgenerator.com/uploads/9835b4aa-ea4b-4a13-97a8-254f69c2e5.png
+- NOAM_AI_AVATAR_URL=https://cdn.imageurlgenerator.com/uploads/9835b4aa-ea4b-4a13-97a8-254f69c2c4e5.png
 - NOAM_AI_DISPLAY_NAME=Noam (AI)
 - NOAM_AI_USER_IDS=830865461021114438,1356667738516357416,1262610664795537503
 - NOAM_AI_OFFICIAL_CHANNEL_IDS: comma-separated Discord channel IDs containing official NRR announcements/reference material. Optional but recommended.
