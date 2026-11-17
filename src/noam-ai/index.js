@@ -65,7 +65,9 @@ async function runDiagnostics(message) {
     const stats=await store.collectionStats();
     lines.push('Knowledge database: ✅ '+Number(stats.total||0).toLocaleString()+' messages; '+Number(stats.channels||0)+' channels');
     lines.push('Historical targets: '+Number(stats.completed_channels||0)+' completed / '+Number(stats.total_targets||0)+' discovered; '+Number(stats.failed_channels||0)+' failed');
-    if(Number(stats.failed_channels||0)>0) lines.push('Latest collection error: '+String(stats.failures?.[0]?.last_error||'See server logs').slice(0,180));
+    if(Number(stats.failed_channels||0)>0) lines.push('Latest target error: '+String(stats.failures?.[0]?.last_error||'See server logs').slice(0,150));
+    lines.push('Thread discovery errors: '+Number(stats.discovery_error_count||0));
+    if(stats.discovery_failures?.[0]) lines.push('Latest discovery error: '+String(stats.discovery_failures[0].stage+': '+stats.discovery_failures[0].error).slice(0,150));
   } catch(error) { lines.push('Knowledge database: ❌ '+String(error?.message||error).slice(0,180)); }
   const api=await ai.diagnoseOpenAI();
   if(api.ok) lines.push('OpenAI API: ✅ '+api.detail);
@@ -81,12 +83,13 @@ async function handleAdminCommands(message){
   const command=message.content.trim().toLowerCase();
   if(!['!noam-collect','!noam-status','!noam-diagnose'].includes(command)) return false;
   if(!isManager(message)){await message.reply({content:'You need Manage Server permission to use this control.',allowedMentions:{parse:[]}});return true;}
-  if(command==='!noam-diagnose'){ await runDiagnostics(message); return true; }\n  if(command==='!noam-status'){
+  if(command==='!noam-diagnose'){ await runDiagnostics(message); return true; }
+  if(command==='!noam-status'){
     const s=await store.collectionStats();
     await message.reply({content:[
       '**Noam AI knowledge status**','Stored messages: '+Number(s.total||0).toLocaleString(),
       'Noam messages: '+Number(s.noam_messages||0).toLocaleString(),'Channels indexed: '+Number(s.channels||0),
-      'Historical targets completed: '+Number(s.completed_channels||0)+'/'+Number(s.total_targets||0),\n      'Failed targets: '+Number(s.failed_channels||0),'Pending/running targets: '+Number(s.pending_channels||0),
+      'Historical targets completed: '+Number(s.completed_channels||0)+'/'+Number(s.total_targets||0),\n      'Failed targets: '+Number(s.failed_channels||0),'Pending/running targets: '+Number(s.pending_channels||0),\n      'Thread discovery errors: '+Number(s.discovery_error_count||0),
       'Collection notice acknowledged: '+(config.collectionNoticeAcknowledged?'Yes':'No'),
       'Live collection enabled: '+(config.collectionEnabled?'Yes':'No'),
     ].join('\n'),allowedMentions:{parse:[]}});
