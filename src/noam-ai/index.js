@@ -89,7 +89,9 @@ async function handleAdminCommands(message){
     await message.reply({content:[
       '**Noam AI knowledge status**','Stored messages: '+Number(s.total||0).toLocaleString(),
       'Noam messages: '+Number(s.noam_messages||0).toLocaleString(),'Channels indexed: '+Number(s.channels||0),
-      'Historical targets completed: '+Number(s.completed_channels||0)+'/'+Number(s.total_targets||0),\n      'Failed targets: '+Number(s.failed_channels||0),'Pending/running targets: '+Number(s.pending_channels||0),\n      'Thread discovery errors: '+Number(s.discovery_error_count||0),
+      'Historical targets completed: '+Number(s.completed_channels||0)+'/'+Number(s.total_targets||0),
+      'Failed targets: '+Number(s.failed_channels||0),'Pending/running targets: '+Number(s.pending_channels||0),
+      'Thread discovery errors: '+Number(s.discovery_error_count||0),
       'Collection notice acknowledged: '+(config.collectionNoticeAcknowledged?'Yes':'No'),
       'Live collection enabled: '+(config.collectionEnabled?'Yes':'No'),
     ].join('\n'),allowedMentions:{parse:[]}});
