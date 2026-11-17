@@ -58,7 +58,7 @@ async function runDiagnostics(message) {
       lines.push('Discord channel: '+(canView&&canSend?'✅ View and send permissions OK':'❌ Missing View Channel or Send Messages'));
       lines.push('Message history permission: '+(canHistory?'✅ Available':'⚠️ Missing Read Message History'));
       const hook=await store.getWebhookCredentials(channel.id);
-      lines.push('Webhook: '+(hook?.webhook_id&&hook?.webhook_token?'✅ Saved credentials found':(perms?.has(PermissionFlagsBits.ManageWebhooks)?'⚠️ No saved webhook; bot can create one':'❌ No saved webhook and Manage Webhooks is missing')));
+      lines.push('Webhook: '+(hook?.webhook_id&&hook?.webhook_token?'✅ Saved credentials found':(perms?.has(PermissionFlagsBits.ManageWebhooks)?'⚠️ No saved webhook; bot can create and save one on its first reply':'❌ No saved webhook and Manage Webhooks is missing')));
     }
   } catch(error) { lines.push('Discord channel: ❌ '+String(error?.message||error).slice(0,160)); }
   try {
@@ -70,10 +70,16 @@ async function runDiagnostics(message) {
     if(stats.discovery_failures?.[0]) lines.push('Latest discovery error: '+String(stats.discovery_failures[0].stage+': '+stats.discovery_failures[0].error).slice(0,150));
   } catch(error) { lines.push('Knowledge database: ❌ '+String(error?.message||error).slice(0,180)); }
   const api=await ai.diagnoseGemini();
-  if(api.ok) lines.push('Gemini API: ✅ '+api.detail);
-  else {
-    const labels={invalid_key:'Invalid API key',quota:'Free-tier quota or rate limit reached',billing:'Billing issue',rate_limit:'Rate limit reached',model:'Model unavailable or not found',permissions:'API project permission issue',timeout:'API request timed out',configuration:'Missing API configuration'};
+  if(api.ok) {
+    lines.push('Gemini API: ✅ '+api.detail);
+    if(api.usageMetadata?.totalTokenCount) lines.push('Diagnostic tokens: '+api.usageMetadata.totalTokenCount+' total');
+  } else {
+    const labels={invalid_key:'Invalid API key',quota:'Free-tier quota or rate limit reached',billing:'Billing issue',rate_limit:'Rate limit reached',model:'Model unavailable or not found',permissions:'API project permission issue',timeout:'API request timed out',configuration:'Missing API configuration',max_tokens:'Output-token budget exhausted',blocked:'Prompt blocked by Gemini'};
     lines.push('Gemini API: ❌ '+(labels[api.category]||'Request failed')+' — '+api.detail);
+    if(api.finishReason) lines.push('Gemini finish reason: '+api.finishReason);
+    if(api.blockReason) lines.push('Gemini block reason: '+api.blockReason);
+    if(api.usageMetadata?.totalTokenCount) lines.push('Diagnostic tokens: '+api.usageMetadata.totalTokenCount+' total');
+    if(api.category==='max_tokens') lines.push('Next step: inspect NOAM_AI_MAX_OUTPUT_TOKENS; the diagnostic uses a 256-token budget and minimal thinking.');
     if(api.category==='quota') lines.push('Next step: check the Gemini project rate limits and daily quota in Google AI Studio.');
     if(api.category==='billing') lines.push('Next step: the project owner should check the linked Google Cloud billing account and Gemini API tier.');
   }
@@ -133,7 +139,7 @@ async function handleChat(message){
     await store.saveHistory(message.channelId,message.author.id,[...history,
       {role:'user',content:message.content.slice(0,2000)},{role:'assistant',content:reply}]);
   }catch(error){
-    console.error('[NoamAI] Chat response failed:',{category:error?.category||'unknown',httpStatus:error?.httpStatus||null,apiCode:error?.apiCode||null,message:error?.message||String(error)});
+    console.error('[NoamAI] Chat response failed:',{category:error?.category||'unknown',httpStatus:error?.httpStatus||null,apiCode:error?.apiCode||null,finishReason:error?.finishReason||null,usageMetadata:error?.usageMetadata||null,message:error?.message||String(error)});
     await message.reply({content:'I ran into a problem generating a response. Please try again in a little while.',allowedMentions:{parse:[]}}).catch(()=>{});
   }finally{activeUsers.delete(message.author.id);}
   return true;
