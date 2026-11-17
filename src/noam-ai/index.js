@@ -73,6 +73,49 @@ async function handleKnowledgeCommands(message,command){
   }
   return false;
 }
+async function handleDirectoryCommands(message,command) {
+  if(command==='!noam-member-list') {
+    const members=await store.listDirectoryMembers(message.guild.id,30);
+    const lines=['**NRR member directory**'];
+    lines.push(...members.map(x=>x.discord_id+' — '+x.display_name+' | '+x.position+' | '+x.group_name+' | rank '+x.authority_rank+' | '+x.status));
+    if(!members.length) lines.push('Directory is empty. Add verified records with !noam-member-set.');
+    await message.reply({content:lines.join('\n').slice(0,1900),allowedMentions:{parse:[]}});
+    return true;
+  }
+  if(command.startsWith('!noam-member-delete ')) {
+    const id=command.slice('!noam-member-delete '.length).trim().replace(/[<@!>]/g,'');
+    if(!/^\d{17,20}$/.test(id)){await message.reply({content:'Usage: !noam-member-delete DISCORD_ID',allowedMentions:{parse:[]}});return true;}
+    const removed=await store.deleteDirectoryMember(message.guild.id,id);
+    await message.reply({content:removed?'✅ Directory record deleted.':'No directory record found for that Discord ID.',allowedMentions:{parse:[]}});
+    return true;
+  }
+  if(command.startsWith('!noam-member-set ')) {
+    const parts=message.content.slice('!noam-member-set '.length).split('|').map(x=>x.trim());
+    if(parts.length<8) {
+      await message.reply({content:'Usage: !noam-member-set @user | position | group | authority rank | active/former/community | aliases (comma-separated) | bio | achievements\nLower rank number = higher authority. Use verified, non-sensitive information only.',allowedMentions:{parse:[]}});
+      return true;
+    }
+    const id=(parts[0].match(/\d{17,20}/)||[])[0];
+    const rank=Number.parseInt(parts[3],10);
+    const status=parts[4].toLowerCase();
+    if(!id||!parts[1]||!parts[2]||!Number.isInteger(rank)||rank<1||rank>100||!['active','former','community'].includes(status)) {
+      await message.reply({content:'Invalid record. Provide a Discord user mention/ID, position, group, rank 1–100, and status active/former/community.',allowedMentions:{parse:[]}});
+      return true;
+    }
+    const record={discordId:id,displayName:parts[0].replace(/<@!?\d{17,20}>/,'').trim()||id,
+      position:parts[1],groupName:parts[2],authorityRank:rank,status,
+      aliases:parts[5]?parts[5].split(',').map(x=>x.trim()).filter(Boolean).slice(0,10):[],
+      bio:parts[6].slice(0,700),achievements:parts.slice(7).join(' | ').slice(0,700)};
+    try {
+      const member=await message.guild.members.fetch(id).catch(()=>null);
+      if(member) record.displayName=member.displayName;
+    } catch {}
+    const saved=await store.upsertDirectoryMember(message.guild.id,record,message.author.id);
+    await message.reply({content:'✅ Saved '+saved.display_name+' — '+saved.position+' (authority rank '+saved.authority_rank+').',allowedMentions:{parse:[]}});
+    return true;
+  }
+  return false;
+}
 async function runDiagnostics(message) {
   const lines=['**Noam AI diagnostics**'];
   lines.push('Configuration: '+(config.enabled?'✅ API key and model variables are present':'❌ GEMINI_API_KEY or GEMINI_MODEL is missing'));
@@ -120,9 +163,11 @@ async function handleAdminCommands(message){
   const command=message.content.trim();
   const normalized=command.toLowerCase();
   const knowledgeCommand=normalized==='!noam-knowledge-list'||normalized.startsWith('!noam-knowledge-add ')||normalized.startsWith('!noam-knowledge-delete ');
-  if(!['!noam-collect','!noam-status','!noam-diagnose'].includes(normalized)&&!knowledgeCommand) return false;
+  const directoryCommand=normalized==='!noam-member-list'||normalized.startsWith('!noam-member-set ')||normalized.startsWith('!noam-member-delete ');
+  if(!['!noam-collect','!noam-status','!noam-diagnose'].includes(normalized)&&!knowledgeCommand&&!directoryCommand) return false;
   if(!isManager(message)){await message.reply({content:'You need Manage Server permission to use this control.',allowedMentions:{parse:[]}});return true;}
   if(knowledgeCommand){await handleKnowledgeCommands(message,normalized);return true;}
+  if(directoryCommand){await handleDirectoryCommands(message,normalized);return true;}
   if(normalized==='!noam-diagnose'){ await runDiagnostics(message); return true; }
   if(normalized==='!noam-status'){
     const s=await store.collectionStats();
@@ -164,9 +209,10 @@ async function handleChat(message){
     await message.channel.sendTyping().catch(()=>{});
     const history=await store.getHistory(message.channelId,message.author.id);
     const knowledge=await store.searchKnowledge(message.guild.id,message.content,10,config.officialChannelIds);
+    const directory=await store.searchDirectory(message.guild.id,message.content,12);
     const examples=await store.recentNoamMessages(message.guild.id,config.noamUserIds,8);
     const rankingContext=await ranking.getRankingContext(message.guild);
-    const reply=await ai.generateReply({question:message.content.slice(0,2000),history,knowledge,noamExamples:examples,rankingContext,
+    const reply=await ai.generateReply({question:message.content.slice(0,2000),history,knowledge,directory,noamExamples:examples,rankingContext,
       memberName:message.member?.displayName||message.author.username});
     await sendAsNoam(message.channel,reply);
     await store.saveHistory(message.channelId,message.author.id,[...history,
