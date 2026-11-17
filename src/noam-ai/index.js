@@ -43,7 +43,7 @@ async function handleOptCommands(message){
 }
 async function runDiagnostics(message) {
   const lines=['**Noam AI diagnostics**'];
-  lines.push('Configuration: '+(config.enabled?'✅ API key and model variables are present':'❌ OPENAI_API_KEY or OPENAI_MODEL is missing'));
+  lines.push('Configuration: '+(config.enabled?'✅ API key and model variables are present':'❌ GEMINI_API_KEY or GEMINI_MODEL is missing'));
   try { await store.databaseCheck(); lines.push('PostgreSQL: ✅ Connected'); }
   catch(error) { lines.push('PostgreSQL: ❌ '+String(error?.message||error).slice(0,180)); }
   try {
@@ -69,12 +69,12 @@ async function runDiagnostics(message) {
     lines.push('Thread discovery errors: '+Number(stats.discovery_error_count||0));
     if(stats.discovery_failures?.[0]) lines.push('Latest discovery error: '+String(stats.discovery_failures[0].stage+': '+stats.discovery_failures[0].error).slice(0,150));
   } catch(error) { lines.push('Knowledge database: ❌ '+String(error?.message||error).slice(0,180)); }
-  const api=await ai.diagnoseOpenAI();
-  if(api.ok) lines.push('OpenAI API: ✅ '+api.detail);
+  const api=await ai.diagnoseGemini();
+  if(api.ok) lines.push('Gemini API: ✅ '+api.detail);
   else {
-    const labels={billing:'Billing/credits issue',invalid_key:'Invalid API key',rate_limit:'Rate limit reached',model:'Model unavailable or not found',permissions:'API project permission issue',timeout:'API request timed out',configuration:'Missing API configuration'};
-    lines.push('OpenAI API: ❌ '+(labels[api.category]||'Request failed')+' — '+api.detail);
-    if(api.category==='billing') lines.push('Next step: the API project owner must check billing/credits in the OpenAI Platform. Do not replace the key unless it is also invalid.');
+    const labels={billing:'Billing or quota issue',invalid_key:'Invalid API key',quota:'Free-tier quota or rate limit reached',billing:'Billing issue',rate_limit:'Rate limit reached',model:'Model unavailable or not found',permissions:'API project permission issue',timeout:'API request timed out',configuration:'Missing API configuration'};
+    lines.push('Gemini API: ❌ '+(labels[api.category]||'Request failed')+' — '+api.detail);
+    if(api.category==='quota') lines.push('Next step: check the Gemini project rate limits and daily quota in Google AI Studio.');\n    if(api.category==='billing') lines.push('Next step: the project owner should check the linked Google Cloud billing account and Gemini API tier.');
   }
   await message.reply({content:lines.join('\n').slice(0,1900),allowedMentions:{parse:[]}});
 }
