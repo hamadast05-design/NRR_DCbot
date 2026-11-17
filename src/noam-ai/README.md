@@ -66,3 +66,24 @@ The historical Discord collector indexes public guild text and announcement chan
 ## Data handling note
 
 Review Google's Gemini API data-use terms for the selected usage tier before sending community messages. Keep curated material factual and avoid adding private member or staff information.
+
+
+## NRR member and leadership directory
+
+The directory is separate from chat history and stores only administrator-entered, verified public/community-role information. It supports current leadership, staff, former staff, developers, and notable community members.
+
+All commands require Manage Server:
+
+- \`!noam-member-set @user | position | group | authority rank | active/former/community | aliases | bio | achievements\`
+- \`!noam-member-list\`
+- \`!noam-member-delete DISCORD_ID\`
+
+Example format (replace with verified NRR information):
+
+\`!noam-member-set @user | Co-Owner | Leadership | 2 | active | alias1,alias2 | Oversees server operations | Helped lead the community\`
+
+The bot resolves the current Discord display name from the mentioned member when possible. Use the Discord ID as the stable identity; aliases are for recognition only. Authority rank is numeric from 1–100, where a lower number means higher authority. The rank is an ordering aid, not a Discord permission grant.
+
+For non-staff community figures, use group \`Community\`, status \`community\`, and a rank such as 50–90. Former staff should use status \`former\`; do not describe them as current staff. Keep bios and achievements factual and non-sensitive. Do not enter private staff notes, moderation history, personal contact details, or speculative reputation claims.
+
+When a member asks about a person or position, Noam searches the directory using names, aliases, titles, and Discord IDs. It uses the stored rank and status to understand hierarchy and distinguish active leaders, former staff, and community figures. Noam must say it does not know someone if there is no reliable matching record.
