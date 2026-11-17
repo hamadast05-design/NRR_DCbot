@@ -14,6 +14,7 @@ A modular AI character simulation for the NRR Discord bot, powered by the Gemini
 - NOAM_AI_AVATAR_URL=https://cdn.imageurlgenerator.com/uploads/9835b4aa-ea4b-4a13-97a8-254f69c2c4e5.png
 - NOAM_AI_DISPLAY_NAME=Noam (AI)
 - NOAM_AI_USER_IDS=830865461021114438,1356667738511147416,1262610664795537503
+- NOAM_AI_MAX_OUTPUT_TOKENS=1024 (optional; minimum effective value is 256)
 - NOAM_COLLECTION_NOTICE_ACKNOWLEDGED=false
 - NOAM_COLLECTION_ENABLED=false
 
@@ -35,7 +36,8 @@ The historical Discord collector indexes public guild text and announcement chan
 - Noam is represented by a webhook named Noam AI with the supplied avatar.
 - The AI uses the Gemini Developer API `generateContent` endpoint and the configured `GEMINI_MODEL`.
 - Knowledge retrieval uses PostgreSQL full-text search. Conversation history is stored per member in Talk to Noam.
-- API calls use a 30-second timeout and capped generated output. The admin-only !noam-diagnose command makes a small API health request and reports common quota, billing, key, model, network, database, and Discord permission problems without exposing credentials.
+- Gemini 3 thinking tokens count against `maxOutputTokens`. The default reply budget is 1024 tokens and generation uses minimal thinking to reserve budget for visible Discord text. The admin-only !noam-diagnose command uses a separate 256-token minimal-thinking test and reports finish/block reasons and token usage without exposing credentials.
+- If the Noam webhook has not been created yet, the bot creates it and saves its credentials on the first successful reply. The bot needs Manage Webhooks permission for this first-time setup.
 - Historical Discord messages are treated as untrusted data, never as instructions.
 
 ## Data handling note
