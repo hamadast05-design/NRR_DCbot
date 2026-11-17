@@ -72,7 +72,7 @@ async function runDiagnostics(message) {
   const api=await ai.diagnoseGemini();
   if(api.ok) lines.push('Gemini API: ✅ '+api.detail);
   else {
-    const labels={billing:'Billing or quota issue',invalid_key:'Invalid API key',quota:'Free-tier quota or rate limit reached',billing:'Billing issue',rate_limit:'Rate limit reached',model:'Model unavailable or not found',permissions:'API project permission issue',timeout:'API request timed out',configuration:'Missing API configuration'};
+    const labels={invalid_key:'Invalid API key',quota:'Free-tier quota or rate limit reached',billing:'Billing issue',rate_limit:'Rate limit reached',model:'Model unavailable or not found',permissions:'API project permission issue',timeout:'API request timed out',configuration:'Missing API configuration'};
     lines.push('Gemini API: ❌ '+(labels[api.category]||'Request failed')+' — '+api.detail);
     if(api.category==='quota') lines.push('Next step: check the Gemini project rate limits and daily quota in Google AI Studio.');\n    if(api.category==='billing') lines.push('Next step: the project owner should check the linked Google Cloud billing account and Gemini API tier.');
   }
