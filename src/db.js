@@ -27,6 +27,19 @@ async function migrate() {
     );
     CREATE INDEX IF NOT EXISTS idx_santa_custom_gifts_guild ON santa_custom_gifts(guild_id, id);
 
+    CREATE TABLE IF NOT EXISTS santa_gift_migrations (
+      name TEXT PRIMARY KEY,
+      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    WITH first_run AS (
+      INSERT INTO santa_gift_migrations (name)
+      VALUES ('reset-old-santa-gift-bank-v2')
+      ON CONFLICT (name) DO NOTHING
+      RETURNING name
+    )
+    DELETE FROM santa_custom_gifts
+    WHERE EXISTS (SELECT 1 FROM first_run);
+
     CREATE TABLE IF NOT EXISTS event_configs (
       id BIGSERIAL PRIMARY KEY,
       guild_id TEXT NOT NULL,
@@ -179,21 +192,33 @@ async function migrate() {
 
 async function getSantaGifts(guildId) {
   const result = await query(`
-    SELECT id, emoji, title, description, weight
+    SELECT id, title, weight
     FROM santa_custom_gifts
     WHERE guild_id = $1
     ORDER BY id ASC
   `, [guildId]);
-  return result.rows.map(row => ({ ...row, id: `custom-${row.id}`, category: 'ordinary', weight: Number(row.weight) }));
+  return result.rows.map(row => ({
+    id: `custom-${row.id}`,
+    title: row.title,
+    emoji: '🎁',
+    category: 'ordinary',
+    weight: Number(row.weight),
+  }));
 }
 
-async function addSantaGift({ guildId, creatorId, emoji, title, description, weight = 1000 }) {
+async function addSantaGift({ guildId, creatorId, title, weight = 1000 }) {
   const result = await query(`
     INSERT INTO santa_custom_gifts (guild_id, creator_id, emoji, title, description, weight)
     VALUES ($1, $2, $3, $4, $5, $6)
-    RETURNING id, emoji, title, description, weight
-  `, [guildId, creatorId, emoji, title, description, weight]);
-  return { ...result.rows[0], id: `custom-${result.rows[0].id}`, category: 'ordinary', weight: Number(result.rows[0].weight) };
+    RETURNING id, title, weight
+  `, [guildId, creatorId, '🎁', title, '', weight]);
+  return {
+    id: `custom-${result.rows[0].id}`,
+    title: result.rows[0].title,
+    emoji: '🎁',
+    category: 'ordinary',
+    weight: Number(result.rows[0].weight),
+  };
 }
 
 async function ensureMember(guildId, userId, active = true) {
