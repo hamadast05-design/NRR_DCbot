@@ -52,23 +52,20 @@ jobs:
           console.log('Components V2 builders and slash command builder verified.');
           NODE
 
-      - name: Verify Santa Gift spoiler reveal and reward weights
+      - name: Verify Santa Gift interactive reveal
         run: |
           node <<'NODE'
           const feature = require('./src/santa-gift');
-          const categoryWeights = feature.GIFTS.reduce((totals, gift) => {
-            totals[gift.category] = (totals[gift.category] || 0) + gift.weight;
-            return totals;
-          }, {});
+          const { ButtonStyle } = require('discord.js');
           if (feature.command.toJSON().name !== 'santa_gift') throw new Error('Santa slash command was not registered.');
-          if (typeof feature.handlePrefixMessage !== 'function' || feature.DEFAULT_GIFT_WEIGHT !== 1000) throw new Error('Santa !addgift handler or default gift weight is missing.');
-          if (feature.GIFTS.length !== 12 || feature.TOTAL_WEIGHT !== 10000) throw new Error('Santa gift pool or total weight is incorrect.');
-          if (categoryWeights.golden !== 500 || categoryWeights.ordinary !== 7000 || categoryWeights.naughty !== 2500) {
-            throw new Error('Santa gift category odds do not match 5% / 70% / 25%.');
-          }
-          const message = feature.buildGiftMessage('12345678901234567', feature.GIFTS[0]);
-          if (!message.includes('||') || !message.includes(feature.GIFTS[0].title)) {
-            throw new Error('Santa gift result is not wrapped in Discord spoiler formatting.');
-          }
-          console.log('Santa command, gift weights, spoiler reveal, and addgift handler verified.');
+          if (typeof feature.handleButton !== 'function' || typeof feature.handlePrefixMessage !== 'function') throw new Error('Santa button or addgift handler is missing.');
+          if (feature.GIFTS.length !== 0 || feature.DEFAULT_GIFT_WEIGHT !== 1000) throw new Error('Santa gift bank must start empty with the expected default weight.');
+          const opening = feature.buildOpeningEmbed('12345678901234567').toJSON();
+          if (opening.title !== '🎅 Santa’s Gift Delivery' || !opening.description.includes('<@12345678901234567>')) throw new Error('Santa opening embed content is incorrect.');
+          const revealed = feature.buildRevealedEmbed({ title: 'NRR Mystery Prize' }).toJSON();
+          if (!revealed.description.includes('Unwrapped Item:') || !revealed.description.includes('NRR Mystery Prize')) throw new Error('Santa revealed embed content is incorrect.');
+          const components = feature.buildGiftComponents('12345678901234567');
+          if (components[0].components[0].data.style !== ButtonStyle.Success || components[0].components[0].data.disabled) throw new Error('Santa unwrap button is incorrectly configured.');
+          if (!feature.buildGiftComponents('12345678901234567', true)[0].components[0].data.disabled) throw new Error('Santa unwrap button is not disabled after reveal.');
+          console.log('Santa embed, owner-bound unwrap button, empty gift bank, and addgift handler verified.');
           NODE
