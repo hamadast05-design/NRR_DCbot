@@ -31,32 +31,65 @@ const { registerApplicationCommands } = require('./command-registration');
 validate();
 
 
-const WORK_REMINDER_CHANNEL_ID = '1570764802651983962';
-const WORK_REMINDER_USER_ID = '823983272614559766';
-let workReminderInterval = null;
+const LEGACY_MEMBER_ROLE_ID = '1259221337252302878';
+const MIGRATED_MEMBER_ROLE_ID = '1559668399204864080';
+const ROLE_MIGRATION_KEY = 'nrr-legacy-member-role-migration-2026-11';
 
-async function sendWorkReminder(readyClient) {
-  try {
-    const channel = await readyClient.channels.fetch(WORK_REMINDER_CHANNEL_ID);
-    if (!channel?.isTextBased() || typeof channel.send !== 'function') {
-      console.error('Work reminder channel is unavailable or is not a sendable text channel.');
-      return;
-    }
-    await channel.send({
-      content: `<@${WORK_REMINDER_USER_ID}> GET BACK TO WORK`,
-      allowedMentions: { parse: [], users: [WORK_REMINDER_USER_ID] }
-    });
-  } catch (error) {
-    console.error('Work reminder failed:', error);
+async function migrateLegacyRoleMembersOnce(guild, members) {
+  const sourceRole = await guild.roles.fetch(LEGACY_MEMBER_ROLE_ID).catch(() => null);
+  if (!sourceRole) return;
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS nrr_one_time_migrations (
+      migration_key TEXT NOT NULL,
+      guild_id TEXT NOT NULL,
+      completed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (migration_key, guild_id)
+    )
+  `);
+  const alreadyDone = await db.query(
+    'SELECT 1 FROM nrr_one_time_migrations WHERE migration_key = $1 AND guild_id = $2',
+    [ROLE_MIGRATION_KEY, guild.id]
+  );
+  if (alreadyDone.rowCount) {
+    console.log(`[Role Migration] Already completed for ${guild.name}; skipping.`);
+    return;
   }
-}
 
-function startWorkReminder(readyClient) {
-  if (workReminderInterval) clearInterval(workReminderInterval);
-  workReminderInterval = setInterval(() => {
-    void sendWorkReminder(readyClient);
-  }, 60 * 1000);
-  console.log('Work reminder started (every 60 seconds).');
+  const targetRole = await guild.roles.fetch(MIGRATED_MEMBER_ROLE_ID).catch(() => null);
+  if (!targetRole) {
+    console.error(`[Role Migration] Target role ${MIGRATED_MEMBER_ROLE_ID} was not found in ${guild.name}.`);
+    return;
+  }
+
+  const matchingMembers = [...members.values()].filter(member => member.roles.cache.has(LEGACY_MEMBER_ROLE_ID));
+  console.log(`[Role Migration] Found ${matchingMembers.length} members with source role in ${guild.name}.`);
+  for (const member of matchingMembers) {
+    console.log(`[Role Migration] Member: ${member.user.tag} (${member.id})`);
+  }
+
+  let assigned = 0;
+  let alreadyHad = 0;
+  const failures = [];
+  for (const member of matchingMembers) {
+    if (member.roles.cache.has(MIGRATED_MEMBER_ROLE_ID)) {
+      alreadyHad++;
+      continue;
+    }
+    try {
+      await member.roles.add(targetRole, 'One-time migration from legacy member role');
+      assigned++;
+    } catch (error) {
+      failures.push({ userId: member.id, error: error?.message || String(error) });
+      console.error(`[Role Migration] Could not assign target role to ${member.id}:`, error);
+    }
+  }
+
+  await db.query(
+    'INSERT INTO nrr_one_time_migrations (migration_key, guild_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+    [ROLE_MIGRATION_KEY, guild.id]
+  );
+  console.log(`[Role Migration] Finished for ${guild.name}: ${assigned} assigned, ${alreadyHad} already had the role, ${failures.length} failed.`);
 }
 
 const client = new Client({
@@ -65,7 +98,6 @@ const client = new Client({
 
 client.once(Events.ClientReady, async readyClient => {
   console.log(`Logged in as ${readyClient.user.tag}`);
-  startWorkReminder(readyClient);
   readyClient.user.setPresence({
     status: 'online',
     activities: [
@@ -109,6 +141,7 @@ client.once(Events.ClientReady, async readyClient => {
 
     for (const guild of readyClient.guilds.cache.values()) {
       const members = await guild.members.fetch();
+      await migrateLegacyRoleMembersOnce(guild, members).catch(error => console.error(`[Role Migration] Failed for ${guild.name}:`, error));
       if (boosterGuild && guild.id === boosterGuild.id) await boosterPerks.syncGuild(guild, members);
       for (const member of members.values()) {
         if (!member.user.bot || config.allowBotTargets) {
@@ -121,34 +154,6 @@ client.once(Events.ClientReady, async readyClient => {
     console.error('Startup database sync failed:', error);
   }
 });
-
-async function handleWorkReminderControl(message) {
-  if (!message.guild || message.author.bot || message.webhookId) return;
-  if (message.channelId !== WORK_REMINDER_CHANNEL_ID || message.content.trim().toLowerCase() !== '!stopping') return;
-
-  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) {
-    await message.reply({
-      content: '❌ You need the Manage Server permission to stop the work reminder.',
-      allowedMentions: { parse: [] }
-    }).catch(() => {});
-    return;
-  }
-
-  if (!workReminderInterval) {
-    await message.reply({
-      content: 'ℹ️ The work reminder is already stopped.',
-      allowedMentions: { parse: [] }
-    }).catch(() => {});
-    return;
-  }
-
-  clearInterval(workReminderInterval);
-  workReminderInterval = null;
-  await message.reply({
-    content: '⏹️ Work reminder stopped.',
-    allowedMentions: { parse: [] }
-  }).catch(() => {});
-}
 
 async function handleAutomationControlMessage(message) {
   if (!message.guild || message.author.bot || message.webhookId) return;
@@ -207,12 +212,6 @@ client.on(Events.MessageDelete, async message => {
 client.on(Events.MessageCreate, async message => {
   try { await noamAI.handleMessage(message); } catch (error) { console.error('[NoamAI] Message handler failed:', error); }
   try { await boosterPerks.handleMessageCreate(message); } catch (error) { console.error('Booster perk reply command failed:', error); }
-  // Keep the NR3 Bot from posting in the NRR staff reminder channel.
-  if (message.channelId === WORK_REMINDER_CHANNEL_ID && message.author.id === '1563975512240689272') {
-    await message.delete().catch(error => console.error('Could not remove NR3 Bot message:', error));
-    return;
-  }
-  try { await handleWorkReminderControl(message); } catch (error) { console.error('Work reminder control failed:', error); }
   try { await handlePrefixMute(message); } catch (error) { console.error('Prefix mute command failed:', error); }
   try { await require('./santa-gift').handlePrefixMessage(message); } catch (error) { console.error('Santa gift prefix command failed:', error); }
   try { await gamePanel.handleStopMessage(message); } catch (error) { console.error('Game Panel !stop command failed:', error); }
