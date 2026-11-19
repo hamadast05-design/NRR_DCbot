@@ -85,10 +85,14 @@ async function migrateLegacyRoleMembersOnce(guild, members) {
     }
   }
 
-  await db.query(
-    'INSERT INTO nrr_one_time_migrations (migration_key, guild_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-    [ROLE_MIGRATION_KEY, guild.id]
-  );
+  if (failures.length === 0) {
+    await db.query(
+      'INSERT INTO nrr_one_time_migrations (migration_key, guild_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+      [ROLE_MIGRATION_KEY, guild.id]
+    );
+  } else {
+    console.warn(`[Role Migration] ${failures.length} assignment(s) failed; incomplete migration will retry on the next startup.`);
+  }
   console.log(`[Role Migration] Finished for ${guild.name}: ${assigned} assigned, ${alreadyHad} already had the role, ${failures.length} failed.`);
 }
 
