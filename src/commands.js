@@ -216,7 +216,7 @@ async function handleVote(interaction, type) {
 }
 
 async function handleWhitelist(interaction) {
-  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: '❌ You do not have permission to manage the reputation whitelist.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild, interaction.member)) return interaction.reply({ content: '❌ You do not have permission to manage the reputation whitelist.', ephemeral: true });
   const sub = interaction.options.getSubcommand();
   const target = interaction.options.getUser('member', true);
   const type = interaction.options.getString('type', true);
@@ -285,7 +285,7 @@ async function showLeaderboard(interaction, type, page = 1) {
 }
 
 async function handleAdmin(interaction) {
-  if (!hasPermission(interaction.user.id, interaction.memberPermissions, config.adminPermission)) return interaction.reply({ content: '❌ You do not have permission to use reputation administration commands.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, config.adminPermission, interaction.member)) return interaction.reply({ content: '❌ You do not have permission to use reputation administration commands.', ephemeral: true });
   const sub = interaction.options.getSubcommand();
   const target = interaction.options.getUser('member', true);
   if (target.bot && !config.allowBotTargets) return interaction.reply({ content: '❌ Bots cannot be modified by the reputation system.', ephemeral: true });
@@ -344,7 +344,7 @@ async function getModerationTarget(interaction, optionName) {
 }
 
 async function handleMute(interaction) {
-  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ModerateMembers)) return interaction.reply({ content: '❌ You do not have permission to mute members.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ModerateMembers, interaction.member)) return interaction.reply({ content: '❌ You do not have permission to mute members.', ephemeral: true });
   const target = await getModerationTarget(interaction, 'user');
   if (target.error) return interaction.reply({ content: target.error, ephemeral: true });
   const duration = parseMuteDuration(interaction.options.getString('time', true));
@@ -364,7 +364,7 @@ async function handlePrefixMute(message) {
     await message.reply('Usage: `!mute @user 1 Minute` | `5 Minutes` | `10 Minutes` | `1 Hour` | `1 Day` | `1 Week`').catch(() => {});
     return true;
   }
-  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ModerateMembers)) {
+  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ModerateMembers, message.member)) {
     await message.reply('❌ You need Moderate Members permission to mute members.').catch(() => {});
     return true;
   }
@@ -422,7 +422,7 @@ async function handlePrefixMute(message) {
 }
 
 async function handleKick(interaction) {
-  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.KickMembers)) return interaction.reply({ content: '❌ You do not have permission to kick members.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.KickMembers, interaction.member)) return interaction.reply({ content: '❌ You do not have permission to kick members.', ephemeral: true });
   const target = await getModerationTarget(interaction, 'user');
   if (target.error) return interaction.reply({ content: target.error, ephemeral: true });
   if (!target.member.kickable) return interaction.reply({ content: '❌ I cannot kick that member. Check my role position and Kick Members permission.', ephemeral: true });
@@ -432,7 +432,7 @@ async function handleKick(interaction) {
 }
 
 async function handleBan(interaction) {
-  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.BanMembers)) return interaction.reply({ content: '❌ You do not have permission to ban members.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.BanMembers, interaction.member)) return interaction.reply({ content: '❌ You do not have permission to ban members.', ephemeral: true });
   const target = await getModerationTarget(interaction, 'user');
   if (target.error) return interaction.reply({ content: target.error, ephemeral: true });
   if (!target.member.bannable) return interaction.reply({ content: '❌ I cannot ban that member. Check my role position and Ban Members permission.', ephemeral: true });
@@ -443,7 +443,7 @@ async function handleBan(interaction) {
 
 async function setupRoleGiver(interaction) {
   if (!interaction.inGuild() || !interaction.guild) return interaction.reply({ content: '❌ Use this command inside a server.', ephemeral: true });
-  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageRoles)) return interaction.reply({ content: '❌ You need Manage Roles to configure a role-giver.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageRoles, interaction.member)) return interaction.reply({ content: '❌ You need Manage Roles to configure a role-giver.', ephemeral: true });
   const roleId = interaction.options.getString('role_id', true).trim();
   const channelId = interaction.options.getString('channel_id', true).trim();
   if (!/^\d{17,22}$/.test(roleId) || !/^\d{17,22}$/.test(channelId)) {

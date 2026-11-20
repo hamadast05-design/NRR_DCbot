@@ -238,12 +238,12 @@ async function start(channel, config) {
 async function stop(channel, config) { const game = getGame(channel.id, config.key); if (!game) return false; await finishGame(channel, game, 'The host ended the session.'); return true; }
 
 async function startCommand(interaction, config) {
-  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: '❌ You need Manage Server permission to host this minigame.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild, interaction.member)) return interaction.reply({ content: '❌ You need Manage Server permission to host this minigame.', ephemeral: true });
   try { const result = await start(interaction.channel, config); if (!result.ok) return interaction.reply({ content: result.message, ephemeral: true }); return interaction.reply({ content: '✅ ' + config.title + ' started in this channel.', ephemeral: true }); }
   catch (error) { console.error(config.title + ' start error:', error); return interaction.reply({ content: '❌ I could not start ' + config.title + ' right now.', ephemeral: true }).catch(() => {}); }
 }
 async function endCommand(interaction, config) {
-  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: '❌ You need Manage Server permission to end this minigame.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild, interaction.member)) return interaction.reply({ content: '❌ You need Manage Server permission to end this minigame.', ephemeral: true });
   try { const stopped = await stop(interaction.channel, config); return interaction.reply({ content: stopped ? '🛑 ' + config.title + ' ended.' : '❌ There is no active ' + config.title + ' game in this channel.', ephemeral: true }); }
   catch (error) { console.error(config.title + ' end error:', error); return interaction.reply({ content: '❌ I could not end ' + config.title + ' cleanly.', ephemeral: true }).catch(() => {}); }
 }

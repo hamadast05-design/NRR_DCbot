@@ -9,7 +9,7 @@ function parseMention(content) {
 }
 
 async function hasModerationPermission(message) {
-  return message.guild && hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ModerateMembers);
+  return message.guild && hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ModerateMembers, message.member);
 }
 
 async function annihilate(message) {

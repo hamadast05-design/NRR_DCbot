@@ -176,9 +176,9 @@ async function handleStopMessage(message) {
       case 'flag': stopped = await flagRush.stop(channel); break;
       case 'politician': stopped = await guessPolitician.stop(channel); break;
       case 'mystery': stopped = await mysteryGen.stop(channel); break;
-      case 'math': stopped = await learningGames.stopByPanel(channel, message.author.id, 'math'); break;
-      case 'language': stopped = await learningGames.stopByPanel(channel, message.author.id, 'language'); break;
-      case 'academics': stopped = await learningGames.stopByPanel(channel, message.author.id, 'academics'); break;
+      case 'math': stopped = await learningGames.stopByPanel(channel, message.author.id, 'math', message.member); break;
+      case 'language': stopped = await learningGames.stopByPanel(channel, message.author.id, 'language', message.member); break;
+      case 'academics': stopped = await learningGames.stopByPanel(channel, message.author.id, 'academics', message.member); break;
       case 'chess': stopped = await chessPuzzle.stop(channel); break;
       case 'steal':
         await message.reply('ℹ️ Steal Or No Steal is a two-player challenge; use its challenge controls to finish it.').catch(() => {});

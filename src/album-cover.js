@@ -113,7 +113,7 @@ async function handlePrefixMessage(message) {
   if (!message.guild || message.author.bot || message.webhookId) return false;
   const raw = message.content.trim().toLowerCase();
   if (raw !== '!storeimg' && raw !== '!sendalbum') return false;
-  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) {
+  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild, message.member)) {
     await message.reply('❌ You need Manage Server permission to manage Name The Album Cover.');
     return true;
   }

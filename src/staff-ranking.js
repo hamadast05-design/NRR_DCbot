@@ -320,7 +320,7 @@ async function handlePrefixMessage(message) {
   if (!message.guild || message.guild.id !== config.staffGuildId || message.author.bot || message.webhookId) return false;
 
   if (/^!reset7d$/i.test(message.content.trim())) {
-    if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) {
+    if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild, message.member)) {
       await message.reply({
         content: 'You need Manage Server permission to reset the 7D staff ranking period.',
         allowedMentions: { parse: [] },
@@ -368,7 +368,7 @@ async function handlePrefixMessage(message) {
 async function handleDiagnosticsMessage(message) {
   if (!message.guild || message.guild.id !== config.staffGuildId || message.author.bot || message.webhookId) return false;
   if (!/^!staff_ranking_diagnostics$/i.test(message.content.trim())) return false;
-  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) {
+  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild, message.member)) {
     await message.reply('You need Manage Server permission to view Staff Ranking diagnostics.').catch(() => {});
     return true;
   }

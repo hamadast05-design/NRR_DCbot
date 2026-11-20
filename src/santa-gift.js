@@ -118,7 +118,7 @@ async function handlePrefixMessage(message) {
   const match = message.content.match(/^!addgift(?:\s+([\s\S]*))?$/i);
   if (!match) return;
 
-  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) {
+  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild, message.member)) {
     return message.reply({ content: '❌ You need Manage Server permission to add gifts.', allowedMentions: { parse: [] } });
   }
 
