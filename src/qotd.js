@@ -99,7 +99,7 @@ async function sendPanel(message) {
   await message.reply('✅ QOTD submission panel posted.');
 }
 async function setChannel(message, channelId) {
-  if (!hasPermission(message.author.id, message.member?.permissions, MANAGE)) return message.reply('❌ You need Manage Server permission to set the QOTD channel.');
+  if (!hasPermission(message.author.id, message.member?.permissions, MANAGE, message.member)) return message.reply('❌ You need Manage Server permission to set the QOTD channel.');
   if (!/^\d{17,22}$/.test(channelId || '')) return message.reply('Usage: !set_qotd_channel [channel_id]');
   const channel = await message.guild.channels.fetch(channelId).catch(()=>null);
   if (!channel?.isTextBased()) return message.reply('❌ I could not find a text channel with that ID.');
