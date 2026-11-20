@@ -104,6 +104,7 @@ async function sendCustom(interaction) {
  const { config } = require('./config');
  const allowed = hasFeatureAccess(interaction.user?.id, {
   memberPermissions: interaction.memberPermissions,
+  member: interaction.member,
   permission: require('discord.js').PermissionFlagsBits.ManageGuild,
   member: interaction.member,
   roleIds: config.eventManagerRoleIds || [],
