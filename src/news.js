@@ -106,7 +106,6 @@ async function sendCustom(interaction) {
   memberPermissions: interaction.memberPermissions,
   member: interaction.member,
   permission: require('discord.js').PermissionFlagsBits.ManageGuild,
-  member: interaction.member,
   roleIds: config.eventManagerRoleIds || [],
  });
  if (!allowed) return interaction.reply({content:'❌ You do not have permission to publish staff-made news posts.',ephemeral:true});
