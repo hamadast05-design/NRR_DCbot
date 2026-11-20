@@ -176,7 +176,7 @@ async function stop(channel) {
   return true;
 }
 async function startCommand(interaction) {
-  if (!hasPermission(interaction.user.id,interaction.memberPermissions,PermissionFlagsBits.ManageGuild)) return interaction.reply({content:'You need Manage Server permission to start MysteryGen.',ephemeral:true});
+  if (!hasPermission(interaction.user.id,interaction.memberPermissions,PermissionFlagsBits.ManageGuild,interaction.member)) return interaction.reply({content:'You need Manage Server permission to start MysteryGen.',ephemeral:true});
   try {
     const result=await start(interaction.channel);
     if (!result.ok) return interaction.reply({content:result.message,ephemeral:true});
@@ -187,7 +187,7 @@ async function startCommand(interaction) {
   }
 }
 async function endCommand(interaction) {
-  if (!hasPermission(interaction.user.id,interaction.memberPermissions,PermissionFlagsBits.ManageGuild)) return interaction.reply({content:'You need Manage Server permission to end MysteryGen.',ephemeral:true});
+  if (!hasPermission(interaction.user.id,interaction.memberPermissions,PermissionFlagsBits.ManageGuild,interaction.member)) return interaction.reply({content:'You need Manage Server permission to end MysteryGen.',ephemeral:true});
   try {
     const stopped=await stop(interaction.channel);
     return interaction.reply({content:stopped?'MysteryGen has ended.':'There is no active MysteryGen game in this channel.',ephemeral:true});
@@ -198,7 +198,7 @@ async function endCommand(interaction) {
 }
 async function revealCommand(message) {
   if (!message.guild || message.author.bot || message.webhookId) return false;
-  if (!hasPermission(message.author.id,message.member?.permissions,PermissionFlagsBits.ManageGuild)) {
+  if (!hasPermission(message.author.id,message.member?.permissions,PermissionFlagsBits.ManageGuild,message.member)) {
     await message.reply('You need Manage Server permission to use !reveal.').catch(()=>{});
     return true;
   }
