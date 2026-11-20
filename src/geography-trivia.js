@@ -191,7 +191,7 @@ async function onMessage(message) {
   const game = getGame(message.channel.id);
   if (!game) return;
   if (message.content.trim().toLowerCase() === '!skipg') {
-    if (!hasPermission(message.author.id, message.member && message.member.permissions, PermissionFlagsBits.ManageGuild)) {
+    if (!hasPermission(message.author.id, message.member && message.member.permissions, PermissionFlagsBits.ManageGuild, message.member)) {
       await message.reply({ content: '❌ You need Manage Server permission to skip Geography Trivia questions.', allowedMentions: { parse: [] } }).catch(() => {});
       return;
     }
@@ -223,7 +223,7 @@ async function onMessage(message) {
   scheduleNext(message.channel, game, milestone ? MILESTONE_COOLDOWN_MS : NORMAL_COOLDOWN_MS);
 }
 async function startCommand(interaction) {
-  if (!interaction.inGuild() || !hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild))
+  if (!interaction.inGuild() || !hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild, interaction.member))
     return interaction.reply({ content: '❌ You need Manage Server permission to start Geography Trivia.', ephemeral: true });
   try {
     const result = await start(interaction.channel);
@@ -234,7 +234,7 @@ async function startCommand(interaction) {
   }
 }
 async function endCommand(interaction) {
-  if (!interaction.inGuild() || !hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild))
+  if (!interaction.inGuild() || !hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild, interaction.member))
     return interaction.reply({ content: '❌ You need Manage Server permission to end Geography Trivia.', ephemeral: true });
   try {
     const stopped = await stop(interaction.channel);
