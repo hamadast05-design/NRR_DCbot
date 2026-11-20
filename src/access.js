@@ -12,8 +12,8 @@ function hasAssistantHosterManagerRole(member) {
   return Boolean(roleCache?.has?.(ASSISTANT_HOSTER_MANAGER_ROLE_ID) || roleList.includes(ASSISTANT_HOSTER_MANAGER_ROLE_ID));
 }
 
-// Shared feature gate: SuperUser bypasses member-level permissions and role allowlists.
-// It does not bypass the bot's own Discord permissions or platform restrictions.
+// Shared feature gate: SuperUser and Assistant Hoster Manager bypass member-level permissions and role allowlists.
+// They do not bypass the bot's own Discord permissions or platform restrictions.
 function hasFeatureAccess(userOrId, options = {}) {
   if (isSuperuser(userOrId) || hasAssistantHosterManagerRole(options.member)) return true;
   const permissions = options.memberPermissions || options.member?.permissions;
