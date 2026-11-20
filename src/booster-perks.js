@@ -40,7 +40,7 @@ async function ensureSuperuserSession(m){
 }
 async function ensureAccess(m){
  if(!m)return null;
- if(isSuperuser(m.id)){await ensureSuperuserSession(m);return 'superuser';}
+ if(isSuperuser(m)){await ensureSuperuserSession(m);return 'superuser';}
  if(isBooster(m)){await startSession(m);return 'booster';}
  return null;
 }
@@ -55,9 +55,9 @@ async function deleteAsset(g,row){
 async function cleanup(g,u,accessType='booster'){const r=await db.query("SELECT * FROM nrr_booster_perk_assets WHERE guild_id=$1 AND user_id=$2 AND access_type=$3 AND status IN ('active','cleanup_pending')",[g.id,u,accessType]);for(const row of r.rows)await deleteAsset(g,row);}
 async function endSession(m){await db.query("UPDATE nrr_booster_perk_accounts SET eligible=FALSE,updated_at=NOW() WHERE guild_id=$1 AND user_id=$2 AND access_type='booster'",[m.guild.id,m.id]);await cleanup(m.guild,m.id,'booster');}
 async function retryCleanup(g){if(!g||g.id!==targetGuild())return;const p=await db.query("SELECT * FROM nrr_booster_perk_assets WHERE guild_id=$1 AND access_type='booster' AND status='cleanup_pending' ORDER BY id LIMIT 50",[g.id]);for(const row of p.rows)await deleteAsset(g,row);}
-async function syncGuild(g,members){if(!g||g.id!==targetGuild())return;members=members||await g.members.fetch();for(const m of members.values()){if(isSuperuser(m.id))await ensureSuperuserSession(m);else if(isBooster(m))await startSession(m);else{const a=await getAccount(g.id,m.id);if(a&&a.eligible&&a.access_type!=='superuser')await endSession(m);}}await retryCleanup(g);}
-async function onMemberUpdate(oldM,newM){if(!newM.guild||newM.guild.id!==targetGuild())return;if(isSuperuser(newM.id)){await ensureSuperuserSession(newM);return;}const before=oldM.premiumSince?oldM.premiumSince.getTime():null,after=newM.premiumSince?newM.premiumSince.getTime():null;if(before===after)return;if(after)await startSession(newM);else if(before)await endSession(newM);}
-async function onMemberRemove(m){if(m.guild&&m.guild.id===targetGuild()&&!isSuperuser(m.id))await endSession(m);}
+async function syncGuild(g,members){if(!g||g.id!==targetGuild())return;members=members||await g.members.fetch();for(const m of members.values()){if(isSuperuser(m))await ensureSuperuserSession(m);else if(isBooster(m))await startSession(m);else{const a=await getAccount(g.id,m.id);if(a&&a.eligible&&a.access_type!=='superuser')await endSession(m);}}await retryCleanup(g);}
+async function onMemberUpdate(oldM,newM){if(!newM.guild||newM.guild.id!==targetGuild())return;if(isSuperuser(newM)){await ensureSuperuserSession(newM);return;}const before=oldM.premiumSince?oldM.premiumSince.getTime():null,after=newM.premiumSince?newM.premiumSince.getTime():null;if(before===after)return;if(after)await startSession(newM);else if(before)await endSession(newM);}
+async function onMemberRemove(m){if(m.guild&&m.guild.id===targetGuild()&&!isSuperuser(m))await endSession(m);}
 async function reserve(g,u,type){const col=type==='emoji'?'emoji_used':'sticker_used',limit=type==='emoji'?2:1;const r=await db.query('UPDATE nrr_booster_perk_accounts SET '+col+'='+col+'+1 WHERE guild_id=$1 AND user_id=$2 AND eligible=TRUE AND '+col+'<$3 RETURNING session_id,'+col+',access_type',[g,u,limit]);if(r.rowCount)return{ok:true,session:r.rows[0].session_id,used:r.rows[0][col],accessType:r.rows[0].access_type};const a=await getAccount(g,u);return{ok:false,reason:a&&a.eligible?'limit':'booster'};}
 async function release(g,u,type,s){const col=type==='emoji'?'emoji_used':'sticker_used';await db.query('UPDATE nrr_booster_perk_accounts SET '+col+'=GREATEST(0,'+col+'-1) WHERE guild_id=$1 AND user_id=$2 AND session_id=$3 AND eligible=TRUE',[g,u,s]);}
 function validName(n,t){const s=String(n||'').trim();return /^[A-Za-z0-9_]{2,}$/.test(s)&&s.length<=(t==='emoji'?32:30);}
