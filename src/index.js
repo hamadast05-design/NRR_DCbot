@@ -224,11 +224,11 @@ client.on(Events.MessageCreate, async message => {
   try { await albumCoverSystem.handlePrefixMessage(message); } catch (error) { console.error('Album Cover command failed:', error); }
   if (message.guild && !message.author.bot && !message.webhookId) {
     const raw = message.content.trim();
-    if (/^!send_news$/i.test(raw)) { if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) return message.reply('❌ You need Manage Server permission to send manual news.'); try { await newsSystem.sendLatest(client, message); } catch (error) { console.error('Manual news command failed:', error); await message.reply('❌ I could not fetch or post a news story right now.'); } }
+    if (/^!send_news$/i.test(raw)) { if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild, message.member)) return message.reply('❌ You need Manage Server permission to send manual news.'); try { await newsSystem.sendLatest(client, message); } catch (error) { console.error('Manual news command failed:', error); await message.reply('❌ I could not fetch or post a news story right now.'); } }
     else if (/^!send_qotd$/i.test(raw)) { try { await qotdSystem.sendPanel(message); } catch (error) { console.error('QOTD panel command failed:', error); await message.reply('❌ I could not post the QOTD submission panel.'); } }
     else if (/^!set_qotd_channel\s+/i.test(raw)) { try { await qotdSystem.setChannel(message, raw.split(/\s+/)[1]); } catch (error) { console.error('QOTD channel setup failed:', error); await message.reply('❌ I could not update the QOTD channel.'); } }
     else if (/^!sendvchub$/i.test(raw)) {
-      if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) {
+      if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild, message.member)) {
         await message.reply({ content: '❌ You need Manage Server permission to send the VoiceHub panel.', allowedMentions: { parse: [] } });
       } else {
         try {
