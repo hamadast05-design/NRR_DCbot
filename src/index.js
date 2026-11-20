@@ -164,7 +164,7 @@ async function handleAutomationControlMessage(message) {
   const command = message.content.trim().toLowerCase();
   if (command !== '!stopic' && command !== '!openic') return;
 
-  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild)) {
+  if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild, message.member)) {
     await message.reply({
       content: '❌ You need the Manage Server permission to control Chat Revival and automatic game invitations.',
       allowedMentions: { parse: [] }
