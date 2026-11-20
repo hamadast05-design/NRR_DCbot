@@ -22,7 +22,7 @@ async function handlePrefixRoleCommands(message) {
       await message.reply('❌ Discord role names must be 100 characters or fewer.').catch(() => {});
       return true;
     }
-    if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageRoles)) {
+    if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageRoles, message.member)) {
       await message.reply('❌ You need Manage Roles permission to rename the Hoster Manager role.').catch(() => {});
       return true;
     }
