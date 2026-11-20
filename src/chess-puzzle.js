@@ -193,7 +193,7 @@ async function stop(channel) {
   return true;
 }
 async function startCommand(interaction) {
-  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: '❌ You need Manage Server permission to host Chess Puzzle.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild, interaction.member)) return interaction.reply({ content: '❌ You need Manage Server permission to host Chess Puzzle.', ephemeral: true });
   try {
     const result = await start(interaction.channel);
     if (!result.ok) return interaction.reply({ content: '❌ ' + result.message, ephemeral: true });
@@ -204,7 +204,7 @@ async function startCommand(interaction) {
   }
 }
 async function endCommand(interaction) {
-  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild)) return interaction.reply({ content: '❌ You need Manage Server permission to end Chess Puzzle.', ephemeral: true });
+  if (!hasPermission(interaction.user.id, interaction.memberPermissions, PermissionFlagsBits.ManageGuild, interaction.member)) return interaction.reply({ content: '❌ You need Manage Server permission to end Chess Puzzle.', ephemeral: true });
   const stopped = await stop(interaction.channel);
   return interaction.reply({ content: stopped ? '🛑 Chess Puzzle ended.' : '❌ There is no active Chess Puzzle game in this channel.', ephemeral: true });
 }
