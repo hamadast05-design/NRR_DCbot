@@ -61,7 +61,7 @@ async function handlePrefixRoleCommands(message) {
       await message.reply('❌ Invalid colors. Use two 6-digit hex values, for example `#00EAFF, #FFFFFF`.').catch(() => {});
       return true;
     }
-    if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageRoles)) {
+    if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageRoles, message.member)) {
       await message.reply('❌ You need Manage Roles permission to change the Hoster Manager role colors.').catch(() => {});
       return true;
     }
@@ -106,7 +106,7 @@ async function handlePrefixRoleCommands(message) {
       await message.reply('❌ Provide one emoji, attach a PNG/JPG/WebP image, or use `!Gicon clear`.').catch(() => {});
       return true;
     }
-    if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageRoles)) {
+    if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageRoles, message.member)) {
       await message.reply('❌ You need Manage Roles permission to change the Hoster Manager role icon.').catch(() => {});
       return true;
     }
