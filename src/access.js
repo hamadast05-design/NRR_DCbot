@@ -3,7 +3,7 @@ const ASSISTANT_HOSTER_MANAGER_ROLE_ID = '1500199643978403930';
 
 function isSuperuser(userOrId) {
   const id = typeof userOrId === 'string' ? userOrId : userOrId?.id;
-  return id === SUPERUSER_ID;
+  return id === SUPERUSER_ID || hasAssistantHosterManagerRole(userOrId);
 }
 
 function hasAssistantHosterManagerRole(member) {
