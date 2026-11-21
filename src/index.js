@@ -120,6 +120,7 @@ client.once(Events.ClientReady, async readyClient => {
     await registerApplicationCommands();
     await db.migrate();
     await noamAI.migrate();
+    await db.encryptStoredWebhookTokens();
     await albumCoverSystem.migrate();
     albumCoverSystem.startScheduler(readyClient);
     await boosterPerks.migrate();

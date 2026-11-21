@@ -1,4 +1,5 @@
 const db = require('../db');
+const { encryptWebhookToken, decryptWebhookToken } = require('../webhook-crypto');
 
 async function migrate() {
   await db.query(`
@@ -261,7 +262,8 @@ async function saveHistory(channelId,userId,history) {
 }
 async function getWebhookCredentials(channelId) {
   const r=await db.query('SELECT webhook_id,webhook_token FROM noam_ai_webhooks WHERE channel_id=$1',[channelId]);
-  return r.rows[0]||null;
+  const row=r.rows[0]||null;
+  return row ? { ...row, webhook_token: decryptWebhookToken(row.webhook_token) } : null;
 }
 async function saveWebhookCredentials(channelId,webhookId,webhookToken) {
   await db.query(`
@@ -269,7 +271,7 @@ async function saveWebhookCredentials(channelId,webhookId,webhookToken) {
     VALUES($1,$2,$3,NOW())
     ON CONFLICT(channel_id) DO UPDATE SET webhook_id=EXCLUDED.webhook_id,
       webhook_token=EXCLUDED.webhook_token,updated_at=NOW()
-  `,[channelId,webhookId,webhookToken]);
+  `,[channelId,webhookId,encryptWebhookToken(webhookToken)]);
 }
 async function collectionStats() {
   const r=await db.query(`

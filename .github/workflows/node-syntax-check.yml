@@ -20,6 +20,9 @@ jobs:
           for file in $(find src -name "*.js"); do
             node --check "$file"
           done
+      - name: Test webhook credential encryption
+        run: node --test test/*.test.js
+
       - name: Verify Discord Components V2 builders
         run: |
           npm install --ignore-scripts --no-audit --no-fund --package-lock=false
