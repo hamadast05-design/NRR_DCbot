@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const { encryptWebhookToken, decryptWebhookToken, isEncrypted } = require('./webhook-crypto');
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is required.');
@@ -188,6 +189,57 @@ async function migrate() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
+}
+
+
+async function encryptStoredWebhookTokens() {
+  const client = await pool.connect();
+  let annihilateCount = 0;
+  let noamCount = 0;
+
+  try {
+    await client.query('BEGIN');
+
+    const annihilateRows = await client.query(
+      'SELECT id, webhook_token FROM annihilate_sessions FOR UPDATE'
+    );
+    for (const row of annihilateRows.rows) {
+      if (!isEncrypted(row.webhook_token)) {
+        await client.query(
+          'UPDATE annihilate_sessions SET webhook_token = $2 WHERE id = $1',
+          [row.id, encryptWebhookToken(row.webhook_token)]
+        );
+        annihilateCount++;
+      }
+    }
+
+    const noamRows = await client.query(
+      'SELECT channel_id, webhook_token FROM noam_ai_webhooks FOR UPDATE'
+    );
+    for (const row of noamRows.rows) {
+      if (!isEncrypted(row.webhook_token)) {
+        await client.query(
+          'UPDATE noam_ai_webhooks SET webhook_token = $2 WHERE channel_id = $1',
+          [row.channel_id, encryptWebhookToken(row.webhook_token)]
+        );
+        noamCount++;
+      }
+    }
+
+    await client.query('COMMIT');
+    console.log(`[Security] Webhook credential encryption ready (Annihilate: ${annihilateCount} migrated, Noam AI: ${noamCount} migrated).`);
+    return { annihilateCount, noamCount };
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+function decryptAnnihilateSession(row) {
+  if (!row) return null;
+  return { ...row, webhook_token: decryptWebhookToken(row.webhook_token) };
 }
 
 async function getSantaGifts(guildId) {
@@ -470,7 +522,7 @@ async function getAnnihilateByTarget(guildId, targetId) {
     ORDER BY created_at DESC
     LIMIT 1
   `, [guildId, targetId]);
-  return result.rows[0] || null;
+  return decryptAnnihilateSession(result.rows[0] || null);
 }
 
 async function getAnnihilateByRunner(guildId, runnerId) {
@@ -480,7 +532,7 @@ async function getAnnihilateByRunner(guildId, runnerId) {
     ORDER BY created_at DESC
     LIMIT 1
   `, [guildId, runnerId]);
-  return result.rows[0] || null;
+  return decryptAnnihilateSession(result.rows[0] || null);
 }
 
 async function getAnnihilateByRunnerGlobal(runnerId) {
@@ -490,7 +542,7 @@ async function getAnnihilateByRunnerGlobal(runnerId) {
     ORDER BY created_at DESC
     LIMIT 1
   `, [runnerId]);
-  return result.rows;
+  return result.rows.map(decryptAnnihilateSession);
 }
 
 async function createAnnihilateSession({ guildId, targetId, runnerId, channelId, webhookId, webhookToken }) {
@@ -499,8 +551,8 @@ async function createAnnihilateSession({ guildId, targetId, runnerId, channelId,
       (guild_id, target_id, runner_id, channel_id, webhook_id, webhook_token)
     VALUES ($1, $2, $3, $4, $5, $6)
     RETURNING *
-  `, [guildId, targetId, runnerId, channelId, webhookId, webhookToken]);
-  return result.rows[0];
+  `, [guildId, targetId, runnerId, channelId, webhookId, encryptWebhookToken(webhookToken)]);
+  return decryptAnnihilateSession(result.rows[0]);
 }
 
 async function endAnnihilateSession(id) {
@@ -708,6 +760,7 @@ async function deleteStealNoStealGame(gameId) {
 module.exports = {
   query,
   migrate,
+  encryptStoredWebhookTokens,
   getSantaGifts,
   addSantaGift,
   getStealNoStealGame,
