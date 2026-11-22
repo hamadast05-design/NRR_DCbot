@@ -240,8 +240,8 @@ async function initialize(bot){
  client=bot;await migrate();const guild=client.guilds.cache.get(config.staffGuildId);
  if(!guild){console.warn('[Staff Quests] STAFF_GUILD_ID unavailable; scheduler paused.');return;}
  await ensurePanel(guild).catch(e=>console.error('[Staff Quests] Panel setup failed:',e.message));
- await tick().catch(e=>console.error('[Staff Quests] Initial schedule failed:',e.message));
  const timer=setInterval(()=>tick().catch(e=>console.error('[Staff Quests] Scheduler failed:',e.message)),60000);timer.unref?.();
- console.log('[Staff Quests] Scheduler ready (Asia/Riyadh).');
+ console.log('[Staff Quests] Scheduler ready (Asia/Riyadh); daily generation is running asynchronously.');
+ tick().catch(e=>console.error('[Staff Quests] Initial schedule failed:',e.message));
 }
 module.exports={staffCommand,adminCommand,handle,initialize};
