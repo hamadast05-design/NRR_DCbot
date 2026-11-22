@@ -110,10 +110,25 @@ async function generate(guild){
  }
  console.log('[Staff Quests] Assigned daily quests to '+eligible.length+' eligible staff members for '+d+'.');
 }
+async function recoverPendingReviews(){
+ const pending=await db.query("SELECT id FROM staff_quest_submissions WHERE status='pending' AND review_message_id IS NULL ORDER BY submitted_at ASC LIMIT 50");
+ for(const row of pending.rows) await postReview(row.id).catch(e=>console.error('[Staff Quests] Review recovery failed for '+row.id+':',e.message));
+}
+async function processPendingPayouts(){
+ const pending=await db.query("SELECT s.id,s.payout_reference_id,a.guild_id,a.user_id,a.quest_name,a.reward FROM staff_quest_submissions s JOIN staff_quest_assignments a ON a.id=s.assignment_id WHERE s.status='approved' AND s.payout_status='pending' AND s.payout_reference_id IS NOT NULL ORDER BY s.reviewed_at ASC LIMIT 25");
+ for(const row of pending.rows){
+  try{const result=await crust.awardStaffPoints({discordUserId:row.user_id,amount:Number(row.reward),reason:'Daily Community Staff Quest: '+row.quest_name,referenceId:row.payout_reference_id});const status=(await crust.getAwardStatus(row.payout_reference_id))?.status||result.status||'pending';await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE id=$1',[row.id,status]);}
+  catch(e){console.error('[Staff Quests] Pending payout recovery failed for submission '+row.id+':',e.message);}
+ }
+}
+async function syncPayoutStatuses(){
+ const pending=await db.query("SELECT id,payout_reference_id FROM staff_quest_submissions WHERE status='approved' AND payout_reference_id IS NOT NULL AND payout_status IN ('pending','retry','processing') ORDER BY id DESC LIMIT 100");
+ for(const row of pending.rows){const status=await crust.getAwardStatus(row.payout_reference_id).catch(()=>null);if(status&&status.status!==row.payout_status)await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE id=$1',[row.id,status.status]);}
+}
 async function tick(){
  const g=client?.guilds.cache.get(config.staffGuildId);if(!g)return;const d=dayKey();
  await db.query("UPDATE staff_quest_assignments SET status='expired',updated_at=NOW() WHERE guild_id=$1 AND quest_day<$2 AND status IN ('assigned','pending_review')",[g.id,d]);
- await generate(g);
+ await generate(g);await recoverPendingReviews();await processPendingPayouts();await syncPayoutStatuses();
 }
 async function postReview(id){
  const r=await db.query('SELECT s.*,a.guild_id,a.quest_name,a.quest_description,a.reward FROM staff_quest_submissions s JOIN staff_quest_assignments a ON a.id=s.assignment_id WHERE s.id=$1',[id]);const q=r.rows[0];if(!q)return;
