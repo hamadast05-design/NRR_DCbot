@@ -79,7 +79,8 @@ async function ensurePanel(guild){
  await db.query("INSERT INTO staff_quest_settings(key,value) VALUES('main_panel',$1) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value",[ch.id+':'+msg.id]);
 }
 async function getMine(guildId,userId,day){
- const r=await db.query('SELECT a.id,a.quest_name,a.quest_description,a.reward,a.status,a.last_feedback,(SELECT s.payout_status FROM staff_quest_submissions s WHERE s.assignment_id=a.id AND s.status=\'approved\' ORDER BY s.id DESC LIMIT 1) AS payout_status FROM staff_quest_assignments a WHERE a.guild_id=$1 AND a.user_id=$2 AND a.quest_day=$3 ORDER BY a.id',[guildId,userId,day]);
+ const r=await db.query('SELECT a.id,a.quest_name,a.quest_description,a.reward,a.status,a.last_feedback,(SELECT s.payout_status FROM staff_quest_submissions s WHERE s.assignment_id=a.id AND s.status=\'approved\' ORDER BY s.id DESC LIMIT 1) AS payout_status,(SELECT s.payout_reference_id FROM staff_quest_submissions s WHERE s.assignment_id=a.id AND s.status=\'approved\' ORDER BY s.id DESC LIMIT 1) AS payout_reference_id FROM staff_quest_assignments a WHERE a.guild_id=$1 AND a.user_id=$2 AND a.quest_day=$3 ORDER BY a.id',[guildId,userId,day]);
+ for (const row of r.rows) { if (row.payout_reference_id) { const current=await crust.getAwardStatus(row.payout_reference_id).catch(()=>null); if (current && current.status!==row.payout_status) { row.payout_status=current.status; await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE payout_reference_id=$1',[row.payout_reference_id,current.status]); } } }
  return r.rows;
 }
 function progress(rows,day){
@@ -87,7 +88,8 @@ function progress(rows,day){
  c.addTextDisplayComponents(text('# 📋 Your Daily Quests'),text('**Date:** '+day+' (Riyadh)\n**Progress:** '+done+'/3 completed • '+pending+' awaiting review\n**Daily requirement:** Complete at least 1. You can complete all 3 for additional rewards.'));
  for(const q of rows){c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));c.addTextDisplayComponents(text('**'+q.quest_name+'** — '+q.reward+' SP\n'+q.quest_description+'\n**Status:** '+({assigned:'📝 Available',pending_review:'🕒 Awaiting review',completed:'✅ Completed',expired:'⌛ Expired'}[q.status]||q.status)));if(q.status==='assigned')c.addActionRowComponents(new ActionRowBuilder().addComponents(btn('staffquest:submit:'+q.id,'Submit evidence',ButtonStyle.Primary)));if(q.last_feedback)c.addTextDisplayComponents(text('**Reviewer feedback:** '+q.last_feedback));}
  c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
- c.addTextDisplayComponents(text('**Payout status**'),text(rows.map(q=>q.quest_name+': '+(q.payout_status||'Not yet payable')).join('\n')));
+ const earned=rows.filter(q=>q.payout_status==='awarded').reduce((sum,q)=>sum+Number(q.reward),0);
+ c.addTextDisplayComponents(text('**Staff Points earned today: '+earned+' SP**'),text(rows.map(q=>q.quest_name+': '+(q.payout_status||'Not yet payable')).join('\n')));
  return c;
 }
 async function showMine(i){
@@ -104,7 +106,7 @@ async function generate(guild){
  for(const m of eligible){
   const pool=[...active.rows];for(let k=pool.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[pool[k],pool[j]]=[pool[j],pool[k]];}
   for(const q of pool.slice(0,3))await db.query('INSERT INTO staff_quest_assignments(guild_id,quest_day,user_id,quest_id,quest_name,quest_description,reward) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING',[guild.id,d,m.id,q.id,q.name,q.description,q.reward]);
-  const mine=await getMine(guild.id,m.id,d);await m.send(v2(progress(mine,d),true)).catch(()=>{});
+  const mine=await getMine(guild.id,m.id,d);await m.send(v2(progress(mine,d))).catch(()=>{});
  }
  console.log('[Staff Quests] Assigned daily quests to '+eligible.length+' eligible staff members for '+d+'.');
 }
@@ -165,6 +167,10 @@ async function adminPanel(i){
   c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:toggle-select').setPlaceholder('Select a quest to enable / disable').addOptions(opts)));
   c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:delete-select').setPlaceholder('Select a quest to delete').addOptions(opts)));
  }
+ const failed=await db.query(\
+  "SELECT id,payout_reference_id FROM staff_quest_submissions WHERE status='approved' AND payout_status='failed' AND payout_reference_id IS NOT NULL ORDER BY reviewed_at DESC LIMIT 25"\
+ );
+ if(failed.rows.length)c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:retry-select').setPlaceholder('Select a failed payout to retry').addOptions(failed.rows.map(x=>({label:'Submission #'+x.id,value:x.payout_reference_id,description:'Retry failed Crust payout'})))));
  return i.reply(v2(c,true));
 }
 async function create(i){
@@ -194,6 +200,7 @@ async function handle(i){
  if(i.isStringSelectMenu()&&i.customId.startsWith('staffquest:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.values[0];
   if(i.customId==='staffquest:edit-select'){const q=(await db.query('SELECT * FROM staff_quest_catalogue WHERE id=$1 AND deleted_at IS NULL',[id])).rows[0];if(!q)return i.reply({content:'Quest not found.',ephemeral:true});const m=new ModalBuilder().setCustomId('staffquest:edit-modal:'+id).setTitle('Edit quest');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('name').setLabel('Quest name').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(90).setValue(q.name)),new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('description').setLabel('Description').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(700).setValue(q.description)),new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('reward').setLabel('Reward in whole Staff Points').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(6).setValue(String(q.reward))));return i.showModal(m);}
   if(i.customId==='staffquest:toggle-select'){const q=(await db.query('SELECT name,enabled FROM staff_quest_catalogue WHERE id=$1 AND deleted_at IS NULL',[id])).rows[0];if(!q)return i.reply({content:'Quest not found.',ephemeral:true});await db.query('UPDATE staff_quest_catalogue SET enabled=NOT enabled,updated_by=$2,updated_at=NOW() WHERE id=$1',[id,i.user.id]);await audit(i.guildId,i.user.id,'quest_toggled',{questId:id,name:q.name,enabled:!q.enabled});return i.reply({content:'Quest '+(q.enabled?'disabled':'enabled')+'.',ephemeral:true});}
+  if(i.customId==='staffquest:retry-select'){const result=await crust.retryAward(id);const status=result?.status||'unknown';await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE payout_reference_id=$1',[id,status]);await audit(i.guildId,i.user.id,'payout_manual_retry',{referenceId:id,status});return i.reply({content:'Crust retry requested. Current status: '+status+'.',ephemeral:true});}
   if(i.customId==='staffquest:delete-select'){const q=(await db.query('SELECT name FROM staff_quest_catalogue WHERE id=$1 AND deleted_at IS NULL',[id])).rows[0];if(!q)return i.reply({content:'Quest not found.',ephemeral:true});await db.query('UPDATE staff_quest_catalogue SET enabled=FALSE,deleted_at=NOW(),updated_by=$2,updated_at=NOW() WHERE id=$1',[id,i.user.id]);await audit(i.guildId,i.user.id,'quest_deleted',{questId:id,name:q.name});return i.reply({content:'Quest removed from the active catalogue. Historical assignments are preserved.',ephemeral:true});}
  }
  if(i.isModalSubmit()&&i.customId.startsWith('staffquest:edit-modal:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});return edit(i,i.customId.split(':')[2]);}
