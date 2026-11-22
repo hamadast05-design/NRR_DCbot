@@ -210,6 +210,18 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_crust_staff_point_awards_retry
       ON crust_staff_point_awards(status, next_attempt_at, created_at)
       WHERE status IN ('pending', 'retry');
+
+    CREATE TABLE IF NOT EXISTS crust_staff_point_test_audits (
+      test_id UUID PRIMARY KEY,
+      actor_id TEXT NOT NULL,
+      recipient_id TEXT NOT NULL,
+      amount INTEGER NOT NULL DEFAULT 1 CHECK (amount = 1),
+      reference_id TEXT NOT NULL UNIQUE,
+      status TEXT NOT NULL DEFAULT 'pending',
+      result JSONB,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
     UPDATE crust_staff_point_awards
     SET status = 'retry', next_attempt_at = NOW(), updated_at = NOW(),
         last_error = COALESCE(last_error, 'Recovered after an interrupted bot process.')
