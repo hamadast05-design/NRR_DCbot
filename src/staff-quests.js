@@ -106,7 +106,7 @@ async function generate(guild){
  for(const m of eligible){
   const pool=[...active.rows];for(let k=pool.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[pool[k],pool[j]]=[pool[j],pool[k]];}
   for(const q of pool.slice(0,3))await db.query('INSERT INTO staff_quest_assignments(guild_id,quest_day,user_id,quest_id,quest_name,quest_description,reward) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING',[guild.id,d,m.id,q.id,q.name,q.description,q.reward]);
-  const mine=await getMine(guild.id,m.id,d);await m.send(v2(progress(mine,d))).catch(()=>{});
+  const mine=await getMine(guild.id,m.id,d);const notice='🏆 Your Daily Community Staff Quests are ready!\n\n'+mine.map((q,index)=>(index+1)+'. **'+q.quest_name+'** — '+q.reward+' SP\n'+q.quest_description).join('\n\n')+'\n\nUse /staff_quests in the Staff Server or the pinned quest panel to view your private progress and submit evidence.';await m.send({content:notice,allowedMentions:{parse:[]}}).catch(()=>{});
  }
  console.log('[Staff Quests] Assigned daily quests to '+eligible.length+' eligible staff members for '+d+'.');
 }
@@ -170,21 +170,21 @@ async function reject(i,id){
  const u=await client.users.fetch(r.rows[0].submitter_id).catch(()=>null);if(u)await u.send('Your submission for **'+a.quest_name+'** was rejected.\nFeedback: '+f+'\nYou may revise and resubmit.').catch(()=>{});
  return i.reply({content:'Rejected. Feedback recorded; resubmission is enabled.',ephemeral:true});
 }
-async function adminPanel(i){
+async function adminPanel(i,page=0,update=false){
  if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});
- const qs=await rows(),c=new ContainerBuilder().setAccentColor(0x5865f2);
+ const qs=await rows(),pageSize=20,maxPage=Math.max(0,Math.ceil(qs.length/pageSize)-1);page=Math.max(0,Math.min(page,maxPage));const pageRows=qs.slice(page*pageSize,(page+1)*pageSize),c=new ContainerBuilder().setAccentColor(0x5865f2);
  c.addTextDisplayComponents(text('# 🛠️ Staff Quests Administration'),text('Create, edit, enable, disable, and delete catalogue entries. Changes affect future assignments; existing assignments keep their saved reward and description.'));
  c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
- c.addTextDisplayComponents(text('**CATALOGUE**'),text(qs.map(q=>(q.enabled?'🟢':'⚪')+' **'+q.name+'** — '+q.reward+' SP\n'+q.description).join('\n\n').slice(0,3900)));
- c.addActionRowComponents(new ActionRowBuilder().addComponents(btn('staffquest:add','Create quest',ButtonStyle.Success)));
- if(qs.length){const opts=qs.slice(0,25).map(q=>({label:q.name.slice(0,100),value:q.id,description:q.reward+' SP • '+(q.enabled?'Enabled':'Disabled')}));
+ c.addTextDisplayComponents(text('**CATALOGUE — PAGE '+(page+1)+'/'+(maxPage+1)+' • '+qs.length+' QUESTS**'),text(pageRows.map(q=>(q.enabled?'🟢':'⚪')+' **'+q.name+'** — '+q.reward+' SP\n'+q.description).join('\n\n').slice(0,3900)));
+ const nav=[btn('staffquest:add','Create quest',ButtonStyle.Success)];if(page>0)nav.push(btn('staffquest:admin-page:'+(page-1),'Previous'));if(page<maxPage)nav.push(btn('staffquest:admin-page:'+(page+1),'Next'));c.addActionRowComponents(new ActionRowBuilder().addComponents(nav));
+ if(pageRows.length){const opts=pageRows.map(q=>({label:q.name.slice(0,100),value:q.id,description:q.reward+' SP • '+(q.enabled?'Enabled':'Disabled')}));
   c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:edit-select').setPlaceholder('Select a quest to edit').addOptions(opts)));
   c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:toggle-select').setPlaceholder('Select a quest to enable / disable').addOptions(opts)));
   c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:delete-select').setPlaceholder('Select a quest to delete').addOptions(opts)));
  }
  const failed=await db.query("SELECT id,payout_reference_id FROM staff_quest_submissions WHERE status='approved' AND payout_status='failed' AND payout_reference_id IS NOT NULL ORDER BY reviewed_at DESC LIMIT 25");
  if(failed.rows.length)c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:retry-select').setPlaceholder('Select a failed payout to retry').addOptions(failed.rows.map(x=>({label:'Submission #'+x.id,value:x.payout_reference_id,description:'Retry failed Crust payout'})))));
- return i.reply(v2(c,true));
+ return update?i.update(v2(c,true)):i.reply(v2(c,true));
 }
 async function create(i){
  const name=i.fields.getTextInputValue('name').trim(),description=i.fields.getTextInputValue('description').trim(),reward=Number(i.fields.getTextInputValue('reward'));
@@ -208,6 +208,7 @@ async function handle(i){
  if(i.isButton()&&i.customId.startsWith('staffquest:approve:'))return approve(i,i.customId.split(':')[2]);
  if(i.isButton()&&i.customId.startsWith('staffquest:reject:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:reject-modal:'+id).setTitle('Reject submission');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('feedback').setLabel('Required reviewer feedback').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1000)));return i.showModal(m);}
  if(i.isModalSubmit()&&i.customId.startsWith('staffquest:reject-modal:'))return reject(i,i.customId.split(':')[2]);
+ if(i.isButton()&&i.customId.startsWith('staffquest:admin-page:'))return adminPanel(i,Number(i.customId.split(':')[2]),true);
  if(i.isButton()&&i.customId==='staffquest:add'){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const m=new ModalBuilder().setCustomId('staffquest:create-modal').setTitle('Create quest');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('name').setLabel('Quest name').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(90)),new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('description').setLabel('Description').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(700)),new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('reward').setLabel('Reward in whole Staff Points').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(6)));return i.showModal(m);}
  if(i.isModalSubmit()&&i.customId==='staffquest:create-modal'){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});return create(i);}
  if(i.isStringSelectMenu()&&i.customId.startsWith('staffquest:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.values[0];
