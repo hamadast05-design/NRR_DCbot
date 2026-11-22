@@ -167,9 +167,7 @@ async function adminPanel(i){
   c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:toggle-select').setPlaceholder('Select a quest to enable / disable').addOptions(opts)));
   c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:delete-select').setPlaceholder('Select a quest to delete').addOptions(opts)));
  }
- const failed=await db.query(\
-  "SELECT id,payout_reference_id FROM staff_quest_submissions WHERE status='approved' AND payout_status='failed' AND payout_reference_id IS NOT NULL ORDER BY reviewed_at DESC LIMIT 25"\
- );
+ const failed=await db.query("SELECT id,payout_reference_id FROM staff_quest_submissions WHERE status='approved' AND payout_status='failed' AND payout_reference_id IS NOT NULL ORDER BY reviewed_at DESC LIMIT 25");
  if(failed.rows.length)c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:retry-select').setPlaceholder('Select a failed payout to retry').addOptions(failed.rows.map(x=>({label:'Submission #'+x.id,value:x.payout_reference_id,description:'Retry failed Crust payout'})))));
  return i.reply(v2(c,true));
 }
