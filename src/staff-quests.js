@@ -86,7 +86,7 @@ async function getMine(guildId,userId,day){
 }
 function progress(rows,day){
  const c=new ContainerBuilder().setAccentColor(0x16a34a),done=rows.filter(x=>x.status==='completed').length,pending=rows.filter(x=>x.status==='pending_review').length;
- c.addTextDisplayComponents(text('# 📋 Your Daily Quests'),text('**Date:** '+day+' (Riyadh)\n**Progress:** '+done+'/3 completed • '+pending+' awaiting review\n**Daily requirement:** '+(done>=1?'✅ Satisfied':'Complete at least 1 quest')+'. You can complete all 3 for additional rewards.'));
+ c.addTextDisplayComponents(text('# 📋 Your Daily Quests'),text('**Date:** '+day+' (Riyadh)\n**Progress:** '+done+'/3 completed • '+pending+' awaiting review\n**Daily requirement:** Complete at least 1 quest; you can complete all 3 for additional rewards.'));
  for(const q of rows){c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));c.addTextDisplayComponents(text('**'+q.quest_name+'** — '+q.reward+' SP\n'+q.quest_description+'\n**Status:** '+({assigned:'📝 Available',pending_review:'🕒 Awaiting review',completed:'✅ Completed',expired:'⌛ Expired'}[q.status]||q.status)));if(q.status==='assigned')c.addActionRowComponents(new ActionRowBuilder().addComponents(btn('staffquest:submit:'+q.id,'Submit evidence',ButtonStyle.Primary)));if(q.last_feedback)c.addTextDisplayComponents(text('**Reviewer feedback:** '+q.last_feedback));}
  c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
  const earned=rows.filter(q=>q.payout_status==='awarded').reduce((sum,q)=>sum+Number(q.reward),0);
