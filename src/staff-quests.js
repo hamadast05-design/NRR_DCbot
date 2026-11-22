@@ -105,11 +105,12 @@ async function generate(guild){
  const run=await db.query('INSERT INTO staff_quest_daily_runs(guild_id,quest_day) VALUES($1,$2) ON CONFLICT DO NOTHING RETURNING quest_day',[guild.id,d]);
  if(!run.rowCount)return;
  const eligible=[...members.values()].filter(m=>!m.user.bot&&m.roles.cache.has(STAFF_ROLE));
- for(const m of eligible){
+ try { for(const m of eligible){
   const pool=[...active.rows];for(let k=pool.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[pool[k],pool[j]]=[pool[j],pool[k]];}
   for(const q of pool.slice(0,3))await db.query('INSERT INTO staff_quest_assignments(guild_id,quest_day,user_id,quest_id,quest_name,quest_description,reward) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING',[guild.id,d,m.id,q.id,q.name,q.description,q.reward]);
   const mine=await getMine(guild.id,m.id,d);const notice='🏆 Your Daily Community Staff Quests are ready!\n\n'+mine.map((q,index)=>(index+1)+'. **'+q.quest_name+'** — '+q.reward+' SP\n'+q.quest_description).join('\n\n')+'\n\nUse /staff_quests in the Staff Server or the pinned quest panel to view your private progress and submit evidence.';await m.send({content:notice,allowedMentions:{parse:[]}}).catch(()=>{});
  }
+ } catch(error) { await db.query('DELETE FROM staff_quest_daily_runs WHERE guild_id=$1 AND quest_day=$2',[guild.id,d]); throw error; }
  console.log('[Staff Quests] Assigned daily quests to '+eligible.length+' eligible staff members for '+d+'.');
 }
 async function recoverPendingReviews(){
