@@ -43,7 +43,6 @@ const staffRankingCommand = new SlashCommandBuilder()
     .addChoices({ name: 'Messages', value: 'messages' }, { name: 'Punishments', value: 'punishments' }));
 
 const commands = [
-  crustTest.command,
   ...boosterPerks.commands,
   gamePanel.command,
   santaGiftSystem.command,
