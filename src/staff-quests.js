@@ -40,6 +40,7 @@ const staffCommand = new SlashCommandBuilder().setName('staff_quests').setDescri
 const adminCommand = new SlashCommandBuilder().setName('staff_quests_admin').setDescription('Open the administrator-only Staff Quests management panel.')
  .addUserOption(o=>o.setName('user').setDescription('Inspect a staff member quest history (administrators only).'));
 let client;
+let schedulerRunning=false;
 const dayKey = () => new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const admin = i => Boolean(i.memberPermissions?.has(PermissionFlagsBits.Administrator));
 const v2 = (c,ephemeral=false) => ({components:[c],flags:MessageFlags.IsComponentsV2|(ephemeral?MessageFlags.Ephemeral:0),allowedMentions:{parse:[]}});
@@ -100,6 +101,7 @@ async function showMine(i){
 }
 async function generate(guild){
  const d=dayKey();
+ const existing=await db.query('SELECT 1 FROM staff_quest_daily_runs WHERE guild_id=$1 AND quest_day=$2',[guild.id,d]);if(existing.rowCount)return;
  const [members,active]=await Promise.all([guild.members.fetch(),db.query('SELECT id,name,description,reward FROM staff_quest_catalogue WHERE enabled=TRUE AND deleted_at IS NULL')]);
  if(active.rows.length<3)throw new Error('At least three enabled quests are required.');
  const run=await db.query('INSERT INTO staff_quest_daily_runs(guild_id,quest_day) VALUES($1,$2) ON CONFLICT DO NOTHING RETURNING quest_day',[guild.id,d]);
@@ -129,9 +131,12 @@ async function syncPayoutStatuses(){
  for(const row of pending.rows){const status=await crust.getAwardStatus(row.payout_reference_id).catch(()=>null);if(status&&status.status!==row.payout_status)await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE id=$1',[row.id,status.status]);}
 }
 async function tick(){
+ if(schedulerRunning)return;schedulerRunning=true;
+ try {
  const g=client?.guilds.cache.get(config.staffGuildId);if(!g)return;const d=dayKey();
  await db.query("UPDATE staff_quest_assignments SET status='expired',updated_at=NOW() WHERE guild_id=$1 AND quest_day<$2 AND status IN ('assigned','pending_review')",[g.id,d]);
  await generate(g);await recoverPendingReviews();await processPendingPayouts();await syncPayoutStatuses();
+ } finally { schedulerRunning=false; }
 }
 async function postReview(id){
  const r=await db.query('SELECT s.*,a.guild_id,a.quest_name,a.quest_description,a.reward FROM staff_quest_submissions s JOIN staff_quest_assignments a ON a.id=s.assignment_id WHERE s.id=$1',[id]);const q=r.rows[0];if(!q)return;
