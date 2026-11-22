@@ -191,7 +191,7 @@ async function adminPanel(i,page=0,update=false){
 async function showHistory(i,target){
  const result=await db.query('SELECT a.quest_day,a.quest_name,a.reward,a.status,s.status AS submission_status,s.payout_status,s.feedback FROM staff_quest_assignments a LEFT JOIN LATERAL (SELECT status,payout_status,feedback FROM staff_quest_submissions WHERE assignment_id=a.id ORDER BY id DESC LIMIT 1) s ON TRUE WHERE a.guild_id=$1 AND a.user_id=$2 ORDER BY a.quest_day DESC,a.id DESC LIMIT 100',[i.guildId,target.id]);
  const c=new ContainerBuilder().setAccentColor(0x5865f2);c.addTextDisplayComponents(text('# 📚 Staff Quest History'),text('**Staff member:** <@'+target.id+'>\n**Records:** '+result.rows.length+' (latest 100)'));
- if(result.rows.length)c.addTextDisplayComponents(text(result.rows.map(r=>'**'+String(r.quest_day).slice(0,10)+' — '+r.quest_name+'** ('+r.reward+' SP)\nAssignment: '+r.status+' • Submission: '+(r.submission_status||'none')+' • Payout: '+(r.payout_status||'none')+(r.feedback?'\nFeedback: '+r.feedback:'')).join('\n\n').slice(0,3900));else c.addTextDisplayComponents(text('No quest history found for this member.'));
+ if(result.rows.length)c.addTextDisplayComponents(text(result.rows.map(r=>'**'+String(r.quest_day).slice(0,10)+' — '+r.quest_name+'** ('+r.reward+' SP)\nAssignment: '+r.status+' • Submission: '+(r.submission_status||'none')+' • Payout: '+(r.payout_status||'none')+(r.feedback?'\nFeedback: '+r.feedback:'')).join('\n\n').slice(0,3900)));else c.addTextDisplayComponents(text('No quest history found for this member.'));
  return i.reply(v2(c,true));
 }
 async function create(i){
