@@ -2,6 +2,7 @@ const { REST, Routes } = require('discord.js');
 const { config } = require('./config');
 const db = require('./db');
 const { commands, staffRankingCommand } = require('./commands');
+const crustTest = require('./crust-test');
 
 async function backupGuildCommands(rest, route, guildId) {
   const current = await rest.get(route);
@@ -57,9 +58,9 @@ async function registerApplicationCommands() {
 
   if (config.staffGuildId) {
     const staffRoute = Routes.applicationGuildCommands(config.clientId, config.staffGuildId);
-    console.log('Registering only /staff_ranking in the Staff Server...');
-    await rest.put(staffRoute, { body: [staffRankingCommand.toJSON()] });
-    console.log('Staff Server /staff_ranking command registered successfully.');
+    console.log('Registering Staff Server commands: /staff_ranking and owner-only /crust_test_award...');
+    await rest.put(staffRoute, { body: [staffRankingCommand.toJSON(), crustTest.command.toJSON()] });
+    console.log('Staff Server commands registered successfully.');
   } else {
     console.warn('STAFF_GUILD_ID is not configured; skipping Staff Server command registration.');
   }
