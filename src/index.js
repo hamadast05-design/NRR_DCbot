@@ -27,6 +27,7 @@ const albumCoverSystem = require('./album-cover');
 const voiceHub = require('./voicehub');
 const noamAI = require('./noam-ai');
 const crustStaffPoints = require('./crust');
+const staffQuests = require('./staff-quests');
 const { registerApplicationCommands } = require('./command-registration');
 
 validate();
@@ -122,6 +123,7 @@ client.once(Events.ClientReady, async readyClient => {
     await db.migrate();
     await crustStaffPoints.migrate();
     crustStaffPoints.startRetryWorker();
+    await staffQuests.initialize(readyClient);
     await noamAI.migrate();
     await albumCoverSystem.migrate();
     albumCoverSystem.startScheduler(readyClient);

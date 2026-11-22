@@ -26,6 +26,7 @@ const boosterPerks = require('./booster-perks');
 const santaGiftSystem = require('./santa-gift');
 const { runExclusive } = require('./game-sessions');
 const crustTest = require('./crust-test');
+const staffQuests = require('./staff-quests');
 
 const COLORS = {
   fame: 0xf1c40f,
@@ -496,6 +497,7 @@ async function handleRoleGiverButton(interaction) {
 }
 
 async function handleInteraction(interaction) {
+  if (await staffQuests.handle(interaction)) return;
   if (await crustTest.handleInteraction(interaction)) return;
   if (boosterPerks.handles(interaction)) return boosterPerks.handleInteraction(interaction);
   if ((interaction.isStringSelectMenu() || interaction.isUserSelectMenu() || interaction.isButton()) && interaction.customId.startsWith('gamepanel:')) return gamePanel.handleInteraction(interaction);
@@ -577,4 +579,4 @@ async function handleInteraction(interaction) {
   }
 }
 
-module.exports = { commands, staffRankingCommand, handleInteraction, handlePrefixMute };
+module.exports = { commands, staffRankingCommand, staffQuestCommands: [staffQuests.staffCommand, staffQuests.adminCommand], handleInteraction, handlePrefixMute };

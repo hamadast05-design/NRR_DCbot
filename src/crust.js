@@ -251,6 +251,13 @@ function stopRetryWorker() {
   retryTimer = null;
 }
 
+async function retryAward(referenceId) {
+  const result = await db.query("UPDATE crust_staff_point_awards SET status = 'retry', attempt_count = 0, next_attempt_at = NOW(), last_error = NULL, updated_at = NOW() WHERE reference_id = $1 AND status = 'failed' RETURNING reference_id", [referenceId]);
+  if (!result.rowCount) return getAwardStatus(referenceId);
+  await retryPendingAwards();
+  return getAwardStatus(referenceId);
+}
+
 async function getAwardStatus(referenceId) {
   const result = await db.query(
     'SELECT reference_id, discord_user_id, amount, reason, status, attempt_count, last_http_status, last_error, created_at, updated_at, awarded_at FROM crust_staff_point_awards WHERE reference_id = $1',
@@ -259,4 +266,4 @@ async function getAwardStatus(referenceId) {
   return result.rows[0] || null;
 }
 
-module.exports = { migrate, awardStaffPoints, getAwardStatus, retryPendingAwards, startRetryWorker, stopRetryWorker };
+module.exports = { migrate, awardStaffPoints, getAwardStatus, retryAward, retryPendingAwards, startRetryWorker, stopRetryWorker };
