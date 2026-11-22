@@ -37,7 +37,8 @@ const seed = [
 ['Quizmaster','Host a quiz or trivia activity for community members using the NRR Bot Game Panel (with ping).',17],
 ];
 const staffCommand = new SlashCommandBuilder().setName('staff_quests').setDescription('Privately view your current Daily Community Staff Quests.');
-const adminCommand = new SlashCommandBuilder().setName('staff_quests_admin').setDescription('Open the administrator-only Staff Quests management panel.');
+const adminCommand = new SlashCommandBuilder().setName('staff_quests_admin').setDescription('Open the administrator-only Staff Quests management panel.')
+ .addUserOption(o=>o.setName('user').setDescription('Inspect a staff member quest history (administrators only).'));
 let client;
 const dayKey = () => new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const admin = i => Boolean(i.memberPermissions?.has(PermissionFlagsBits.Administrator));
@@ -85,7 +86,7 @@ async function getMine(guildId,userId,day){
 }
 function progress(rows,day){
  const c=new ContainerBuilder().setAccentColor(0x16a34a),done=rows.filter(x=>x.status==='completed').length,pending=rows.filter(x=>x.status==='pending_review').length;
- c.addTextDisplayComponents(text('# 📋 Your Daily Quests'),text('**Date:** '+day+' (Riyadh)\n**Progress:** '+done+'/3 completed • '+pending+' awaiting review\n**Daily requirement:** Complete at least 1. You can complete all 3 for additional rewards.'));
+ c.addTextDisplayComponents(text('# 📋 Your Daily Quests'),text('**Date:** '+day+' (Riyadh)\n**Progress:** '+done+'/3 completed • '+pending+' awaiting review\n**Daily requirement:** '+(done>=1?'✅ Satisfied':'Complete at least 1 quest')+'. You can complete all 3 for additional rewards.'));
  for(const q of rows){c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));c.addTextDisplayComponents(text('**'+q.quest_name+'** — '+q.reward+' SP\n'+q.quest_description+'\n**Status:** '+({assigned:'📝 Available',pending_review:'🕒 Awaiting review',completed:'✅ Completed',expired:'⌛ Expired'}[q.status]||q.status)));if(q.status==='assigned')c.addActionRowComponents(new ActionRowBuilder().addComponents(btn('staffquest:submit:'+q.id,'Submit evidence',ButtonStyle.Primary)));if(q.last_feedback)c.addTextDisplayComponents(text('**Reviewer feedback:** '+q.last_feedback));}
  c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
  const earned=rows.filter(q=>q.payout_status==='awarded').reduce((sum,q)=>sum+Number(q.reward),0);
@@ -172,6 +173,7 @@ async function reject(i,id){
 }
 async function adminPanel(i,page=0,update=false){
  if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});
+ const target=i.options?.getUser?.('user');if(target)return showHistory(i,target);
  const qs=await rows(),pageSize=20,maxPage=Math.max(0,Math.ceil(qs.length/pageSize)-1);page=Math.max(0,Math.min(page,maxPage));const pageRows=qs.slice(page*pageSize,(page+1)*pageSize),c=new ContainerBuilder().setAccentColor(0x5865f2);
  c.addTextDisplayComponents(text('# 🛠️ Staff Quests Administration'),text('Create, edit, enable, disable, and delete catalogue entries. Changes affect future assignments; existing assignments keep their saved reward and description.'));
  c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
@@ -185,6 +187,12 @@ async function adminPanel(i,page=0,update=false){
  const failed=await db.query("SELECT id,payout_reference_id FROM staff_quest_submissions WHERE status='approved' AND payout_status='failed' AND payout_reference_id IS NOT NULL ORDER BY reviewed_at DESC LIMIT 25");
  if(failed.rows.length)c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:retry-select').setPlaceholder('Select a failed payout to retry').addOptions(failed.rows.map(x=>({label:'Submission #'+x.id,value:x.payout_reference_id,description:'Retry failed Crust payout'})))));
  return update?i.update(v2(c,true)):i.reply(v2(c,true));
+}
+async function showHistory(i,target){
+ const result=await db.query('SELECT a.quest_day,a.quest_name,a.reward,a.status,s.status AS submission_status,s.payout_status,s.feedback FROM staff_quest_assignments a LEFT JOIN LATERAL (SELECT status,payout_status,feedback FROM staff_quest_submissions WHERE assignment_id=a.id ORDER BY id DESC LIMIT 1) s ON TRUE WHERE a.guild_id=$1 AND a.user_id=$2 ORDER BY a.quest_day DESC,a.id DESC LIMIT 100',[i.guildId,target.id]);
+ const c=new ContainerBuilder().setAccentColor(0x5865f2);c.addTextDisplayComponents(text('# 📚 Staff Quest History'),text('**Staff member:** <@'+target.id+'>\n**Records:** '+result.rows.length+' (latest 100)'));
+ if(result.rows.length)c.addTextDisplayComponents(text(result.rows.map(r=>'**'+String(r.quest_day).slice(0,10)+' — '+r.quest_name+'** ('+r.reward+' SP)\nAssignment: '+r.status+' • Submission: '+(r.submission_status||'none')+' • Payout: '+(r.payout_status||'none')+(r.feedback?'\nFeedback: '+r.feedback:'')).join('\n\n').slice(0,3900));else c.addTextDisplayComponents(text('No quest history found for this member.'));
+ return i.reply(v2(c,true));
 }
 async function create(i){
  const name=i.fields.getTextInputValue('name').trim(),description=i.fields.getTextInputValue('description').trim(),reward=Number(i.fields.getTextInputValue('reward'));
@@ -214,6 +222,7 @@ async function handle(i){
  if(i.isStringSelectMenu()&&i.customId.startsWith('staffquest:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.values[0];
   if(i.customId==='staffquest:edit-select'){const q=(await db.query('SELECT * FROM staff_quest_catalogue WHERE id=$1 AND deleted_at IS NULL',[id])).rows[0];if(!q)return i.reply({content:'Quest not found.',ephemeral:true});const m=new ModalBuilder().setCustomId('staffquest:edit-modal:'+id).setTitle('Edit quest');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('name').setLabel('Quest name').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(90).setValue(q.name)),new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('description').setLabel('Description').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(700).setValue(q.description)),new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('reward').setLabel('Reward in whole Staff Points').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(6).setValue(String(q.reward))));return i.showModal(m);}
   if(i.customId==='staffquest:toggle-select'){const q=(await db.query('SELECT name,enabled FROM staff_quest_catalogue WHERE id=$1 AND deleted_at IS NULL',[id])).rows[0];if(!q)return i.reply({content:'Quest not found.',ephemeral:true});await db.query('UPDATE staff_quest_catalogue SET enabled=NOT enabled,updated_by=$2,updated_at=NOW() WHERE id=$1',[id,i.user.id]);await audit(i.guildId,i.user.id,'quest_toggled',{questId:id,name:q.name,enabled:!q.enabled});return i.reply({content:'Quest '+(q.enabled?'disabled':'enabled')+'.',ephemeral:true});}
+  if(i.customId==='staffquest:retry-select'){const result=await crust.retryAward(id);const status=result?.status||'unknown';await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE payout_reference_id=$1',[id,status]);await audit(i.guildId,i.user.id,'payout_manual_retry',{referenceId:id,status});return i.reply({content:'Crust retry requested. Current status: '+status+'.',ephemeral:true});}
   if(i.customId==='staffquest:retry-select'){const result=await crust.retryAward(id);const status=result?.status||'unknown';await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE payout_reference_id=$1',[id,status]);await audit(i.guildId,i.user.id,'payout_manual_retry',{referenceId:id,status});return i.reply({content:'Crust retry requested. Current status: '+status+'.',ephemeral:true});}
   if(i.customId==='staffquest:delete-select'){const q=(await db.query('SELECT name FROM staff_quest_catalogue WHERE id=$1 AND deleted_at IS NULL',[id])).rows[0];if(!q)return i.reply({content:'Quest not found.',ephemeral:true});await db.query('UPDATE staff_quest_catalogue SET enabled=FALSE,deleted_at=NOW(),updated_by=$2,updated_at=NOW() WHERE id=$1',[id,i.user.id]);await audit(i.guildId,i.user.id,'quest_deleted',{questId:id,name:q.name});return i.reply({content:'Quest removed from the active catalogue. Historical assignments are preserved.',ephemeral:true});}
  }
