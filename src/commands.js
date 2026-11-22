@@ -25,6 +25,7 @@ const gamePanel = require('./game-panel');
 const boosterPerks = require('./booster-perks');
 const santaGiftSystem = require('./santa-gift');
 const { runExclusive } = require('./game-sessions');
+const crustTest = require('./crust-test');
 
 const COLORS = {
   fame: 0xf1c40f,
@@ -42,6 +43,7 @@ const staffRankingCommand = new SlashCommandBuilder()
     .addChoices({ name: 'Messages', value: 'messages' }, { name: 'Punishments', value: 'punishments' }));
 
 const commands = [
+  crustTest.command,
   ...boosterPerks.commands,
   gamePanel.command,
   santaGiftSystem.command,
@@ -495,6 +497,7 @@ async function handleRoleGiverButton(interaction) {
 }
 
 async function handleInteraction(interaction) {
+  if (await crustTest.handleInteraction(interaction)) return;
   if (boosterPerks.handles(interaction)) return boosterPerks.handleInteraction(interaction);
   if ((interaction.isStringSelectMenu() || interaction.isUserSelectMenu() || interaction.isButton()) && interaction.customId.startsWith('gamepanel:')) return gamePanel.handleInteraction(interaction);
   if (interaction.isStringSelectMenu() && interaction.customId === 'staff-ranking:category') return staffRanking.handleSelect(interaction);
