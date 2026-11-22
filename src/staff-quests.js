@@ -153,7 +153,7 @@ async function submit(i,id){
  const s=await db.query('INSERT INTO staff_quest_submissions(assignment_id,submitter_id,evidence) VALUES($1,$2,$3) RETURNING id',[id,i.user.id,evidence]);
  await db.query("UPDATE staff_quest_assignments SET status='pending_review',last_feedback=NULL,updated_at=NOW() WHERE id=$1",[id]);
  await postReview(s.rows[0].id);await audit(i.guildId,i.user.id,'submission_created',{submissionId:s.rows[0].id,quest:a.quest_name});
- return i.reply({content:'✅ Evidence submitted. An administrator will review it shortly.',ephemeral:true});
+ const updated=await getMine(i.guildId,i.user.id,dayKey());return i.reply(v2(progress(updated,dayKey()),true));
 }
 async function approve(i,id){
  if(!admin(i))return i.reply({content:'Only Discord administrators can review submissions.',ephemeral:true});
@@ -166,6 +166,7 @@ async function approve(i,id){
  await i.update({components:[new ContainerBuilder().setAccentColor(0x16a34a).addTextDisplayComponents(text('# ✅ Quest approved'),text('**'+q.quest_name+'** for <@'+q.user_id+'>. Crust payout of **'+q.reward+' SP** is being processed.'))],flags:MessageFlags.IsComponentsV2,allowedMentions:{parse:[]}});
  try{const result=await crust.awardStaffPoints({discordUserId:q.user_id,amount:Number(q.reward),reason:'Daily Community Staff Quest: '+q.quest_name,referenceId:ref});const status=(await crust.getAwardStatus(ref))?.status||result.status||'pending';await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE id=$1',[id,status]);await audit(q.guild_id,i.user.id,'payout_status_updated',{submissionId:id,referenceId:ref,status});}
  catch(e){console.error('[Staff Quests] Crust award request failed:',e.message);await db.query("UPDATE staff_quest_submissions SET payout_status='pending' WHERE id=$1",[id]);}
+ const user=await client.users.fetch(q.user_id).catch(()=>null);if(user)await user.send('🏆 Your quest **'+q.quest_name+'** was approved. Reward: **'+q.reward+' Staff Points**. Current payout status: **'+((await crust.getAwardStatus(ref).catch(()=>null))?.status||'pending')+'**.').catch(()=>{});
 }
 async function reject(i,id){
  if(!admin(i))return i.reply({content:'Only Discord administrators can review submissions.',ephemeral:true});
