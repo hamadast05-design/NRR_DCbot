@@ -83,6 +83,7 @@ async function sendAward(row) {
   try {
     response = await fetch(url.origin + url.pathname.replace(/\/+$/, '') + ENDPOINT, {
       method: 'POST',
+      redirect: 'error',
       headers: {
         'Content-Type': 'application/json',
         'X-Crust-Timestamp': timestamp,
