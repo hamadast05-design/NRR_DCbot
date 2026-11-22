@@ -68,3 +68,47 @@ Sticker uploads support Discord's PNG, APNG, GIF, and Lottie JSON formats within
 - Each use is unlimited; there is no cooldown, animation, image dependency, or button interaction.
 - Gifts are cosmetic only; the feature does not modify coins, roles, inventory, or reputation.
 - The 12 possible outcomes retain their original weighted odds: 5% golden, 70% ordinary, and 25% naughty-list surprises.
+
+
+## Crust Staff Points API
+
+The bot includes a durable HMAC-SHA256 client for Crust's existing Staff Points system.
+
+### Configuration
+
+Set these variables in the NRR Bot Railway service:
+
+- `CRUST_INTEGRATION_URL=https://crust.wispbyte.app`
+- `STAFF_POINTS_API_SECRET` — the rotated secret issued by Crust. Store it only as a Railway environment variable; never commit it or paste it into source code.
+
+The bot requires HTTPS and refuses to send requests if the base URL is not HTTPS or the secret is missing. The database migration creates a persistent reward ledger at startup.
+
+### Awarding points from an approved quest
+
+The quest review handler should call the client only after an approval has been successfully claimed:
+
+```js
+const crust = require('./crust');
+
+const result = await crust.awardStaffPoints({
+  discordUserId: submission.staff_discord_id,
+  amount: quest.staff_points_reward,
+  reason: 'Daily Staff Quest: ' + quest.title,
+  referenceId: 'nrr_quest_submission_' + submission.id,
+});
+```
+
+Use one stable, unique `referenceId` per approved quest submission. Never create a new reference when retrying the same award. The module persists the exact JSON body and reuses it on retries while generating a fresh millisecond timestamp and HMAC signature for each request.
+
+### Reliability and status
+
+- HTTP 201 and HTTP 200 with `duplicate: true` are recorded as awarded.
+- HTTP 409 is recorded as a reference conflict and is not retried.
+- Network errors, HTTP 408/425/429, and HTTP 5xx responses are retried with exponential backoff (up to 12 attempts).
+- Other HTTP 4xx responses are recorded as failed for investigation rather than retried indefinitely.
+- Interrupted `processing` records are recovered to the retry queue on the next startup.
+- Reward records and their response/error metadata are retained in PostgreSQL. Use `crust.getAwardStatus(referenceId)` to inspect a reward from the future quest review/admin workflow.
+
+The current repository does not yet contain the Daily Community Staff Quests feature or its approval handler. This API client is the reusable integration layer; call it from that handler when the quest workflow is added. It is deliberately not connected to the unrelated Event Submission feature, to avoid awarding Staff Points for contest submissions.
+
+Do not test against a real staff member without authorization: a successful request changes their live Crust balance. Use a Crust-provided test recipient or obtain approval for a controlled low-value test first.

@@ -26,6 +26,7 @@ const boosterPerks = require('./booster-perks');
 const albumCoverSystem = require('./album-cover');
 const voiceHub = require('./voicehub');
 const noamAI = require('./noam-ai');
+const crustStaffPoints = require('./crust');
 const { registerApplicationCommands } = require('./command-registration');
 
 validate();
@@ -119,6 +120,8 @@ client.once(Events.ClientReady, async readyClient => {
   try {
     await registerApplicationCommands();
     await db.migrate();
+    await crustStaffPoints.migrate();
+    crustStaffPoints.startRetryWorker();
     await noamAI.migrate();
     await albumCoverSystem.migrate();
     albumCoverSystem.startScheduler(readyClient);
