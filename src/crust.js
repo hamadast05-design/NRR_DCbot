@@ -209,6 +209,10 @@ async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_crust_staff_point_awards_retry
       ON crust_staff_point_awards(status, next_attempt_at, created_at)
       WHERE status IN ('pending', 'retry');
+    UPDATE crust_staff_point_awards
+    SET status = 'retry', next_attempt_at = NOW(), updated_at = NOW(),
+        last_error = COALESCE(last_error, 'Recovered after an interrupted bot process.')
+    WHERE status = 'processing';
   \`);
 }
 
@@ -234,4 +238,12 @@ function stopRetryWorker() {
   retryTimer = null;
 }
 
-module.exports = { migrate, awardStaffPoints, retryPendingAwards, startRetryWorker, stopRetryWorker };
+async function getAwardStatus(referenceId) {
+  const result = await db.query(
+    'SELECT reference_id, discord_user_id, amount, reason, status, attempt_count, last_http_status, last_error, created_at, updated_at, awarded_at FROM crust_staff_point_awards WHERE reference_id = $1',
+    [referenceId]
+  );
+  return result.rows[0] || null;
+}
+
+module.exports = { migrate, awardStaffPoints, getAwardStatus, retryPendingAwards, startRetryWorker, stopRetryWorker };
