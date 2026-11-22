@@ -252,10 +252,7 @@ function stopRetryWorker() {
 }
 
 async function retryAward(referenceId) {
-  const result = await db.query(\
-    "UPDATE crust_staff_point_awards SET status = 'retry', attempt_count = 0, next_attempt_at = NOW(), last_error = NULL, updated_at = NOW() WHERE reference_id = $1 AND status = 'failed' RETURNING reference_id",\
-    [referenceId]\
-  );
+  const result = await db.query("UPDATE crust_staff_point_awards SET status = 'retry', attempt_count = 0, next_attempt_at = NOW(), last_error = NULL, updated_at = NOW() WHERE reference_id = $1 AND status = 'failed' RETURNING reference_id", [referenceId]);
   if (!result.rowCount) return getAwardStatus(referenceId);
   await retryPendingAwards();
   return getAwardStatus(referenceId);
