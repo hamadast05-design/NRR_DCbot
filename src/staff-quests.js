@@ -99,10 +99,11 @@ async function showMine(i){
  return i.reply(v2(progress(rs,d),true));
 }
 async function generate(guild){
- const d=dayKey(),run=await db.query('INSERT INTO staff_quest_daily_runs(guild_id,quest_day) VALUES($1,$2) ON CONFLICT DO NOTHING RETURNING quest_day',[guild.id,d]);
- if(!run.rowCount)return;
+ const d=dayKey();
  const [members,active]=await Promise.all([guild.members.fetch(),db.query('SELECT id,name,description,reward FROM staff_quest_catalogue WHERE enabled=TRUE AND deleted_at IS NULL')]);
- if(active.rows.length<3){await db.query('DELETE FROM staff_quest_daily_runs WHERE guild_id=$1 AND quest_day=$2',[guild.id,d]);throw new Error('At least three enabled quests are required.');}
+ if(active.rows.length<3)throw new Error('At least three enabled quests are required.');
+ const run=await db.query('INSERT INTO staff_quest_daily_runs(guild_id,quest_day) VALUES($1,$2) ON CONFLICT DO NOTHING RETURNING quest_day',[guild.id,d]);
+ if(!run.rowCount)return;
  const eligible=[...members.values()].filter(m=>!m.user.bot&&m.roles.cache.has(STAFF_ROLE));
  for(const m of eligible){
   const pool=[...active.rows];for(let k=pool.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[pool[k],pool[j]]=[pool[j],pool[k]];}
@@ -144,7 +145,7 @@ async function submit(i,id){
  if(!a||String(a.quest_day).slice(0,10)!==dayKey()||a.status!=='assigned')return i.reply({content:'This quest is no longer available for submission.',ephemeral:true});
  const evidence=i.fields.getTextInputValue('evidence').trim();if(!evidence)return i.reply({content:'Evidence is required.',ephemeral:true});
  const s=await db.query('INSERT INTO staff_quest_submissions(assignment_id,submitter_id,evidence) VALUES($1,$2,$3) RETURNING id',[id,i.user.id,evidence]);
- await db.query("UPDATE staff_quest_assignments SET status='pending_review',updated_at=NOW() WHERE id=$1",[id]);
+ await db.query("UPDATE staff_quest_assignments SET status='pending_review',last_feedback=NULL,updated_at=NOW() WHERE id=$1",[id]);
  await postReview(s.rows[0].id);await audit(i.guildId,i.user.id,'submission_created',{submissionId:s.rows[0].id,quest:a.quest_name});
  return i.reply({content:'✅ Evidence submitted. An administrator will review it shortly.',ephemeral:true});
 }
@@ -222,7 +223,6 @@ async function handle(i){
  if(i.isStringSelectMenu()&&i.customId.startsWith('staffquest:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.values[0];
   if(i.customId==='staffquest:edit-select'){const q=(await db.query('SELECT * FROM staff_quest_catalogue WHERE id=$1 AND deleted_at IS NULL',[id])).rows[0];if(!q)return i.reply({content:'Quest not found.',ephemeral:true});const m=new ModalBuilder().setCustomId('staffquest:edit-modal:'+id).setTitle('Edit quest');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('name').setLabel('Quest name').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(90).setValue(q.name)),new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('description').setLabel('Description').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(700).setValue(q.description)),new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('reward').setLabel('Reward in whole Staff Points').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(6).setValue(String(q.reward))));return i.showModal(m);}
   if(i.customId==='staffquest:toggle-select'){const q=(await db.query('SELECT name,enabled FROM staff_quest_catalogue WHERE id=$1 AND deleted_at IS NULL',[id])).rows[0];if(!q)return i.reply({content:'Quest not found.',ephemeral:true});await db.query('UPDATE staff_quest_catalogue SET enabled=NOT enabled,updated_by=$2,updated_at=NOW() WHERE id=$1',[id,i.user.id]);await audit(i.guildId,i.user.id,'quest_toggled',{questId:id,name:q.name,enabled:!q.enabled});return i.reply({content:'Quest '+(q.enabled?'disabled':'enabled')+'.',ephemeral:true});}
-  if(i.customId==='staffquest:retry-select'){const result=await crust.retryAward(id);const status=result?.status||'unknown';await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE payout_reference_id=$1',[id,status]);await audit(i.guildId,i.user.id,'payout_manual_retry',{referenceId:id,status});return i.reply({content:'Crust retry requested. Current status: '+status+'.',ephemeral:true});}
   if(i.customId==='staffquest:retry-select'){const result=await crust.retryAward(id);const status=result?.status||'unknown';await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE payout_reference_id=$1',[id,status]);await audit(i.guildId,i.user.id,'payout_manual_retry',{referenceId:id,status});return i.reply({content:'Crust retry requested. Current status: '+status+'.',ephemeral:true});}
   if(i.customId==='staffquest:delete-select'){const q=(await db.query('SELECT name FROM staff_quest_catalogue WHERE id=$1 AND deleted_at IS NULL',[id])).rows[0];if(!q)return i.reply({content:'Quest not found.',ephemeral:true});await db.query('UPDATE staff_quest_catalogue SET enabled=FALSE,deleted_at=NOW(),updated_by=$2,updated_at=NOW() WHERE id=$1',[id,i.user.id]);await audit(i.guildId,i.user.id,'quest_deleted',{questId:id,name:q.name});return i.reply({content:'Quest removed from the active catalogue. Historical assignments are preserved.',ephemeral:true});}
  }
