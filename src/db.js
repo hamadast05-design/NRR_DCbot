@@ -705,9 +705,14 @@ async function deleteStealNoStealGame(gameId) {
   console.info('[StealOrNoSteal][DB] Deleted', { gameId, rowCount: result.rowCount });
 }
 
+async function close() {
+  await pool.end();
+}
+
 module.exports = {
   query,
   migrate,
+  close,
   getSantaGifts,
   addSantaGift,
   getStealNoStealGame,
