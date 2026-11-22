@@ -189,7 +189,7 @@ async function retryPendingAwards() {
 }
 
 async function migrate() {
-  await db.query(\`
+  await db.query(`
     CREATE TABLE IF NOT EXISTS crust_staff_point_awards (
       reference_id TEXT PRIMARY KEY,
       discord_user_id TEXT NOT NULL,
@@ -214,7 +214,7 @@ async function migrate() {
     SET status = 'retry', next_attempt_at = NOW(), updated_at = NOW(),
         last_error = COALESCE(last_error, 'Recovered after an interrupted bot process.')
     WHERE status = 'processing';
-  \`);
+  `);
 }
 
 function startRetryWorker() {
