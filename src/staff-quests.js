@@ -1,5 +1,5 @@
 const {
-  SlashCommandBuilder, PermissionFlagsBits, MessageFlags, ContainerBuilder, TextDisplayBuilder,
+  SlashCommandBuilder, PermissionFlagsBits, MessageFlags, ContainerBuilder, TextDisplayBuilder, EmbedBuilder,
   SeparatorBuilder, SeparatorSpacingSize, ActionRowBuilder, ButtonBuilder, ButtonStyle,
   StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle,
 } = require('discord.js');
@@ -44,6 +44,26 @@ let schedulerRunning=false;
 const dayKey = () => new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const admin = i => Boolean(i.memberPermissions?.has(PermissionFlagsBits.Administrator));
 const v2 = (c,ephemeral=false) => ({components:[c],flags:MessageFlags.IsComponentsV2|(ephemeral?MessageFlags.Ephemeral:0),allowedMentions:{parse:[]}});
+const resetTimestamp=day=>{const [y,m,d]=String(day||dayKey()).slice(0,10).split('-').map(Number);return Math.floor(Date.UTC(y,m-1,d+1,-3,0,0)/1000);};
+const preferenceLabels={dm:'Daily quest DMs',none:'Daily quest notifications disabled',ping:'Temporary server pings in the quest panel'};
+async function getNotificationPreference(g,u){const r=await db.query('SELECT preference FROM staff_quest_notification_preferences WHERE guild_id=$1 AND user_id=$2',[g,u]);return r.rows[0]?.preference||'dm';}
+async function setNotificationPreference(g,u,p){await db.query('INSERT INTO staff_quest_notification_preferences(guild_id,user_id,preference) VALUES($1,$2,$3) ON CONFLICT(guild_id,user_id) DO UPDATE SET preference=EXCLUDED.preference,updated_at=NOW()',[g,u,p]);}
+function notificationSettingsPanel(p){const c=new ContainerBuilder().setAccentColor(0xffffff);c.addTextDisplayComponents(text('# ◈ Notification Preferences'),text('Choose how you receive daily quest notifications.\n**Current setting:** '+preferenceLabels[p]));c.addActionRowComponents(new ActionRowBuilder().addComponents(btn('staffquest:notify:dm','Receive Bot DMs',ButtonStyle.Secondary),btn('staffquest:notify:none','Stop Bot DMs',ButtonStyle.Secondary),btn('staffquest:notify:ping','Receive Server Pings Instead',ButtonStyle.Secondary)));return c;}
+function dailyQuestEmbed(guild,quests,day){const reset=resetTimestamp(day),embed=new EmbedBuilder().setColor(0xffffff).setTitle('◈ Daily Community Staff Quests').setDescription('Your individual quests for today are ready. Complete at least one to meet the daily requirement, or complete all three to earn every reward.').setFooter({text:'Resets <t:'+reset+':t> • <t:'+reset+':R>'});const icon=guild?.iconURL?.({size:128});if(icon)embed.setThumbnail(icon);for(const q of quests)embed.addFields({name:'◈ '+q.quest_name+' · `'+q.reward+' SP`',value:'-# '+q.quest_description,inline:false});return embed;}
+async function sendDailyNotification(guild,member,quests,day){
+ const preference=await getNotificationPreference(guild.id,member.id);if(preference==='none')return {skipped:true};
+ const claim=await db.query("INSERT INTO staff_quest_notification_deliveries(guild_id,quest_day,user_id,status) VALUES($1,$2,$3,'sending') ON CONFLICT(guild_id,quest_day,user_id) DO NOTHING RETURNING user_id",[guild.id,day,member.id]);
+ if(!claim.rowCount){const prior=await db.query('SELECT status,updated_at FROM staff_quest_notification_deliveries WHERE guild_id=$1 AND quest_day=$2 AND user_id=$3',[guild.id,day,member.id]),row=prior.rows[0];if(row?.status==='sent')return {skipped:true};if(row?.status==='sending'&&Date.now()-new Date(row.updated_at).getTime()<300000)return {skipped:true};await db.query("UPDATE staff_quest_notification_deliveries SET status='sending',updated_at=NOW() WHERE guild_id=$1 AND quest_day=$2 AND user_id=$3",[guild.id,day,member.id]);}
+ try{
+  if(preference==='ping'){const channel=await guild.channels.fetch(CHANNELS.panel).catch(()=>null);if(!channel?.send)throw Error('Quest panel channel unavailable');const message=await channel.send({content:'<@'+member.id+'>',allowedMentions:{parse:[],users:[member.id]}});await db.query("UPDATE staff_quest_notification_deliveries SET status='sent',channel_id=$4,message_id=$5,delivered_at=NOW(),updated_at=NOW() WHERE guild_id=$1 AND quest_day=$2 AND user_id=$3",[guild.id,day,member.id,channel.id,message.id]);setTimeout(()=>message.delete().catch(()=>{}),5000).unref?.();return {sent:true};}
+  const view=new ActionRowBuilder().addComponents(btn('staffquest:mine:'+guild.id,'◈ View Progress & Submit',ButtonStyle.Secondary));
+  const prefs=new ActionRowBuilder().addComponents(btn('staffquest:notify:'+guild.id+':none','Stop Bot DMs',ButtonStyle.Secondary),btn('staffquest:notify:'+guild.id+':ping','Receive Server Pings Instead',ButtonStyle.Secondary));
+  const message=await member.send({embeds:[dailyQuestEmbed(guild,quests,day)],components:[view,prefs],allowedMentions:{parse:[]}});
+  await db.query("UPDATE staff_quest_notification_deliveries SET status='sent',channel_id=$4,message_id=$5,delivered_at=NOW(),updated_at=NOW() WHERE guild_id=$1 AND quest_day=$2 AND user_id=$3",[guild.id,day,member.id,message.channelId,message.id]);return {sent:true};
+ }catch(error){await db.query("UPDATE staff_quest_notification_deliveries SET status='failed',updated_at=NOW() WHERE guild_id=$1 AND quest_day=$2 AND user_id=$3",[guild.id,day,member.id]).catch(()=>{});console.warn('[Staff Quests] Notification delivery failed for '+member.id+' ('+preference+'); no alternate notification was sent:',error.message);return {sent:false};}
+}
+async function showNotificationSettings(i){return i.reply(v2(notificationSettingsPanel(await getNotificationPreference(i.guildId,i.user.id)),true));}
+async function updateNotificationPreference(i,g,p){await setNotificationPreference(g,i.user.id,p);if(i.inGuild())return i.reply({content:'◈ Notification preference saved: **'+preferenceLabels[p]+'**. This applies to future daily quest notifications.',ephemeral:true,allowedMentions:{parse:[]}});const embed=EmbedBuilder.from(i.message.embeds[0]);embed.setFooter({text:preferenceLabels[p]+' • Daily reset <t:'+resetTimestamp(dayKey())+':R>'});return i.update({embeds:[embed],components:i.message.components,allowedMentions:{parse:[]}});}
 const audit = async (guildId,actor,action,details) => {
   await db.query('INSERT INTO staff_quest_audit_logs(guild_id,actor_id,action,details) VALUES($1,$2,$3,$4::jsonb)',[guildId,actor,action,JSON.stringify(details||{})]);
   const guild=client?.guilds.cache.get(guildId), channel=await guild?.channels.fetch(CHANNELS.audit).catch(()=>null);
@@ -59,18 +79,20 @@ async function migrate(){
  'CREATE TABLE IF NOT EXISTS staff_quest_submissions(id BIGSERIAL PRIMARY KEY,assignment_id BIGINT NOT NULL REFERENCES staff_quest_assignments(id),submitter_id TEXT NOT NULL,evidence TEXT NOT NULL,status TEXT NOT NULL DEFAULT \'pending\' CHECK(status IN (\'pending\',\'approved\',\'rejected\')),reviewer_id TEXT,feedback TEXT,review_channel_id TEXT,review_message_id TEXT,payout_reference_id TEXT UNIQUE,payout_status TEXT,submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),reviewed_at TIMESTAMPTZ);'+
  'CREATE INDEX IF NOT EXISTS idx_staff_quest_pending ON staff_quest_submissions(status,submitted_at);'+
  'CREATE TABLE IF NOT EXISTS staff_quest_audit_logs(id BIGSERIAL PRIMARY KEY,guild_id TEXT NOT NULL,actor_id TEXT NOT NULL,action TEXT NOT NULL,details JSONB NOT NULL DEFAULT \'{}\'::jsonb,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());'+
- 'CREATE TABLE IF NOT EXISTS staff_quest_settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);'
+ 'CREATE TABLE IF NOT EXISTS staff_quest_settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);'+
+ 'CREATE TABLE IF NOT EXISTS staff_quest_notification_preferences(guild_id TEXT NOT NULL,user_id TEXT NOT NULL,preference TEXT NOT NULL DEFAULT \'dm\' CHECK(preference IN (\'dm\',\'none\',\'ping\')),updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),PRIMARY KEY(guild_id,user_id));'+
+ 'CREATE TABLE IF NOT EXISTS staff_quest_notification_deliveries(guild_id TEXT NOT NULL,quest_day DATE NOT NULL,user_id TEXT NOT NULL,status TEXT NOT NULL DEFAULT \'sending\' CHECK(status IN (\'sending\',\'sent\',\'failed\')),channel_id TEXT,message_id TEXT,delivered_at TIMESTAMPTZ,updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),PRIMARY KEY(guild_id,quest_day,user_id));'
  );
  const n=await db.query('SELECT COUNT(*)::int AS n FROM staff_quest_catalogue');
  if(!n.rows[0].n) for(const q of seed) await db.query('INSERT INTO staff_quest_catalogue(name,description,reward,created_by) VALUES($1,$2,$3,$4)',[q[0],q[1],q[2],'system-seed']);
 }
 async function rows(){const r=await db.query('SELECT id,name,description,reward,enabled FROM staff_quest_catalogue WHERE deleted_at IS NULL ORDER BY id');return r.rows.map(x=>({...x,id:String(x.id),reward:Number(x.reward)}));}
 function mainPanel(){
- const c=new ContainerBuilder().setAccentColor(0xffffff);
- c.addTextDisplayComponents(text('# 🏆 NR:R Daily Community Staff Quests'),text('You receive **3 individual quests every day**. Complete at least one to meet the daily requirement, or complete all three to earn every reward. Each approved quest pays its own Staff Points reward.'));
+ const c=new ContainerBuilder().setAccentColor(0xffffff),reset=resetTimestamp(dayKey());
+ c.addTextDisplayComponents(text('# ◈ NR:R Daily Community Staff Quests'),text('You receive **3 individual quests every day**. Complete at least one to meet the daily requirement, or complete all three to earn every reward. Each approved quest pays its own **Staff Points (SP)** reward.'));
  c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
- c.addTextDisplayComponents(text('**HOW IT WORKS**'),text('1. View your privately assigned quests.\n2. Complete a quest and submit evidence.\n3. An administrator reviews it.\n4. Approval triggers the Crust Staff Points payout.\n\nQuests refresh at **00:00 Riyadh time**. Unfinished quests expire at reset.'));
- c.addActionRowComponents(new ActionRowBuilder().addComponents(btn('staffquest:mine','View my quests',ButtonStyle.Primary)));
+ c.addTextDisplayComponents(text('**HOW IT WORKS**'),text('1. View your privately assigned quests.\n2. Complete a quest and submit evidence.\n3. An administrator reviews it.\n4. Approval triggers the Staff Points payout.\n\n**Daily reset:** <t:'+reset+':t> (<t:'+reset+':R>). Unfinished quests expire at reset.'));
+ c.addActionRowComponents(new ActionRowBuilder().addComponents(btn('staffquest:mine','◈ View my quests',ButtonStyle.Secondary),btn('staffquest:notifications','▪ Notification settings',ButtonStyle.Secondary)));
  return c;
 }
 async function ensurePanel(guild){
@@ -86,16 +108,13 @@ async function getMine(guildId,userId,day){
  return r.rows;
 }
 function progress(rows,day){
- const c=new ContainerBuilder().setAccentColor(0x16a34a),done=rows.filter(x=>x.status==='completed').length,pending=rows.filter(x=>x.status==='pending_review').length;
- c.addTextDisplayComponents(text('# 📋 Your Daily Quests'),text('**Date:** '+day+' (Riyadh)\n**Progress:** '+done+'/3 completed • '+pending+' awaiting review\n**Daily requirement:** Complete at least 1 quest; you can complete all 3 for additional rewards.'));
- for(const q of rows){c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));c.addTextDisplayComponents(text('**'+q.quest_name+'** — '+q.reward+' SP\n'+q.quest_description+'\n**Status:** '+({assigned:'📝 Available',pending_review:'🕒 Awaiting review',completed:'✅ Completed',expired:'⌛ Expired'}[q.status]||q.status)));if(q.status==='assigned')c.addActionRowComponents(new ActionRowBuilder().addComponents(btn('staffquest:submit:'+q.id,'Submit evidence',ButtonStyle.Primary)));if(q.last_feedback)c.addTextDisplayComponents(text('**Reviewer feedback:** '+q.last_feedback));}
- c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
- const earned=rows.filter(q=>q.payout_status==='awarded').reduce((sum,q)=>sum+Number(q.reward),0);
- c.addTextDisplayComponents(text('**Staff Points earned today: '+earned+' SP**'),text(rows.map(q=>q.quest_name+': '+(q.payout_status||'Not yet payable')).join('\n')));
- return c;
+ const c=new ContainerBuilder().setAccentColor(0xffffff),done=rows.filter(x=>x.status==='completed').length,pending=rows.filter(x=>x.status==='pending_review').length,reset=resetTimestamp(day);
+ c.addTextDisplayComponents(text('# ◈ Your Daily Quests'),text('**Date:** '+day+'\n**Progress:** '+done+'/3 completed • '+pending+' awaiting review\n**Minimum requirement:** Complete at least 1 quest.\n**Additional rewards:** Each other approved quest earns its own reward.\n**Daily reset:** <t:'+reset+':t> (<t:'+reset+':R>).'));
+ for(const q of rows){c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));c.addTextDisplayComponents(text('**'+q.quest_name+'** — `'+q.reward+' SP`\n'+q.quest_description+'\n**Status:** '+({assigned:'Available',pending_review:'Awaiting review',completed:'Completed',expired:'Expired'}[q.status]||q.status)));if(q.status==='assigned')c.addActionRowComponents(new ActionRowBuilder().addComponents(btn('staffquest:submit:'+q.id,'◈ Submit evidence',ButtonStyle.Secondary)));if(q.last_feedback)c.addTextDisplayComponents(text('**Reviewer feedback:** '+q.last_feedback));}
+ c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));const earned=rows.filter(q=>q.payout_status==='awarded').reduce((sum,q)=>sum+Number(q.reward),0);c.addTextDisplayComponents(text('**Staff Points earned today: '+earned+' SP**'),text(rows.map(q=>q.quest_name+': '+(q.payout_status||'Not yet payable')).join('\n')));return c;
 }
-async function showMine(i){
- const d=dayKey(),rs=await getMine(i.guildId,i.user.id,d);
+async function showMine(i,guildId=i.guildId){
+ const d=dayKey(),rs=await getMine(guildId,i.user.id,d);
  if(!rs.length)return i.reply({content:'You do not have quests assigned today. Daily assignments are generated at 00:00 Riyadh time for eligible NR:R Branch members.',ephemeral:true});
  return i.reply(v2(progress(rs,d),true));
 }
@@ -110,7 +129,7 @@ async function generate(guild){
  try { for(const m of eligible){
   const pool=[...active.rows];for(let k=pool.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[pool[k],pool[j]]=[pool[j],pool[k]];}
   for(const q of pool.slice(0,3))await db.query('INSERT INTO staff_quest_assignments(guild_id,quest_day,user_id,quest_id,quest_name,quest_description,reward) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING',[guild.id,d,m.id,q.id,q.name,q.description,q.reward]);
-  const mine=await getMine(guild.id,m.id,d);const notice='🏆 Your Daily Community Staff Quests are ready!\n\n'+mine.map((q,index)=>(index+1)+'. **'+q.quest_name+'** — '+q.reward+' SP\n'+q.quest_description).join('\n\n')+'\n\nUse /staff_quests in the Staff Server or the pinned quest panel to view your private progress and submit evidence.';await m.send({content:notice,allowedMentions:{parse:[]}}).catch(()=>{});
+  const mine=await getMine(guild.id,m.id,d);await sendDailyNotification(guild,m,mine,d);
  }
  } catch(error) { await db.query('DELETE FROM staff_quest_daily_runs WHERE guild_id=$1 AND quest_day=$2',[guild.id,d]); throw error; }
  console.log('[Staff Quests] Assigned daily quests to '+eligible.length+' eligible staff members for '+d+'.');
@@ -147,13 +166,15 @@ async function postReview(id){
  const m=await ch.send(v2(c));await db.query('UPDATE staff_quest_submissions SET review_channel_id=$2,review_message_id=$3 WHERE id=$1',[id,ch.id,m.id]);
 }
 async function submit(i,id){
- const r=await db.query('SELECT * FROM staff_quest_assignments WHERE id=$1 AND guild_id=$2 AND user_id=$3',[id,i.guildId,i.user.id]),a=r.rows[0];
- if(!a||String(a.quest_day).slice(0,10)!==dayKey()||a.status!=='assigned')return i.reply({content:'This quest is no longer available for submission.',ephemeral:true});
- const evidence=i.fields.getTextInputValue('evidence').trim();if(!evidence)return i.reply({content:'Evidence is required.',ephemeral:true});
- const s=await db.query('INSERT INTO staff_quest_submissions(assignment_id,submitter_id,evidence) VALUES($1,$2,$3) RETURNING id',[id,i.user.id,evidence]);
- await db.query("UPDATE staff_quest_assignments SET status='pending_review',last_feedback=NULL,updated_at=NOW() WHERE id=$1",[id]);
- await postReview(s.rows[0].id);await audit(i.guildId,i.user.id,'submission_created',{submissionId:s.rows[0].id,quest:a.quest_name});
- const updated=await getMine(i.guildId,i.user.id,dayKey());return i.reply(v2(progress(updated,dayKey()),true));
+ await i.deferReply({ephemeral:true});let claimed=false,submissionId=null;
+ try{
+  const claim=await db.query("UPDATE staff_quest_assignments SET status='pending_review',last_feedback=NULL,updated_at=NOW() WHERE id=$1 AND guild_id=$2 AND user_id=$3 AND quest_day=$4 AND status='assigned' RETURNING *",[id,i.guildId,i.user.id,dayKey()]);
+  const a=claim.rows[0];if(!a)return i.editReply({content:'This quest is no longer available for submission.'});claimed=true;
+  const evidence=i.fields.getTextInputValue('evidence').trim();if(!evidence){await db.query("UPDATE staff_quest_assignments SET status='assigned' WHERE id=$1 AND status='pending_review'",[id]);return i.editReply({content:'Evidence is required.'});}
+  const inserted=await db.query('INSERT INTO staff_quest_submissions(assignment_id,submitter_id,evidence) VALUES($1,$2,$3) RETURNING id',[id,i.user.id,evidence]);submissionId=inserted.rows[0].id;
+  try{await postReview(submissionId);}catch(error){console.error('[Staff Quests] Submission saved; review post failed and will be recovered:',{submissionId,assignmentId:id,guildId:i.guildId,userId:i.user.id,code:error?.code,status:error?.status,message:error?.message,stack:error?.stack});const updated=await getMine(i.guildId,i.user.id,dayKey());return i.editReply({...v2(progress(updated,dayKey()),true),content:'Your evidence was saved. The review message could not be posted immediately; the recovery worker will retry it.'});}
+  await audit(i.guildId,i.user.id,'submission_created',{submissionId,quest:a.quest_name});const updated=await getMine(i.guildId,i.user.id,dayKey());return i.editReply(v2(progress(updated,dayKey()),true));
+ }catch(error){console.error('[Staff Quests] Evidence submission failed:',{submissionId,assignmentId:id,guildId:i.guildId,userId:i.user.id,claimed,code:error?.code,status:error?.status,message:error?.message,stack:error?.stack});if(claimed&&!submissionId)await db.query("UPDATE staff_quest_assignments SET status='assigned',updated_at=NOW() WHERE id=$1 AND status='pending_review'",[id]).catch(()=>{});return i.editReply({content:'We could not finish processing your evidence. Your quest has been kept safe; please try again shortly or contact an administrator if the problem continues.'}).catch(()=>{});}
 }
 async function approve(i,id){
  if(!admin(i))return i.reply({content:'Only Discord administrators can review submissions.',ephemeral:true});
@@ -163,7 +184,7 @@ async function approve(i,id){
  await db.query("UPDATE staff_quest_assignments SET status='completed',updated_at=NOW() WHERE id=$1",[q.assignment_id]);
  const ref='staff-quest-'+q.guild_id+'-'+id;await db.query("UPDATE staff_quest_submissions SET payout_reference_id=$2,payout_status='pending' WHERE id=$1",[id,ref]);
  await audit(q.guild_id,i.user.id,'submission_approved',{submissionId:id,userId:q.user_id,quest:q.quest_name,reward:q.reward,referenceId:ref});
- await i.update({components:[new ContainerBuilder().setAccentColor(0x16a34a).addTextDisplayComponents(text('# ✅ Quest approved'),text('**'+q.quest_name+'** for <@'+q.user_id+'>. Crust payout of **'+q.reward+' SP** is being processed.'))],flags:MessageFlags.IsComponentsV2,allowedMentions:{parse:[]}});
+ await i.update({components:[new ContainerBuilder().setAccentColor(0x16a34a).addTextDisplayComponents(text('# ✅ Quest approved'),text('**'+q.quest_name+'** for <@'+q.user_id+'>. Staff Points payout of **'+q.reward+' SP** is being processed.'))],flags:MessageFlags.IsComponentsV2,allowedMentions:{parse:[]}});
  try{const result=await crust.awardStaffPoints({discordUserId:q.user_id,amount:Number(q.reward),reason:'Daily Community Staff Quest: '+q.quest_name,referenceId:ref});const status=(await crust.getAwardStatus(ref))?.status||result.status||'pending';await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE id=$1',[id,status]);await audit(q.guild_id,i.user.id,'payout_status_updated',{submissionId:id,referenceId:ref,status});}
  catch(e){console.error('[Staff Quests] Crust award request failed:',e.message);await db.query("UPDATE staff_quest_submissions SET payout_status='pending' WHERE id=$1",[id]);}
  const user=await client.users.fetch(q.user_id).catch(()=>null);if(user)await user.send('🏆 Your quest **'+q.quest_name+'** was approved. Reward: **'+q.reward+' Staff Points**. Current payout status: **'+((await crust.getAwardStatus(ref).catch(()=>null))?.status||'pending')+'**.').catch(()=>{});
@@ -219,6 +240,14 @@ async function handle(i){
  if(i.isChatInputCommand()&&i.commandName==='staff_quests')return showMine(i);
  if(i.isChatInputCommand()&&i.commandName==='staff_quests_admin')return adminPanel(i);
  if(i.isButton()&&i.customId==='staffquest:mine')return showMine(i);
+ if(i.isButton()&&i.customId.startsWith('staffquest:mine:'))return showMine(i,i.customId.split(':')[2]);
+ if(i.isButton()&&i.customId==='staffquest:notifications')return showNotificationSettings(i);
+ if(i.isButton()&&i.customId==='staffquest:notify:dm')return updateNotificationPreference(i,i.guildId,'dm');
+ if(i.isButton()&&i.customId==='staffquest:notify:none')return updateNotificationPreference(i,i.guildId,'none');
+ if(i.isButton()&&i.customId==='staffquest:notify:ping')return updateNotificationPreference(i,i.guildId,'ping');
+ if(i.isButton()&&i.customId.startsWith('staffquest:notify:')){
+  const p=i.customId.split(':');return updateNotificationPreference(i,p[2],p[3]);
+ }
  if(i.isButton()&&i.customId.startsWith('staffquest:submit:')){const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:submit-modal:'+id).setTitle('Submit Quest Evidence');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('evidence').setLabel('Evidence: message link, explanation, or screenshot link').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1500)));return i.showModal(m);}
  if(i.isModalSubmit()&&i.customId.startsWith('staffquest:submit-modal:'))return submit(i,i.customId.split(':')[2]);
  if(i.isButton()&&i.customId.startsWith('staffquest:approve:'))return approve(i,i.customId.split(':')[2]);
