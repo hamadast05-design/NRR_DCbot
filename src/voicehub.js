@@ -122,13 +122,56 @@ async function sendPanel(client) {
   return channel.send(panelPayload());
 }
 
+let ensurePanelPromise = null;
+
+function containsVoiceHubOpenButton(component) {
+  if (!component) return false;
+  const data = typeof component.toJSON === 'function' ? component.toJSON() : component;
+  if (!data || typeof data !== 'object') return false;
+  if (data.custom_id === PREFIX + 'open' || data.customId === PREFIX + 'open') return true;
+  const children = [
+    ...(Array.isArray(data.components) ? data.components : []),
+    ...(Array.isArray(data.accessory) ? [data.accessory] : []),
+  ];
+  return children.some(containsVoiceHubOpenButton);
+}
+
+function isVoiceHubPanel(message, botUserId) {
+  if (!message || message.author?.id !== botUserId) return false;
+  return (message.components || []).some(containsVoiceHubOpenButton);
+}
+
 async function ensurePanel(client) {
-  try {
-    await sendPanel(client);
-    console.log('[VoiceHub] Control panel posted.');
-  } catch (error) {
-    console.error('[VoiceHub] Could not post control panel:', error);
-  }
+  if (ensurePanelPromise) return ensurePanelPromise;
+
+  ensurePanelPromise = (async () => {
+    try {
+      const channel = await client.channels.fetch(CONTROL_CHANNEL_ID).catch(() => null);
+      if (!channel || typeof channel.send !== 'function') {
+        throw new Error('[VoiceHub] Configured VoiceHub channel is unavailable or does not support sending messages.');
+      }
+
+      // Reuse the existing bot-authored panel after restarts instead of
+      // publishing a fresh copy every time the client becomes ready.
+      const recentMessages = await channel.messages.fetch({ limit: 100 });
+      const existingPanel = recentMessages.find(message => isVoiceHubPanel(message, client.user.id));
+      if (existingPanel) {
+        console.log(`[VoiceHub] Existing control panel found (${existingPanel.id}); skipping duplicate post.`);
+        return existingPanel;
+      }
+
+      const panel = await channel.send(panelPayload());
+      console.log(`[VoiceHub] Control panel posted (${panel.id}).`);
+      return panel;
+    } catch (error) {
+      console.error('[VoiceHub] Could not ensure control panel:', error);
+      return null;
+    } finally {
+      ensurePanelPromise = null;
+    }
+  })();
+
+  return ensurePanelPromise;
 }
 
 async function migrate() {
