@@ -98,7 +98,7 @@ function mainPanel(){
 async function ensurePanel(guild){
  const ch=await guild.channels.fetch(CHANNELS.panel).catch(()=>null); if(!ch?.send) throw new Error('Quest panel channel unavailable.');
  const saved=await db.query("SELECT value FROM staff_quest_settings WHERE key='main_panel'");
- if(saved.rows[0]){const [cid,mid]=saved.rows[0].value.split(':');const old=await guild.channels.fetch(cid).catch(()=>null);const msg=await old?.messages.fetch(mid).catch(()=>null);if(msg)return;}
+ if(saved.rows[0]){const [cid,mid]=saved.rows[0].value.split(':');const old=await guild.channels.fetch(cid).catch(()=>null);const msg=await old?.messages.fetch(mid).catch(()=>null);if(msg){await msg.edit(v2(mainPanel()));return;}}
  const msg=await ch.send(v2(mainPanel()));
  await db.query("INSERT INTO staff_quest_settings(key,value) VALUES('main_panel',$1) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value",[ch.id+':'+msg.id]);
 }
@@ -172,7 +172,7 @@ async function submit(i,id){
   const a=claim.rows[0];if(!a)return i.editReply({content:'This quest is no longer available for submission.'});claimed=true;
   const evidence=i.fields.getTextInputValue('evidence').trim();if(!evidence){await db.query("UPDATE staff_quest_assignments SET status='assigned' WHERE id=$1 AND status='pending_review'",[id]);return i.editReply({content:'Evidence is required.'});}
   const inserted=await db.query('INSERT INTO staff_quest_submissions(assignment_id,submitter_id,evidence) VALUES($1,$2,$3) RETURNING id',[id,i.user.id,evidence]);submissionId=inserted.rows[0].id;
-  try{await postReview(submissionId);}catch(error){console.error('[Staff Quests] Submission saved; review post failed and will be recovered:',{submissionId,assignmentId:id,guildId:i.guildId,userId:i.user.id,code:error?.code,status:error?.status,message:error?.message,stack:error?.stack});const updated=await getMine(i.guildId,i.user.id,dayKey());return i.editReply({...v2(progress(updated,dayKey()),true),content:'Your evidence was saved. The review message could not be posted immediately; the recovery worker will retry it.'});}
+  try{await postReview(submissionId);}catch(error){console.error('[Staff Quests] Submission saved; review post failed and will be recovered:',{submissionId,assignmentId:id,guildId:i.guildId,userId:i.user.id,code:error?.code,status:error?.status,message:error?.message,stack:error?.stack});const updated=await getMine(i.guildId,i.user.id,dayKey());const recovery=progress(updated,dayKey());recovery.addTextDisplayComponents(text('Your evidence was saved. The review message could not be posted immediately; the recovery worker will retry it.'));return i.editReply(v2(recovery,true));}
   await audit(i.guildId,i.user.id,'submission_created',{submissionId,quest:a.quest_name});const updated=await getMine(i.guildId,i.user.id,dayKey());return i.editReply(v2(progress(updated,dayKey()),true));
  }catch(error){console.error('[Staff Quests] Evidence submission failed:',{submissionId,assignmentId:id,guildId:i.guildId,userId:i.user.id,claimed,code:error?.code,status:error?.status,message:error?.message,stack:error?.stack});if(claimed&&!submissionId)await db.query("UPDATE staff_quest_assignments SET status='assigned',updated_at=NOW() WHERE id=$1 AND status='pending_review'",[id]).catch(()=>{});return i.editReply({content:'We could not finish processing your evidence. Your quest has been kept safe; please try again shortly or contact an administrator if the problem continues.'}).catch(()=>{});}
 }
