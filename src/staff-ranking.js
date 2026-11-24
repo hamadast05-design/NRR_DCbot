@@ -48,22 +48,22 @@ function safeName(value) {
 
 function renderRankingRows(rows) {
   if (!rows.length) {
-    return [new TextDisplayBuilder().setContent('_No staff ranking data is available yet._')];
+    return new TextDisplayBuilder().setContent('_No staff ranking data is available yet._');
   }
   const medals = ['🥇', '🥈', '🥉'];
-  const components = [];
-  rows.forEach((row, index) => {
+  const lines = rows.map((row, index) => {
     const rank = Number(row.rank || index + 1);
     const marker = medals[rank - 1] || ('**' + String(rank).padStart(2, '0') + '.**');
     const name = safeName(row.display_name);
     const highlightedName = rank <= 3 ? '**' + name + '**' : name;
-    const stats = '\`7D\`: **' + formatCount(row.last_7d) + '** | ' +
-      '\`14D\`: **' + formatCount(row.last_14d) + '** | ' +
-      '\`Total\`: **' + formatCount(row.all_time) + '**';
-    components.push(new TextDisplayBuilder().setContent(marker + ' ' + highlightedName + '\n' + stats));
-    if (index < rows.length - 1) components.push(new SeparatorBuilder());
+    const stats = '`7D`: **' + formatCount(row.last_7d) + '** | ' +
+      '`14D`: **' + formatCount(row.last_14d) + '** | ' +
+      '`Total`: **' + formatCount(row.all_time) + '**';
+    return marker + ' ' + highlightedName + '\n' + stats;
   });
-  return components;
+  // Keep the ranking in one text component so tied scores cannot exceed
+  // Discord's 40-component limit when many staff share the same rank.
+  return new TextDisplayBuilder().setContent(lines.join('\n\n'));
 }
 async function ensureDiagnosticsTable() {
   if (diagnosticTableReady) return;
@@ -237,10 +237,7 @@ async function buildComponents(client, category, onStage = () => {}) {
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(title))
     .addSeparatorComponents(new SeparatorBuilder());
 
-  for (const component of renderRankingRows(rows)) {
-    if (component instanceof SeparatorBuilder) container.addSeparatorComponents(component);
-    else container.addTextDisplayComponents(component);
-  }
+  container.addTextDisplayComponents(renderRankingRows(rows));
 
   if (category === 'messages') {
     container.addSeparatorComponents(new SeparatorBuilder());
@@ -353,8 +350,7 @@ async function handlePrefixMessage(message) {
   if (!match) return false;
   const category = (match[1] || 'messages').toLowerCase();
   try {
-    const components = await buildComponents(message.client, category);
-    await message.channel.send({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
+    await publishRanking(message.channel, message.client, category);
   } catch (error) {
     const diagnosticId = await recordDiagnostic({
       source: 'prefix_command', stage: error.staffRankingStage || 'build_or_send', category, message, error,
@@ -399,6 +395,65 @@ async function handleDiagnosticsMessage(message) {
   return true;
 }
 
+
+async function ensureRankingMessageTable() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS nrr_staff_ranking_messages (
+      channel_id TEXT PRIMARY KEY,
+      message_id TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+}
+
+async function publishRanking(channel, client, category) {
+  const components = await buildComponents(client, category);
+  await ensureRankingMessageTable();
+
+  const previous = await db.query(
+    'SELECT message_id FROM nrr_staff_ranking_messages WHERE channel_id = $1',
+    [channel.id]
+  );
+  const previousIds = new Set(previous.rows.map(row => row.message_id));
+
+  // Also catch older panels created before message tracking was introduced.
+  const recent = await channel.messages.fetch({ limit: 100 }).catch(() => null);
+  if (recent) {
+    for (const message of recent.values()) {
+      if (message.author?.id !== client.user.id) continue;
+      const hasRankingSelector = (message.components || []).some(function containsSelector(component) {
+        const data = typeof component.toJSON === 'function' ? component.toJSON() : component;
+        if (!data || typeof data !== 'object') return false;
+        if (data.custom_id === 'staff-ranking:category' || data.customId === 'staff-ranking:category') return true;
+        return (Array.isArray(data.components) ? data.components : []).some(containsSelector);
+      });
+      if (hasRankingSelector) previousIds.add(message.id);
+    }
+  }
+
+  const sent = await channel.send({
+    components,
+    flags: MessageFlags.IsComponentsV2,
+    allowedMentions: { parse: [] },
+  });
+
+  await db.query(`
+    INSERT INTO nrr_staff_ranking_messages(channel_id, message_id, updated_at)
+    VALUES($1,$2,NOW())
+    ON CONFLICT(channel_id)
+    DO UPDATE SET message_id = EXCLUDED.message_id, updated_at = NOW()
+  `, [channel.id, sent.id]);
+
+  for (const messageId of previousIds) {
+    if (messageId === sent.id) continue;
+    const oldMessage = await channel.messages.fetch(messageId).catch(() => null);
+    if (oldMessage) await oldMessage.delete().catch(error => {
+      console.warn('[StaffRanking] Could not delete previous leaderboard:', messageId, error.message);
+    });
+  }
+  return sent;
+}
+
 async function startScheduler(client) {
   await ensureDiagnosticsTable();
   await ensureResetTable();
@@ -425,8 +480,7 @@ async function startScheduler(client) {
       console.error('Staff ranking schedule: configured channel is unavailable.');
       return;
     }
-    const components = await buildComponents(client, 'messages');
-    await channel.send({ components, flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
+    await publishRanking(channel, client, 'messages');
     await db.query('INSERT INTO nrr_staff_ranking_schedule(slot_key) VALUES($1) ON CONFLICT DO NOTHING', [slot]);
     console.log('Posted scheduled Staff Ranking for Saudi time slot ' + slot + '.');
   };
