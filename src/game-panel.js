@@ -16,7 +16,7 @@ const learningGames = require('./learning-games');
 
 const { hasFeatureAccess } = require('./access');
 
-const ACCESS_ROLES = new Set(['1102294809147879465','1113872898726297661','1566684707377119232','1566681749294030881']);
+const ACCESS_ROLES = new Set(['1102294809147879465','1113872898726297661','1566684707377119232','1566681749294030881','1180415723164668044','1314794053694394368']);
 const BANNER_URL = 'https://cdn.imageurlgenerator.com/uploads/88cfecef-4533-4b21-85f9-69aad6c2f089.jpg';
 const GAME_THUMBNAIL_URL = 'https://cdn.imageurlgenerator.com/uploads/88cfecef-4533-4b21-85f9-69aad6c2f089.jpg';
 const panelStartedGames = new Map();
