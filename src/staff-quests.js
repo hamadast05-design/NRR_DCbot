@@ -64,10 +64,36 @@ async function sendDailyNotification(guild,member,quests,day){
 }
 async function showNotificationSettings(i){return i.reply(v2(notificationSettingsPanel(await getNotificationPreference(i.guildId,i.user.id)),true));}
 async function updateNotificationPreference(i,g,p){await setNotificationPreference(g,i.user.id,p);if(i.inGuild())return i.reply({content:'◈ Notification preference saved: **'+preferenceLabels[p]+'**. This applies to future daily quest notifications.',ephemeral:true,allowedMentions:{parse:[]}});const embed=EmbedBuilder.from(i.message.embeds[0]);embed.setFooter({text:preferenceLabels[p]+' • Daily reset <t:'+resetTimestamp(dayKey())+':R>'});return i.update({embeds:[embed],components:i.message.components,allowedMentions:{parse:[]}});}
+const auditColors={quest_created:0x2ecc71,submission_approved:0x2ecc71,quest_edited:0xf1c40f,quest_toggled:0xf1c40f,quest_deleted:0xe74c3c,submission_rejected:0xe74c3c,submission_needs_evidence:0xe67e22,submission_created:0x3498db,payout_status_updated:0x3498db,payout_manual_retry:0x3498db};
+const auditTitle=action=>({quest_created:'Quest Created',quest_edited:'Quest Edited',quest_toggled:'Quest Availability Changed',quest_deleted:'Quest Deleted',submission_created:'Submission Received',submission_approved:'Submission Approved',submission_rejected:'Submission Rejected',submission_needs_evidence:'More Evidence Requested',payout_status_updated:'Payout Status Updated',payout_manual_retry:'Manual Payout Retry'}[action]||String(action).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()));
+const auditValue=value=>value===null||value===undefined||value===''?'—':typeof value==='object'?JSON.stringify(value):String(value);
 const audit = async (guildId,actor,action,details) => {
-  await db.query('INSERT INTO staff_quest_audit_logs(guild_id,actor_id,action,details) VALUES($1,$2,$3,$4::jsonb)',[guildId,actor,action,JSON.stringify(details||{})]);
-  const guild=client?.guilds.cache.get(guildId), channel=await guild?.channels.fetch(CHANNELS.audit).catch(()=>null);
-  if(channel?.send) await channel.send({content:'🧾 **Staff Quests Audit**\n**Action:** '+action+'\n**Actor:** <@'+actor+'>\n**Details:** '+JSON.stringify(details||{}).slice(0,1200),allowedMentions:{parse:[]}}).catch(()=>{});
+ details=details||{};
+ await db.query('INSERT INTO staff_quest_audit_logs(guild_id,actor_id,action,details) VALUES($1,$2,$3,$4::jsonb)',[guildId,actor,action,JSON.stringify(details)]);
+ const guild=client?.guilds.cache.get(guildId),channel=await guild?.channels.fetch(CHANNELS.audit).catch(()=>null);if(!channel?.send)return;
+ const embed=new EmbedBuilder().setColor(auditColors[action]||0x3498db).setTitle('Staff Quests • '+auditTitle(action)).setDescription('**Actor:** <@'+actor+'>').setTimestamp(new Date());
+ const fields=[];
+ if(action==='quest_edited'&&details.before&&details.after){
+  for(const key of new Set([...Object.keys(details.before),...Object.keys(details.after)])){
+   const before=details.before[key],after=details.after[key];if(JSON.stringify(before)===JSON.stringify(after))continue;
+   const label=({name:'Name',description:'Description',reward:'Reward',enabled:'Enabled'}[key]||key);
+   fields.push({name:label,value:auditValue(before)+' → '+auditValue(after),inline:false});
+  }
+  if(details.questId)fields.push({name:'Quest ID',value:String(details.questId),inline:true});
+ }else{
+  for(const [key,value] of Object.entries(details)){
+   if(key==='before'||key==='after')continue;
+   const label=key.replace(/([A-Z])/g,' $1').replace(/^./,c=>c.toUpperCase());
+   let formatted=auditValue(value);
+   if(key==='userId')formatted='<@'+value+'>\nID: '+value;
+   else if(key==='feedback')formatted=String(value).slice(0,1000);
+   else if(key==='imageName')formatted=String(value).slice(0,200);
+   fields.push({name:label,value:formatted.slice(0,1024),inline:['submissionId','questId','reward','status'].includes(key)});
+  }
+ }
+ if(fields.length)embed.addFields(fields.slice(0,25));
+ embed.setFooter({text:'Actor ID: '+actor+(guild?.name?' • '+guild.name:'')});
+ await channel.send({embeds:[embed],allowedMentions:{parse:[]} }).catch(()=>{});
 };
 async function migrate(){
  await db.query(
