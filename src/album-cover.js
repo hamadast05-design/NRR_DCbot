@@ -151,6 +151,15 @@ async function migrate() {
     CREATE TABLE IF NOT EXISTS nrr_album_cover_posts (
       id BIGSERIAL PRIMARY KEY, schedule_date DATE NOT NULL, scheduled_minute INTEGER NOT NULL, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), UNIQUE(schedule_date, scheduled_minute)
     );
+    -- Upgrade installations where this table predates scheduled_minute.
+    ALTER TABLE nrr_album_cover_posts
+      ADD COLUMN IF NOT EXISTS scheduled_minute INTEGER;
+    UPDATE nrr_album_cover_posts
+      SET scheduled_minute = (EXTRACT(HOUR FROM sent_at) * 60 + EXTRACT(MINUTE FROM sent_at))::INTEGER
+      WHERE scheduled_minute IS NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_nrr_album_cover_posts_schedule_minute
+      ON nrr_album_cover_posts(schedule_date, scheduled_minute)
+      WHERE scheduled_minute IS NOT NULL;
     CREATE INDEX IF NOT EXISTS idx_nrr_album_cover_posts_date ON nrr_album_cover_posts(schedule_date, sent_at);
   `);
 }
