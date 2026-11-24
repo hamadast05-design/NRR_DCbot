@@ -115,11 +115,7 @@ function privatePanelPayload(channel, ownerId) {
 }
 
 async function sendPanel(client) {
-  const channel = await client.channels.fetch(CONTROL_CHANNEL_ID).catch(() => null);
-  if (!channel || typeof channel.send !== 'function') {
-    throw new Error('[VoiceHub] Configured VoiceHub channel is unavailable or does not support sending messages.');
-  }
-  return channel.send(panelPayload());
+  return ensurePanel(client);
 }
 
 let ensurePanelPromise = null;
@@ -151,16 +147,58 @@ async function ensurePanel(client) {
         throw new Error('[VoiceHub] Configured VoiceHub channel is unavailable or does not support sending messages.');
       }
 
-      // Reuse the existing bot-authored panel after restarts instead of
-      // publishing a fresh copy every time the client becomes ready.
+      // A durable message ID prevents reposting even when the panel is older
+      // than the recent-message scan window.
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS voicehub_control_panel (
+          channel_id TEXT PRIMARY KEY,
+          message_id TEXT NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+      const saved = await db.query(
+        'SELECT message_id FROM voicehub_control_panel WHERE channel_id = $1',
+        [CONTROL_CHANNEL_ID]
+      );
+      if (saved.rows[0]) {
+        const storedPanel = await channel.messages.fetch(saved.rows[0].message_id).catch(() => null);
+        if (storedPanel && isVoiceHubPanel(storedPanel, client.user.id)) {
+          console.log(`[VoiceHub] Reusing stored control panel (${storedPanel.id}).`);
+          return storedPanel;
+        }
+        await db.query('DELETE FROM voicehub_control_panel WHERE channel_id = $1', [CONTROL_CHANNEL_ID]);
+      }
+
       const recentMessages = await channel.messages.fetch({ limit: 100 });
-      const existingPanel = recentMessages.find(message => isVoiceHubPanel(message, client.user.id));
-      if (existingPanel) {
-        console.log(`[VoiceHub] Existing control panel found (${existingPanel.id}); skipping duplicate post.`);
+      const existingPanels = [...recentMessages.values()]
+        .filter(message => isVoiceHubPanel(message, client.user.id))
+        .sort((a, b) => b.createdTimestamp - a.createdTimestamp);
+
+      if (existingPanels.length) {
+        const existingPanel = existingPanels[0];
+        await db.query(`
+          INSERT INTO voicehub_control_panel(channel_id, message_id, updated_at)
+          VALUES($1,$2,NOW())
+          ON CONFLICT(channel_id)
+          DO UPDATE SET message_id = EXCLUDED.message_id, updated_at = NOW()
+        `, [CONTROL_CHANNEL_ID, existingPanel.id]);
+
+        for (const duplicate of existingPanels.slice(1)) {
+          await duplicate.delete().catch(error => {
+            console.warn('[VoiceHub] Could not remove duplicate control panel:', duplicate.id, error.message);
+          });
+        }
+        console.log(`[VoiceHub] Existing control panel found (${existingPanel.id}); saved and deduplicated.`);
         return existingPanel;
       }
 
       const panel = await channel.send(panelPayload());
+      await db.query(`
+        INSERT INTO voicehub_control_panel(channel_id, message_id, updated_at)
+        VALUES($1,$2,NOW())
+        ON CONFLICT(channel_id)
+        DO UPDATE SET message_id = EXCLUDED.message_id, updated_at = NOW()
+      `, [CONTROL_CHANNEL_ID, panel.id]);
       console.log(`[VoiceHub] Control panel posted (${panel.id}).`);
       return panel;
     } catch (error) {
