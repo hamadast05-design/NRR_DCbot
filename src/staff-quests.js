@@ -239,7 +239,7 @@ async function approve(i,id,feedback=null){
  let payoutStatus='pending';
  try{const result=await crust.awardStaffPoints({discordUserId:q.user_id,amount:Number(q.reward),reason:'Daily Community Staff Quest: '+q.quest_name,referenceId:ref});payoutStatus=(await crust.getAwardStatus(ref))?.status||result.status||'pending';await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE id=$1',[id,payoutStatus]);await audit(q.guild_id,i.user.id,'payout_status_updated',{submissionId:id,referenceId:ref,status:payoutStatus});}
  catch(e){console.error('[Staff Quests] Crust award request failed:',e.message);await db.query("UPDATE staff_quest_submissions SET payout_status='pending' WHERE id=$1",[id]);}
- await updateReviewMessage(id,'approved',i.user.id,feedback,{payoutStatus});
+ await updateReviewMessage(id,'approved',i.user.id,feedback,{payoutStatus}).catch(e=>console.warn('[Staff Quests] Could not update approved review message:',e.message));
  const guild=client.guilds.cache.get(q.guild_id),user=await client.users.fetch(q.user_id).catch(()=>null);if(user)await user.send(decisionDm({status:'approved',id,questName:q.quest_name,reward:q.reward,feedback,guild,payoutStatus})).catch(()=>{});
  return i.editReply({content:'Approved. The review record has been updated and the Staff Points payout is '+payoutStatus+'.'});
 }
@@ -252,7 +252,7 @@ async function reject(i,id,feedback){
  await db.query("UPDATE staff_quest_assignments SET status='assigned',last_feedback=$2,updated_at=NOW() WHERE id=$1",[r.rows[0].assignment_id,f]);
  const a=(await db.query('SELECT guild_id,quest_name,reward FROM staff_quest_assignments WHERE id=$1',[r.rows[0].assignment_id])).rows[0];
  await audit(a.guild_id,i.user.id,'submission_rejected',{submissionId:id,userId:r.rows[0].submitter_id,quest:a.quest_name,feedback:f});
- await updateReviewMessage(id,'rejected',i.user.id,f);
+ await updateReviewMessage(id,'rejected',i.user.id,f).catch(e=>console.warn('[Staff Quests] Could not update rejected review message:',e.message));
  const guild=client.guilds.cache.get(a.guild_id),user=await client.users.fetch(r.rows[0].submitter_id).catch(()=>null);if(user)await user.send(decisionDm({status:'rejected',id,questName:a.quest_name,reward:a.reward,feedback:f,guild})).catch(()=>{});
  return i.editReply({content:'Rejected. Feedback recorded; resubmission is enabled.'});
 }
@@ -265,7 +265,7 @@ async function requestMoreEvidence(i,id,feedback){
  await db.query("UPDATE staff_quest_assignments SET status='assigned',last_feedback=$2,updated_at=NOW() WHERE id=$1",[r.rows[0].assignment_id,f]);
  const a=(await db.query('SELECT guild_id,quest_name,reward FROM staff_quest_assignments WHERE id=$1',[r.rows[0].assignment_id])).rows[0];
  await audit(a.guild_id,i.user.id,'submission_needs_evidence',{submissionId:id,userId:r.rows[0].submitter_id,quest:a.quest_name,feedback:f});
- await updateReviewMessage(id,'needs_evidence',i.user.id,f);
+ await updateReviewMessage(id,'needs_evidence',i.user.id,f).catch(e=>console.warn('[Staff Quests] Could not update evidence-request review message:',e.message));
  const guild=client.guilds.cache.get(a.guild_id),user=await client.users.fetch(r.rows[0].submitter_id).catch(()=>null);if(user)await user.send(decisionDm({status:'needs_evidence',id,questName:a.quest_name,reward:a.reward,feedback:f,guild})).catch(()=>{});
  return i.editReply({content:'Additional evidence requested. The staff member can now submit an updated image.'});
 }
@@ -320,7 +320,7 @@ async function handle(i){
  if(i.isButton()&&i.customId.startsWith('staffquest:submit:')){const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:submit-modal:'+id).setTitle('Submit Quest Evidence');const upload=new FileUploadBuilder().setCustomId('submission_image').setMinValues(1).setMaxValues(1).setRequired(true);m.addLabelComponents(new LabelBuilder().setLabel('Upload your evidence image').setDescription('Upload one image showing your completed quest.').setFileUploadComponent(upload));return i.showModal(m);}
  if(i.isModalSubmit()&&i.customId.startsWith('staffquest:submit-modal:'))return submit(i,i.customId.split(':')[2]);
  if(i.isButton()&&i.customId.startsWith('staffquest:approve:'))return approve(i,i.customId.split(':')[2]);
- if(i.isButton()&&i.customId.startsWith('staffquest:approve-note:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:approve-note-modal:'+id).setTitle('Approve with reviewer note');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('feedback').setLabel('Reviewer note (optional)').setStyle(TextInputStyle.Paragraph).setRequired(false).setMaxLength(1000)));return i.showModal(m);}
+ if(i.isButton()&&i.customId.startsWith('staffquest:approve-note:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:approve-note-modal:'+id).setTitle('Approve with reviewer note');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('feedback').setLabel('Reviewer note').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1000)));return i.showModal(m);}
  if(i.isButton()&&i.customId.startsWith('staffquest:reject:'))return reject(i,i.customId.split(':')[2],null);
  if(i.isButton()&&i.customId.startsWith('staffquest:reject-note:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:reject-note-modal:'+id).setTitle('Reject with reviewer feedback');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('feedback').setLabel('Required reviewer feedback').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1000)));return i.showModal(m);}
  if(i.isButton()&&i.customId.startsWith('staffquest:request-evidence:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:request-evidence-modal:'+id).setTitle('Request additional evidence');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('feedback').setLabel('What additional evidence is needed?').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1000)));return i.showModal(m);}
