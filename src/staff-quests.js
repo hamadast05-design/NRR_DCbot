@@ -77,7 +77,7 @@ const audit = async (guildId,actor,action,details) => {
   for(const key of new Set([...Object.keys(details.before),...Object.keys(details.after)])){
    const before=details.before[key],after=details.after[key];if(JSON.stringify(before)===JSON.stringify(after))continue;
    const label=({name:'Name',description:'Description',reward:'Reward',enabled:'Enabled'}[key]||key);
-   fields.push({name:label,value:auditValue(before)+' → '+auditValue(after),inline:false});
+   fields.push({name:label,value:(auditValue(before)+' → '+auditValue(after)).slice(0,1024),inline:false});
   }
   if(details.questId)fields.push({name:'Quest ID',value:String(details.questId),inline:true});
  }else{
