@@ -188,30 +188,46 @@ async function tick(){
 async function postReview(id){
  const r=await db.query('SELECT s.*,a.guild_id,a.quest_name,a.quest_description,a.reward FROM staff_quest_submissions s JOIN staff_quest_assignments a ON a.id=s.assignment_id WHERE s.id=$1',[id]);const q=r.rows[0];if(!q)return;
  const g=client.guilds.cache.get(q.guild_id),ch=await g?.channels.fetch(CHANNELS.submissions).catch(()=>null);if(!ch?.send)throw new Error('Submission channel unavailable.');
- const embed=new EmbedBuilder().setColor(0x3498db).setTitle('Quest Submission #'+id).setDescription('**Status:** Pending Review\n**Staff:** <@'+q.submitter_id+'>\n**Quest:** '+q.quest_name+'\n**Reward:** '+q.reward+' SP\n**Description:** '+q.quest_description+'\n**Submitted:** <t:'+Math.floor(new Date(q.submitted_at).getTime()/1000)+':F>').setImage(q.evidence).setFooter({text:'Submission ID: '+id+' • Awaiting administrator review'}).setTimestamp(new Date(q.submitted_at));
- const actions=new ActionRowBuilder().addComponents(btn('staffquest:approve:'+id,'Approve',ButtonStyle.Success),btn('staffquest:approve-note:'+id,'Approve with Note',ButtonStyle.Success),btn('staffquest:reject:'+id,'Reject',ButtonStyle.Danger),btn('staffquest:reject-note:'+id,'Reject with Note',ButtonStyle.Danger),btn('staffquest:request-evidence:'+id,'Request Evidence',ButtonStyle.Secondary));
+ const icon=g?.iconURL?.({size:64});
+ const embed=new EmbedBuilder().setColor(0x3498db).setAuthor({name:'◈ QUEST SUBMISSION #'+id,...(icon?{iconURL:icon}:{})}).setTitle(q.quest_name).setDescription('▪ **PENDING REVIEW**').addFields(
+  {name:'▪ STAFF MEMBER',value:'<@'+q.submitter_id+'>',inline:true},
+  {name:'▪ QUEST',value:q.quest_name,inline:true},
+  {name:'▪ REWARD',value:'`'+q.reward+' SP`',inline:true},
+  {name:'▪ QUEST CRITERIA',value:q.quest_description,inline:false}
+ ).setImage(q.evidence).setFooter({text:'NR:R • Daily Community Staff Quests'}).setTimestamp(new Date(q.submitted_at));
+ const actions=new ActionRowBuilder().addComponents(
+  btn('staffquest:review-approve:'+id,'Approve',ButtonStyle.Success),
+  btn('staffquest:review-reject:'+id,'Reject',ButtonStyle.Danger),
+  btn('staffquest:request-evidence:'+id,'Request Evidence',ButtonStyle.Secondary)
+ );
  const m=await ch.send({embeds:[embed],components:[actions],allowedMentions:{parse:[]}});
  await db.query('UPDATE staff_quest_submissions SET review_channel_id=$2,review_message_id=$3 WHERE id=$1',[id,ch.id,m.id]);
 }
 async function updateReviewMessage(id,status,reviewerId,feedback,extra){
  const r=await db.query('SELECT s.*,a.guild_id,a.quest_name,a.reward FROM staff_quest_submissions s JOIN staff_quest_assignments a ON a.id=s.assignment_id WHERE s.id=$1',[id]);const q=r.rows[0];if(!q?.review_message_id)return;
  const guild=client.guilds.cache.get(q.guild_id),channel=await guild?.channels.fetch(q.review_channel_id||CHANNELS.submissions).catch(()=>null),message=await channel?.messages.fetch(q.review_message_id).catch(()=>null);if(!message)return;
- const state=({approved:{title:'Submission Approved',color:0x2ecc71},rejected:{title:'Submission Rejected',color:0xe74c3c},needs_evidence:{title:'More Evidence Requested',color:0xe67e22}})[status]||{title:'Submission Reviewed',color:0x3498db};
- const embed=EmbedBuilder.from(message.embeds[0]).setTitle(state.title+' • #'+id).setColor(state.color);
+ const state=({approved:{title:'✓ APPROVED',color:0x2ecc71},rejected:{title:'✕ REJECTED',color:0xe74c3c},needs_evidence:{title:'◒ ADDITIONAL EVIDENCE REQUESTED',color:0xf59e0b}})[status]||{title:'REVIEWED',color:0x3498db};
+ const embed=EmbedBuilder.from(message.embeds[0]).setDescription('▪ **'+state.title+'**').setColor(state.color);
  const fields=(message.embeds[0].fields||[]).filter(f=>!['Review Result','Reviewed By','Reviewer Feedback','Payout Status'].includes(f.name));
- fields.push({name:'Review Result',value:state.title,inline:true},{name:'Reviewed By',value:'<@'+reviewerId+'>',inline:true});
- if(feedback)fields.push({name:'Reviewer Feedback',value:String(feedback).slice(0,1024),inline:false});
- if(extra?.payoutStatus)fields.push({name:'Payout Status',value:String(extra.payoutStatus),inline:true});
- embed.setFields(fields).setFooter({text:'Submission ID: '+id+' • Reviewer ID: '+reviewerId}).setTimestamp(new Date());
+ fields.push({name:'▪ REVIEWED BY',value:'<@'+reviewerId+'>',inline:true});
+ if(feedback)fields.push({name:'▪ REVIEWER FEEDBACK',value:String(feedback).slice(0,1024),inline:false});
+ if(extra?.payoutStatus)fields.push({name:'▪ PAYOUT STATUS',value:'`'+String(extra.payoutStatus)+'`',inline:true});
+ embed.setFields(fields).setFooter({text:'NR:R • Daily Community Staff Quests'}).setTimestamp(new Date());
  await message.edit({embeds:[embed],components:[],allowedMentions:{parse:[]}});
 }
-function decisionDm({status,id,questName,reward,feedback,guild,payoutStatus}){
- const approved=status==='approved',requested=status==='needs_evidence',color=approved?0x2ecc71:requested?0xe67e22:0xe74c3c;
- const heading=approved?'Submission Approved':requested?'Additional Evidence Requested':'Submission Rejected';
- const detail=approved?'Your quest submission has been approved.':requested?'An administrator needs additional evidence before this submission can be approved.':'Your quest submission was not approved. You may revise it and submit again.';
- const embed=new EmbedBuilder().setColor(color).setTitle(heading).setDescription('### '+heading+'\n-# Daily Community Staff Quests\n\n**Quest**\n'+questName+'\n**Reward**\n'+reward+' Staff Points (SP)'+(payoutStatus?'\n**Payout status**\n'+payoutStatus:'')+'\n\n**Update**\n'+detail).addFields({name:'Reviewer Feedback',value:feedback?'> '+String(feedback).slice(0,1000):'No additional note was provided.',inline:false}).setFooter({text:'Submission #'+id+' • '+(guild?.name||'NR:R Staff Quests')}).setTimestamp(new Date());
+function decisionDm({status,id,assignmentId,questName,reward,feedback,guild,payoutStatus}){
+ const approved=status==='approved',requested=status==='needs_evidence';
+ const color=approved?0x2ecc71:requested?0xf59e0b:0xef4444;
+ const heading=approved?'✓ Submission Approved':requested?'◒ Additional Evidence Requested':'✕ Submission Rejected';
+ const icon=guild?.iconURL?.({size:64});
+ const embed=new EmbedBuilder().setColor(color).setAuthor({name:'◈ DAILY COMMUNITY STAFF QUESTS',...(icon?{iconURL:icon}:{})}).setTitle(heading).addFields(
+  {name:'▪ QUEST',value:questName,inline:true},
+  {name:'▪ REWARD',value:'`'+reward+' SP`',inline:true},
+  ...(payoutStatus?[{name:'▪ PAYOUT STATUS',value:'`'+payoutStatus+'`',inline:true}]:[]),
+  {name:'▪ REVIEWER FEEDBACK',value:feedback?'> '+String(feedback).slice(0,1000):'No additional note was provided.',inline:false}
+ ).setFooter({text:'NR:R • Submission #'+id}).setTimestamp(new Date());
  const payload={embeds:[embed],allowedMentions:{parse:[]}};
- if(!approved&&guild){payload.components=[new ActionRowBuilder().addComponents(new ButtonBuilder().setLabel('Open Quest Panel').setStyle(ButtonStyle.Link).setURL('https://discord.com/channels/'+guild.id+'/'+CHANNELS.panel))];}
+ if(!approved&&guild&&assignmentId){payload.components=[new ActionRowBuilder().addComponents(btn('staffquest:resubmit:'+guild.id+':'+assignmentId,'Resubmit Evidence',ButtonStyle.Primary))];}
  return payload;
 }
 async function submit(i,id){
@@ -228,8 +244,9 @@ async function submit(i,id){
   const claim=await db.query("UPDATE staff_quest_assignments SET status='pending_review',last_feedback=NULL,updated_at=NOW() WHERE id=$1 AND guild_id=$2 AND user_id=$3 AND quest_day=$4 AND status='assigned' RETURNING *",[id,guildId,i.user.id,dayKey()]);
   const a=claim.rows[0];if(!a)return i.editReply({content:'This quest is no longer available for submission.'});claimed=true;
   const inserted=await db.query('INSERT INTO staff_quest_submissions(assignment_id,submitter_id,evidence) VALUES($1,$2,$3) RETURNING id',[id,i.user.id,attachment.url]);submissionId=inserted.rows[0].id;
-  try{await postReview(submissionId);}catch(error){console.error('[Staff Quests] Submission saved; review post failed and will be recovered:',{submissionId,assignmentId:id,guildId,userId:i.user.id,code:error?.code,status:error?.status,message:error?.message,stack:error?.stack});const updated=await getMine(guildId,i.user.id,dayKey());const recovery=progress(updated,dayKey());recovery.addTextDisplayComponents(text('Your image was saved. The review message could not be posted immediately; the recovery worker will retry it.'));return i.editReply(v2(recovery,true));}
-  await audit(guildId,i.user.id,'submission_created',{submissionId,quest:a.quest_name,imageName:attachment.name}).catch(error=>console.error('[Staff Quests] Submission audit logging failed:',error.message));try{const updated=await getMine(guildId,i.user.id,dayKey());return i.editReply(v2(progress(updated,dayKey()),true));}catch(error){console.warn('[Staff Quests] Submission succeeded but progress refresh failed:',error.message);return i.editReply({content:'Your image was submitted successfully and sent for administrator review.'});}
+  try{await postReview(submissionId);}catch(error){console.error('[Staff Quests] Submission saved; review post failed and will be recovered:',{submissionId,assignmentId:id,guildId,userId:i.user.id,code:error?.code,status:error?.status,message:error?.message,stack:error?.stack});return i.editReply({content:'◈ **Your submission was saved.** The review message could not be posted immediately, so the recovery worker will retry it automatically. You will receive a DM when it has been reviewed.',components:[new ActionRowBuilder().addComponents(btn('staffquest:mine:'+guildId,'View My Quests',ButtonStyle.Secondary))],allowedMentions:{parse:[]}});}
+  await audit(guildId,i.user.id,'submission_created',{submissionId,quest:a.quest_name,imageName:attachment.name}).catch(error=>console.error('[Staff Quests] Submission audit logging failed:',error.message));
+  return i.editReply({content:'◈ **Submission sent for review.** Your evidence has been delivered to the administrators. You will receive a DM when it has been reviewed.',components:[new ActionRowBuilder().addComponents(btn('staffquest:mine:'+guildId,'View My Quests',ButtonStyle.Secondary))],allowedMentions:{parse:[]}});
  }catch(error){console.error('[Staff Quests] Image evidence submission failed:',{submissionId,assignmentId:id,guildId:guildId||i.guildId,userId:i.user.id,claimed,code:error?.code,status:error?.status,message:error?.message,stack:error?.stack});if(claimed&&!submissionId)await db.query("UPDATE staff_quest_assignments SET status='assigned',updated_at=NOW() WHERE id=$1 AND status='pending_review'",[id]).catch(()=>{});return i.editReply({content:'We could not finish processing your image. Your quest has been kept safe; please try again shortly or contact an administrator if the problem continues.'}).catch(()=>{});}
 }
 async function approve(i,id,feedback=null){
@@ -245,7 +262,7 @@ async function approve(i,id,feedback=null){
  try{const result=await crust.awardStaffPoints({discordUserId:q.user_id,amount:Number(q.reward),reason:'Daily Community Staff Quest: '+q.quest_name,referenceId:ref});payoutStatus=(await crust.getAwardStatus(ref))?.status||result.status||'pending';await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE id=$1',[id,payoutStatus]);await audit(q.guild_id,i.user.id,'payout_status_updated',{submissionId:id,referenceId:ref,status:payoutStatus});}
  catch(e){console.error('[Staff Quests] Crust award request failed:',e.message);await db.query("UPDATE staff_quest_submissions SET payout_status='pending' WHERE id=$1",[id]);}
  await updateReviewMessage(id,'approved',i.user.id,feedback,{payoutStatus}).catch(e=>console.warn('[Staff Quests] Could not update approved review message:',e.message));
- const guild=client.guilds.cache.get(q.guild_id),user=await client.users.fetch(q.user_id).catch(()=>null);if(user)await user.send(decisionDm({status:'approved',id,questName:q.quest_name,reward:q.reward,feedback,guild,payoutStatus})).catch(()=>{});
+ const guild=client.guilds.cache.get(q.guild_id),user=await client.users.fetch(q.user_id).catch(()=>null);if(user)await user.send(decisionDm({status:'approved',id,assignmentId:q.assignment_id,questName:q.quest_name,reward:q.reward,feedback,guild,payoutStatus})).catch(()=>{});
  return i.editReply({content:'Approved. The review record has been updated and the Staff Points payout is '+payoutStatus+'.'});
 }
 async function reject(i,id,feedback){
@@ -258,7 +275,7 @@ async function reject(i,id,feedback){
  const a=(await db.query('SELECT guild_id,quest_name,reward FROM staff_quest_assignments WHERE id=$1',[r.rows[0].assignment_id])).rows[0];
  await audit(a.guild_id,i.user.id,'submission_rejected',{submissionId:id,userId:r.rows[0].submitter_id,quest:a.quest_name,feedback:f});
  await updateReviewMessage(id,'rejected',i.user.id,f).catch(e=>console.warn('[Staff Quests] Could not update rejected review message:',e.message));
- const guild=client.guilds.cache.get(a.guild_id),user=await client.users.fetch(r.rows[0].submitter_id).catch(()=>null);if(user)await user.send(decisionDm({status:'rejected',id,questName:a.quest_name,reward:a.reward,feedback:f,guild})).catch(()=>{});
+ const guild=client.guilds.cache.get(a.guild_id),user=await client.users.fetch(r.rows[0].submitter_id).catch(()=>null);if(user)await user.send(decisionDm({status:'rejected',id,assignmentId:r.rows[0].assignment_id,questName:a.quest_name,reward:a.reward,feedback:f,guild})).catch(()=>{});
  return i.editReply({content:'Rejected. Feedback recorded; resubmission is enabled.'});
 }
 async function requestMoreEvidence(i,id,feedback){
@@ -271,7 +288,7 @@ async function requestMoreEvidence(i,id,feedback){
  const a=(await db.query('SELECT guild_id,quest_name,reward FROM staff_quest_assignments WHERE id=$1',[r.rows[0].assignment_id])).rows[0];
  await audit(a.guild_id,i.user.id,'submission_needs_evidence',{submissionId:id,userId:r.rows[0].submitter_id,quest:a.quest_name,feedback:f});
  await updateReviewMessage(id,'needs_evidence',i.user.id,f).catch(e=>console.warn('[Staff Quests] Could not update evidence-request review message:',e.message));
- const guild=client.guilds.cache.get(a.guild_id),user=await client.users.fetch(r.rows[0].submitter_id).catch(()=>null);if(user)await user.send(decisionDm({status:'needs_evidence',id,questName:a.quest_name,reward:a.reward,feedback:f,guild})).catch(()=>{});
+ const guild=client.guilds.cache.get(a.guild_id),user=await client.users.fetch(r.rows[0].submitter_id).catch(()=>null);if(user)await user.send(decisionDm({status:'needs_evidence',id,assignmentId:r.rows[0].assignment_id,questName:a.quest_name,reward:a.reward,feedback:f,guild})).catch(()=>{});
  return i.editReply({content:'Additional evidence requested. The staff member can now submit an updated image.'});
 }
 async function adminPanel(i,page=0,update=false){
@@ -322,13 +339,24 @@ async function handle(i){
  if(i.isButton()&&i.customId.startsWith('staffquest:notify:')){
   const p=i.customId.split(':');return updateNotificationPreference(i,p[2],p[3]);
  }
- if(i.isButton()&&i.customId.startsWith('staffquest:submit:')){const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:submit-modal:'+id).setTitle('Submit Quest Evidence');const upload=new FileUploadBuilder().setCustomId('submission_image').setMinValues(1).setMaxValues(1).setRequired(true);m.addLabelComponents(new LabelBuilder().setLabel('Upload your evidence image').setDescription('Upload one image showing your completed quest.').setFileUploadComponent(upload));return i.showModal(m);}
+ if(i.isButton()&&(i.customId.startsWith('staffquest:submit:')||i.customId.startsWith('staffquest:resubmit:'))){
+  const p=i.customId.split(':'),isResubmit=p[1]==='resubmit',id=isResubmit?p[3]:p[2],guildId=isResubmit?p[2]:i.guildId;
+  if(isResubmit){const available=await db.query("SELECT 1 FROM staff_quest_assignments WHERE id=$1 AND guild_id=$2 AND user_id=$3 AND quest_day=$4 AND status='assigned'",[id,guildId,i.user.id,dayKey()]);if(!available.rowCount)return i.reply({content:'This quest is no longer available for resubmission. Open your current quests to check its status.',ephemeral:true});}
+  const m=new ModalBuilder().setCustomId('staffquest:submit-modal:'+id).setTitle(isResubmit?'Resubmit Quest Evidence':'Submit Quest Evidence');
+  const upload=new FileUploadBuilder().setCustomId('submission_image').setMinValues(1).setMaxValues(1).setRequired(true);
+  m.addLabelComponents(new LabelBuilder().setLabel('Upload your evidence image').setDescription('Upload one image showing your completed quest.').setFileUploadComponent(upload));
+  return i.showModal(m);
+ }
  if(i.isModalSubmit()&&i.customId.startsWith('staffquest:submit-modal:'))return submit(i,i.customId.split(':')[2]);
+ if(i.isButton()&&i.customId.startsWith('staffquest:review-approve:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:review-approve-modal:'+id).setTitle('Approve submission');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('feedback').setLabel('Reviewer note (optional)').setStyle(TextInputStyle.Paragraph).setRequired(false).setMaxLength(1000)));return i.showModal(m);}
+ if(i.isButton()&&i.customId.startsWith('staffquest:review-reject:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:review-reject-modal:'+id).setTitle('Reject submission');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('feedback').setLabel('Reviewer feedback (optional)').setStyle(TextInputStyle.Paragraph).setRequired(false).setMaxLength(1000)));return i.showModal(m);}
  if(i.isButton()&&i.customId.startsWith('staffquest:approve:'))return approve(i,i.customId.split(':')[2]);
  if(i.isButton()&&i.customId.startsWith('staffquest:approve-note:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:approve-note-modal:'+id).setTitle('Approve with reviewer note');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('feedback').setLabel('Reviewer note').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1000)));return i.showModal(m);}
  if(i.isButton()&&i.customId.startsWith('staffquest:reject:'))return reject(i,i.customId.split(':')[2],null);
  if(i.isButton()&&i.customId.startsWith('staffquest:reject-note:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:reject-note-modal:'+id).setTitle('Reject with reviewer feedback');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('feedback').setLabel('Required reviewer feedback').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1000)));return i.showModal(m);}
  if(i.isButton()&&i.customId.startsWith('staffquest:request-evidence:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:request-evidence-modal:'+id).setTitle('Request additional evidence');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('feedback').setLabel('What additional evidence is needed?').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1000)));return i.showModal(m);}
+ if(i.isModalSubmit()&&i.customId.startsWith('staffquest:review-approve-modal:'))return approve(i,i.customId.split(':')[2],i.fields.getTextInputValue('feedback').trim()||null);
+ if(i.isModalSubmit()&&i.customId.startsWith('staffquest:review-reject-modal:'))return reject(i,i.customId.split(':')[2],i.fields.getTextInputValue('feedback').trim()||null);
  if(i.isModalSubmit()&&i.customId.startsWith('staffquest:approve-note-modal:'))return approve(i,i.customId.split(':')[2],i.fields.getTextInputValue('feedback').trim()||null);
  if(i.isModalSubmit()&&i.customId.startsWith('staffquest:reject-note-modal:'))return reject(i,i.customId.split(':')[2],i.fields.getTextInputValue('feedback').trim());
  if(i.isModalSubmit()&&i.customId.startsWith('staffquest:request-evidence-modal:'))return requestMoreEvidence(i,i.customId.split(':')[2],i.fields.getTextInputValue('feedback').trim());
