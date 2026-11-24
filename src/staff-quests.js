@@ -64,8 +64,8 @@ async function sendDailyNotification(guild,member,quests,day){
 }
 async function showNotificationSettings(i){return i.reply(v2(notificationSettingsPanel(await getNotificationPreference(i.guildId,i.user.id)),true));}
 async function updateNotificationPreference(i,g,p){await setNotificationPreference(g,i.user.id,p);if(i.inGuild())return i.reply({content:'◈ Notification preference saved: **'+preferenceLabels[p]+'**. This applies to future daily quest notifications.',ephemeral:true,allowedMentions:{parse:[]}});const embed=EmbedBuilder.from(i.message.embeds[0]);embed.setFooter({text:preferenceLabels[p]+' • Daily reset <t:'+resetTimestamp(dayKey())+':R>'});return i.update({embeds:[embed],components:i.message.components,allowedMentions:{parse:[]}});}
-const auditColors={quest_created:0x2ecc71,submission_approved:0x2ecc71,quest_edited:0xf1c40f,quest_toggled:0xf1c40f,quest_deleted:0xe74c3c,submission_rejected:0xe74c3c,submission_needs_evidence:0xe67e22,submission_created:0x3498db,payout_status_updated:0x3498db,payout_manual_retry:0x3498db};
-const auditTitle=action=>({quest_created:'Quest Created',quest_edited:'Quest Edited',quest_toggled:'Quest Availability Changed',quest_deleted:'Quest Deleted',submission_created:'Submission Received',submission_approved:'Submission Approved',submission_rejected:'Submission Rejected',submission_needs_evidence:'More Evidence Requested',payout_status_updated:'Payout Status Updated',payout_manual_retry:'Manual Payout Retry'}[action]||String(action).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()));
+const auditColors={staff_break_started:0x3498db,staff_break_ended:0x2ecc71,quest_created:0x2ecc71,submission_approved:0x2ecc71,quest_edited:0xf1c40f,quest_toggled:0xf1c40f,quest_deleted:0xe74c3c,submission_rejected:0xe74c3c,submission_needs_evidence:0xe67e22,submission_created:0x3498db,payout_status_updated:0x3498db,payout_manual_retry:0x3498db};
+const auditTitle=action=>({staff_break_started:'Staff Break Started',staff_break_ended:'Staff Break Ended',quest_created:'Quest Created',quest_edited:'Quest Edited',quest_toggled:'Quest Availability Changed',quest_deleted:'Quest Deleted',submission_created:'Submission Received',submission_approved:'Submission Approved',submission_rejected:'Submission Rejected',submission_needs_evidence:'More Evidence Requested',payout_status_updated:'Payout Status Updated',payout_manual_retry:'Manual Payout Retry'}[action]||String(action).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()));
 const auditValue=value=>value===null||value===undefined||value===''?'—':typeof value==='object'?JSON.stringify(value):String(value);
 const audit = async (guildId,actor,action,details) => {
  details=details||{};
@@ -109,7 +109,9 @@ async function migrate(){
  'CREATE TABLE IF NOT EXISTS staff_quest_audit_logs(id BIGSERIAL PRIMARY KEY,guild_id TEXT NOT NULL,actor_id TEXT NOT NULL,action TEXT NOT NULL,details JSONB NOT NULL DEFAULT \'{}\'::jsonb,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());'+
  'CREATE TABLE IF NOT EXISTS staff_quest_settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);'+
  'CREATE TABLE IF NOT EXISTS staff_quest_notification_preferences(guild_id TEXT NOT NULL,user_id TEXT NOT NULL,preference TEXT NOT NULL DEFAULT \'dm\' CHECK(preference IN (\'dm\',\'none\',\'ping\')),updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),PRIMARY KEY(guild_id,user_id));'+
- 'CREATE TABLE IF NOT EXISTS staff_quest_notification_deliveries(guild_id TEXT NOT NULL,quest_day DATE NOT NULL,user_id TEXT NOT NULL,status TEXT NOT NULL DEFAULT \'sending\' CHECK(status IN (\'sending\',\'sent\',\'failed\')),channel_id TEXT,message_id TEXT,delivered_at TIMESTAMPTZ,updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),PRIMARY KEY(guild_id,quest_day,user_id));'
+ 'CREATE TABLE IF NOT EXISTS staff_quest_notification_deliveries(guild_id TEXT NOT NULL,quest_day DATE NOT NULL,user_id TEXT NOT NULL,status TEXT NOT NULL DEFAULT \'sending\' CHECK(status IN (\'sending\',\'sent\',\'failed\')),channel_id TEXT,message_id TEXT,delivered_at TIMESTAMPTZ,updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),PRIMARY KEY(guild_id,quest_day,user_id));'+
+ 'CREATE TABLE IF NOT EXISTS staff_quest_breaks(id BIGSERIAL PRIMARY KEY,guild_id TEXT NOT NULL,user_id TEXT NOT NULL,status TEXT NOT NULL DEFAULT \'active\' CHECK(status IN (\'active\',\'ended\')),starts_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),expires_at TIMESTAMPTZ NOT NULL,started_by TEXT NOT NULL,ended_at TIMESTAMPTZ,ended_by TEXT,end_reason TEXT,expiry_notified_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());'+
+ 'CREATE UNIQUE INDEX IF NOT EXISTS idx_staff_quest_breaks_active ON staff_quest_breaks(guild_id,user_id) WHERE status=\'active\';'
  );
  const n=await db.query('SELECT COUNT(*)::int AS n FROM staff_quest_catalogue');
  if(!n.rows[0].n) for(const q of seed) await db.query('INSERT INTO staff_quest_catalogue(name,description,reward,created_by) VALUES($1,$2,$3,$4)',[q[0],q[1],q[2],'system-seed']);
@@ -130,6 +132,7 @@ async function ensurePanel(guild){
  const msg=await ch.send(v2(mainPanel()));
  await db.query("INSERT INTO staff_quest_settings(key,value) VALUES('main_panel',$1) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value",[ch.id+':'+msg.id]);
 }
+async function activeBreak(guildId,userId){const r=await db.query("SELECT id,expires_at FROM staff_quest_breaks WHERE guild_id=$1 AND user_id=$2 AND status='active' AND expires_at>NOW() ORDER BY id DESC LIMIT 1",[guildId,userId]);return r.rows[0]||null;}
 async function getMine(guildId,userId,day){
  const r=await db.query('SELECT a.id,a.quest_name,a.quest_description,a.reward,a.status,a.last_feedback,(SELECT s.payout_status FROM staff_quest_submissions s WHERE s.assignment_id=a.id AND s.status=\'approved\' ORDER BY s.id DESC LIMIT 1) AS payout_status,(SELECT s.payout_reference_id FROM staff_quest_submissions s WHERE s.assignment_id=a.id AND s.status=\'approved\' ORDER BY s.id DESC LIMIT 1) AS payout_reference_id FROM staff_quest_assignments a WHERE a.guild_id=$1 AND a.user_id=$2 AND a.quest_day=$3 ORDER BY a.id',[guildId,userId,day]);
  for (const row of r.rows) { if (row.payout_reference_id) { const current=await crust.getAwardStatus(row.payout_reference_id).catch(()=>null); if (current && current.status!==row.payout_status) { row.payout_status=current.status; await db.query('UPDATE staff_quest_submissions SET payout_status=$2 WHERE payout_reference_id=$1',[row.payout_reference_id,current.status]); } } }
@@ -142,6 +145,7 @@ function progress(rows,day){
  c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));const earned=rows.filter(q=>q.payout_status==='awarded').reduce((sum,q)=>sum+Number(q.reward),0);c.addTextDisplayComponents(text('**Staff Points earned today: '+earned+' SP**'),text(rows.map(q=>q.quest_name+': '+(q.payout_status||'Not yet payable')).join('\n')));return c;
 }
 async function showMine(i,guildId=i.guildId){
+ const onBreak=await activeBreak(guildId,i.user.id);if(onBreak)return i.reply({content:'◈ You are currently on an approved staff break. Your daily quests and quest notifications are paused until <t:'+Math.floor(new Date(onBreak.expires_at).getTime()/1000)+':F>.',ephemeral:true,allowedMentions:{parse:[]}});
  const d=dayKey(),rs=await getMine(guildId,i.user.id,d);
  if(!rs.length)return i.reply({content:'You do not have quests assigned today. Daily assignments are generated at 00:00 Riyadh time for eligible NR:R Branch members.',ephemeral:true});
  return i.reply(v2(progress(rs,d),true));
@@ -153,7 +157,8 @@ async function generate(guild){
  if(active.rows.length<3)throw new Error('At least three enabled quests are required.');
  const run=await db.query('INSERT INTO staff_quest_daily_runs(guild_id,quest_day) VALUES($1,$2) ON CONFLICT DO NOTHING RETURNING quest_day',[guild.id,d]);
  if(!run.rowCount)return;
- const eligible=[...members.values()].filter(m=>!m.user.bot&&m.roles.cache.has(STAFF_ROLE));
+ const breaks=await db.query("SELECT user_id FROM staff_quest_breaks WHERE guild_id=$1 AND status='active' AND expires_at>NOW()",[guild.id]);const onBreak=new Set(breaks.rows.map(x=>x.user_id));
+ const eligible=[...members.values()].filter(m=>!m.user.bot&&m.roles.cache.has(STAFF_ROLE)&&!onBreak.has(m.id));
  try { for(const m of eligible){
   const pool=[...active.rows];for(let k=pool.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[pool[k],pool[j]]=[pool[j],pool[k]];}
   for(const q of pool.slice(0,3))await db.query('INSERT INTO staff_quest_assignments(guild_id,quest_day,user_id,quest_id,quest_name,quest_description,reward) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING',[guild.id,d,m.id,q.id,q.name,q.description,q.reward]);
@@ -182,7 +187,7 @@ async function tick(){
  try {
  const g=client?.guilds.cache.get(config.staffGuildId);if(!g)return;const d=dayKey();
  await db.query("UPDATE staff_quest_assignments SET status='expired',updated_at=NOW() WHERE guild_id=$1 AND quest_day<$2 AND status IN ('assigned','pending_review')",[g.id,d]);
- await generate(g);await recoverPendingReviews();await processPendingPayouts();await syncPayoutStatuses();
+ await expireStaffBreaks(g);await generate(g);await recoverPendingReviews();await processPendingPayouts();await syncPayoutStatuses();
  } finally { schedulerRunning=false; }
 }
 async function postReview(id){
@@ -298,7 +303,7 @@ async function adminPanel(i,page=0,update=false){
  c.addTextDisplayComponents(text('# 🛠️ Staff Quests Administration'),text('Create, edit, enable, disable, and delete catalogue entries. Changes affect future assignments; existing assignments keep their saved reward and description.'));
  c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
  c.addTextDisplayComponents(text('**CATALOGUE — PAGE '+(page+1)+'/'+(maxPage+1)+' • '+qs.length+' QUESTS**'),text(pageRows.map(q=>(q.enabled?'🟢':'⚪')+' **'+q.name+'** — '+q.reward+' SP\n'+q.description).join('\n\n').slice(0,3900)));
- const nav=[btn('staffquest:add','Create quest',ButtonStyle.Success)];if(page>0)nav.push(btn('staffquest:admin-page:'+(page-1),'Previous'));if(page<maxPage)nav.push(btn('staffquest:admin-page:'+(page+1),'Next'));c.addActionRowComponents(new ActionRowBuilder().addComponents(nav));
+ const nav=[btn('staffquest:add','Create quest',ButtonStyle.Success),btn('staffquest:breaks','Manage Staff Breaks',ButtonStyle.Secondary)];if(page>0)nav.push(btn('staffquest:admin-page:'+(page-1),'Previous'));if(page<maxPage)nav.push(btn('staffquest:admin-page:'+(page+1),'Next'));c.addActionRowComponents(new ActionRowBuilder().addComponents(nav));
  if(pageRows.length){const opts=pageRows.map(q=>({label:q.name.slice(0,100),value:q.id,description:q.reward+' SP • '+(q.enabled?'Enabled':'Disabled')}));
   c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:edit-select').setPlaceholder('Select a quest to edit').addOptions(opts)));
   c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:toggle-select').setPlaceholder('Select a quest to enable / disable').addOptions(opts)));
@@ -307,6 +312,44 @@ async function adminPanel(i,page=0,update=false){
  const failed=await db.query("SELECT id,payout_reference_id FROM staff_quest_submissions WHERE status='approved' AND payout_status='failed' AND payout_reference_id IS NOT NULL ORDER BY reviewed_at DESC LIMIT 25");
  if(failed.rows.length)c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:retry-select').setPlaceholder('Select a failed payout to retry').addOptions(failed.rows.map(x=>({label:'Submission #'+x.id,value:x.payout_reference_id,description:'Retry failed Crust payout'})))));
  return update?i.update(v2(c,true)):i.reply(v2(c,true));
+}
+async function breakPanel(i,update=false){
+ if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});
+ const guild=i.guild||client.guilds.cache.get(config.staffGuildId);if(!guild)return i.reply({content:'Staff server unavailable.',ephemeral:true});
+ const members=await guild.members.fetch(),staff=[...members.values()].filter(m=>!m.user.bot&&m.roles.cache.has(STAFF_ROLE)).sort((a,b)=>a.displayName.localeCompare(b.displayName));
+ const active=(await db.query("SELECT user_id,expires_at FROM staff_quest_breaks WHERE guild_id=$1 AND status='active' AND expires_at>NOW() ORDER BY expires_at ASC",[guild.id])).rows;
+ const c=new ContainerBuilder().setAccentColor(0x5865f2);
+ c.addTextDisplayComponents(text('# ◈ Staff Break Management'),text('Place eligible staff on a temporary break or end an active break early. Breaks pause new daily quests and notifications. Unsubmitted quests for today are cancelled immediately; submitted evidence remains reviewable.'));
+ c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
+ c.addTextDisplayComponents(text('**PUT A STAFF MEMBER ON BREAK**'),text('Select a staff member, then enter the duration in days.'));
+ if(staff.length)c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:break-member').setPlaceholder('Select a staff member').addOptions(staff.slice(0,25).map(m=>({label:m.displayName.slice(0,100),value:m.id,description:'Start a staff break'})))));
+ else c.addTextDisplayComponents(text('No eligible staff members were found.'));
+ c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
+ c.addTextDisplayComponents(text('**ACTIVE BREAKS — '+active.length+'**'),text(active.length?active.slice(0,25).map(b=>'<@'+b.user_id+'> — returns <t:'+Math.floor(new Date(b.expires_at).getTime()/1000)+':R>').join('\n'):'There are no active staff breaks.'));
+ if(active.length)c.addActionRowComponents(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId('staffquest:break-remove').setPlaceholder('Select a break to end early').addOptions(active.slice(0,25).map(b=>({label:(members.get(b.user_id)?.displayName||b.user_id).slice(0,100),value:b.user_id,description:'Ends '+new Date(b.expires_at).toLocaleDateString('en-GB',{timeZone:TZ})})))));
+ c.addActionRowComponents(new ActionRowBuilder().addComponents(btn('staffquest:admin-back','Back to Staff Quests',ButtonStyle.Secondary)));
+ return update?i.update(v2(c,true)):i.reply(v2(c,true));
+}
+async function startStaffBreak(guild,userId,days,actorId){
+ const result=await db.query("INSERT INTO staff_quest_breaks(guild_id,user_id,expires_at,started_by,status,starts_at,ended_at,ended_by,end_reason,expiry_notified_at) VALUES($1,$2,NOW()+($3::int * INTERVAL '1 day'),$4,'active',NOW(),NULL,NULL,NULL,NULL) ON CONFLICT (guild_id,user_id) WHERE status='active' DO UPDATE SET expires_at=EXCLUDED.expires_at,started_by=EXCLUDED.started_by,starts_at=NOW(),ended_at=NULL,ended_by=NULL,end_reason=NULL,expiry_notified_at=NULL RETURNING expires_at",[guild.id,userId,days,actorId]);
+ await db.query("UPDATE staff_quest_assignments SET status='expired',updated_at=NOW() WHERE guild_id=$1 AND user_id=$2 AND quest_day=$3 AND status='assigned'",[guild.id,userId,dayKey()]);
+ await audit(guild.id,actorId,'staff_break_started',{userId,days,expiresAt:result.rows[0].expires_at});
+ const user=await client.users.fetch(userId).catch(()=>null);if(user)await user.send({embeds:[new EmbedBuilder().setColor(0x3498db).setTitle('◈ Staff Break Approved').setDescription('An administrator has placed you on a staff break. Your daily quests and quest notifications are paused during this period. Any unsubmitted quests for today have been cancelled; existing submissions remain reviewable.').addFields({name:'DURATION',value:days+' day(s)',inline:true},{name:'RETURN DATE',value:'<t:'+Math.floor(new Date(result.rows[0].expires_at).getTime()/1000)+':F>',inline:false}).setFooter({text:'NR:R • Daily Community Staff Quests'}).setTimestamp(new Date())],allowedMentions:{parse:[]}}).catch(()=>{});
+ return result.rows[0];
+}
+async function endStaffBreak(guild,userId,actorId,reason='manual'){
+ const r=await db.query("UPDATE staff_quest_breaks SET status='ended',ended_at=NOW(),ended_by=$3,end_reason=$4,expiry_notified_at=NOW() WHERE guild_id=$1 AND user_id=$2 AND status='active' AND expires_at>NOW() RETURNING expires_at",[guild.id,userId,actorId,reason]);
+ if(!r.rowCount)return false;
+ await audit(guild.id,actorId,'staff_break_ended',{userId,reason,previousExpiry:r.rows[0].expires_at});
+ const user=await client.users.fetch(userId).catch(()=>null);if(user)await user.send({embeds:[new EmbedBuilder().setColor(0x2ecc71).setTitle('◈ Staff Break Ended').setDescription(reason==='expired'?'Your approved staff break has ended automatically. Daily quest eligibility will resume with the next daily assignment cycle.':'An administrator has ended your staff break early. Daily quest eligibility will resume with the next daily assignment cycle.').setFooter({text:'NR:R • Daily Community Staff Quests'}).setTimestamp(new Date())],allowedMentions:{parse:[]}}).catch(()=>{});
+ return true;
+}
+async function expireStaffBreaks(guild){
+ const due=await db.query("SELECT id,user_id FROM staff_quest_breaks WHERE guild_id=$1 AND status='active' AND expires_at<=NOW() AND expiry_notified_at IS NULL ORDER BY expires_at ASC LIMIT 50",[guild.id]);
+ for(const row of due.rows){
+  const done=await db.query("UPDATE staff_quest_breaks SET status='ended',ended_at=NOW(),ended_by='system',end_reason='expired',expiry_notified_at=NOW() WHERE id=$1 AND status='active' AND expiry_notified_at IS NULL RETURNING user_id",[row.id]);
+  if(done.rowCount){const user=await client.users.fetch(row.user_id).catch(()=>null);if(user)await user.send({embeds:[new EmbedBuilder().setColor(0x2ecc71).setTitle('◈ Staff Break Ended').setDescription('Your approved staff break has ended automatically. Daily quest eligibility will resume with the next daily assignment cycle.').setFooter({text:'NR:R • Daily Community Staff Quests'}).setTimestamp(new Date())],allowedMentions:{parse:[]}}).catch(()=>{});await audit(guild.id,'system','staff_break_ended',{userId:row.user_id,reason:'expired'}).catch(()=>{});}
+ }
 }
 async function showHistory(i,target){
  const result=await db.query('SELECT a.quest_day,a.quest_name,a.reward,a.status,s.status AS submission_status,s.payout_status,s.feedback FROM staff_quest_assignments a LEFT JOIN LATERAL (SELECT status,payout_status,feedback FROM staff_quest_submissions WHERE assignment_id=a.id ORDER BY id DESC LIMIT 1) s ON TRUE WHERE a.guild_id=$1 AND a.user_id=$2 ORDER BY a.quest_day DESC,a.id DESC LIMIT 100',[i.guildId,target.id]);
@@ -347,7 +390,7 @@ async function handle(i){
   m.addLabelComponents(new LabelBuilder().setLabel('Upload your evidence image').setDescription('Upload one image showing your completed quest.').setFileUploadComponent(upload));
   return i.showModal(m);
  }
- if(i.isModalSubmit()&&i.customId.startsWith('staffquest:submit-modal:'))return submit(i,i.customId.split(':')[2]);
+ if(i.isModalSubmit()&&i.customId.startsWith('staffquest:submit-modal:')){const a=await db.query('SELECT guild_id FROM staff_quest_assignments WHERE id=$1 AND user_id=$2',[i.customId.split(':')[2],i.user.id]);if(a.rows[0]&&await activeBreak(a.rows[0].guild_id,i.user.id))return i.reply({content:'Your staff break is active, so quest submissions are paused.',ephemeral:true});return submit(i,i.customId.split(':')[2]);}
  if(i.isButton()&&i.customId.startsWith('staffquest:review-approve:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:review-approve-modal:'+id).setTitle('Approve submission');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('feedback').setLabel('Reviewer note (optional)').setStyle(TextInputStyle.Paragraph).setRequired(false).setMaxLength(1000)));return i.showModal(m);}
  if(i.isButton()&&i.customId.startsWith('staffquest:review-reject:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const id=i.customId.split(':')[2],m=new ModalBuilder().setCustomId('staffquest:review-reject-modal:'+id).setTitle('Reject submission');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('feedback').setLabel('Reviewer feedback (optional)').setStyle(TextInputStyle.Paragraph).setRequired(false).setMaxLength(1000)));return i.showModal(m);}
  if(i.isButton()&&i.customId.startsWith('staffquest:approve:'))return approve(i,i.customId.split(':')[2]);
@@ -360,6 +403,11 @@ async function handle(i){
  if(i.isModalSubmit()&&i.customId.startsWith('staffquest:approve-note-modal:'))return approve(i,i.customId.split(':')[2],i.fields.getTextInputValue('feedback').trim()||null);
  if(i.isModalSubmit()&&i.customId.startsWith('staffquest:reject-note-modal:'))return reject(i,i.customId.split(':')[2],i.fields.getTextInputValue('feedback').trim());
  if(i.isModalSubmit()&&i.customId.startsWith('staffquest:request-evidence-modal:'))return requestMoreEvidence(i,i.customId.split(':')[2],i.fields.getTextInputValue('feedback').trim());
+ if(i.isButton()&&i.customId==='staffquest:breaks')return breakPanel(i);
+ if(i.isButton()&&i.customId==='staffquest:admin-back')return adminPanel(i,0,true);
+ if(i.isStringSelectMenu()&&i.customId==='staffquest:break-member'){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const userId=i.values[0],m=new ModalBuilder().setCustomId('staffquest:break-duration:'+userId).setTitle('Set Staff Break Duration');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('days').setLabel('Duration in days (1–365)').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(3)));return i.showModal(m);}
+ if(i.isModalSubmit()&&i.customId.startsWith('staffquest:break-duration:')){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const userId=i.customId.split(':')[2],days=Number(i.fields.getTextInputValue('days'));if(!Number.isInteger(days)||days<1||days>365)return i.reply({content:'Enter a whole number between 1 and 365 days.',ephemeral:true});const guild=i.guild||client.guilds.cache.get(config.staffGuildId);if(!guild)return i.reply({content:'Staff server unavailable.',ephemeral:true});const member=await guild.members.fetch(userId).catch(()=>null);if(!member||!member.roles.cache.has(STAFF_ROLE))return i.reply({content:'That user is no longer an eligible staff member.',ephemeral:true});const expiry=await startStaffBreak(guild,userId,days,i.user.id);return i.reply({content:'Staff break saved for <@'+userId+'>. It ends <t:'+Math.floor(new Date(expiry.expires_at).getTime()/1000)+':F>. The staff member has been notified by DM.',ephemeral:true,allowedMentions:{parse:[]}});}
+ if(i.isStringSelectMenu()&&i.customId==='staffquest:break-remove'){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const guild=i.guild||client.guilds.cache.get(config.staffGuildId);if(!guild)return i.reply({content:'Staff server unavailable.',ephemeral:true});const ok=await endStaffBreak(guild,i.values[0],i.user.id,'manual');return i.reply({content:ok?'Staff break ended for <@'+i.values[0]+'>. The staff member has been notified by DM.':'That staff break is no longer active.',ephemeral:true,allowedMentions:{parse:[]}});}
  if(i.isButton()&&i.customId.startsWith('staffquest:admin-page:'))return adminPanel(i,Number(i.customId.split(':')[2]),true);
  if(i.isButton()&&i.customId==='staffquest:add'){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});const m=new ModalBuilder().setCustomId('staffquest:create-modal').setTitle('Create quest');m.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('name').setLabel('Quest name').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(90)),new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('description').setLabel('Description').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(700)),new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('reward').setLabel('Reward in whole Staff Points').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(6)));return i.showModal(m);}
  if(i.isModalSubmit()&&i.customId==='staffquest:create-modal'){if(!admin(i))return i.reply({content:'Administrators only.',ephemeral:true});return create(i);}
