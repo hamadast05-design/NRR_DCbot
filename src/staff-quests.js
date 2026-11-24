@@ -215,17 +215,22 @@ function decisionDm({status,id,questName,reward,feedback,guild,payoutStatus}){
  return payload;
 }
 async function submit(i,id){
- await i.deferReply({ephemeral:true});let claimed=false,submissionId=null;
+ await i.deferReply({ephemeral:true});let claimed=false,submissionId=null,guildId=null;
  try{
   const files=i.fields.getUploadedFiles('submission_image',true),attachment=files?.first();
   if(!attachment)return i.editReply({content:'I could not read the uploaded image. Please try again.'});
   if(!attachment.contentType?.startsWith('image/'))return i.editReply({content:'Please upload a valid image file.'});
-  const claim=await db.query("UPDATE staff_quest_assignments SET status='pending_review',last_feedback=NULL,updated_at=NOW() WHERE id=$1 AND guild_id=$2 AND user_id=$3 AND quest_day=$4 AND status='assigned' RETURNING *",[id,i.guildId,i.user.id,dayKey()]);
+  // Modal submissions in DMs have no i.guildId. Resolve the owning server from
+  // the assignment itself, scoped to this user and today's Riyadh quest date.
+  const context=await db.query('SELECT guild_id FROM staff_quest_assignments WHERE id=$1 AND user_id=$2 AND quest_day=$3',[id,i.user.id,dayKey()]);
+  guildId=context.rows[0]?.guild_id;
+  if(!guildId)return i.editReply({content:'This quest is no longer available for submission.'});
+  const claim=await db.query("UPDATE staff_quest_assignments SET status='pending_review',last_feedback=NULL,updated_at=NOW() WHERE id=$1 AND guild_id=$2 AND user_id=$3 AND quest_day=$4 AND status='assigned' RETURNING *",[id,guildId,i.user.id,dayKey()]);
   const a=claim.rows[0];if(!a)return i.editReply({content:'This quest is no longer available for submission.'});claimed=true;
   const inserted=await db.query('INSERT INTO staff_quest_submissions(assignment_id,submitter_id,evidence) VALUES($1,$2,$3) RETURNING id',[id,i.user.id,attachment.url]);submissionId=inserted.rows[0].id;
-  try{await postReview(submissionId);}catch(error){console.error('[Staff Quests] Submission saved; review post failed and will be recovered:',{submissionId,assignmentId:id,guildId:i.guildId,userId:i.user.id,code:error?.code,status:error?.status,message:error?.message,stack:error?.stack});const updated=await getMine(i.guildId,i.user.id,dayKey());const recovery=progress(updated,dayKey());recovery.addTextDisplayComponents(text('Your image was saved. The review message could not be posted immediately; the recovery worker will retry it.'));return i.editReply(v2(recovery,true));}
-  await audit(i.guildId,i.user.id,'submission_created',{submissionId,quest:a.quest_name,imageName:attachment.name}).catch(error=>console.error('[Staff Quests] Submission audit logging failed:',error.message));try{const updated=await getMine(i.guildId,i.user.id,dayKey());return i.editReply(v2(progress(updated,dayKey()),true));}catch(error){console.warn('[Staff Quests] Submission succeeded but progress refresh failed:',error.message);return i.editReply({content:'Your image was submitted successfully and sent for administrator review.'});}
- }catch(error){console.error('[Staff Quests] Image evidence submission failed:',{submissionId,assignmentId:id,guildId:i.guildId,userId:i.user.id,claimed,code:error?.code,status:error?.status,message:error?.message,stack:error?.stack});if(claimed&&!submissionId)await db.query("UPDATE staff_quest_assignments SET status='assigned',updated_at=NOW() WHERE id=$1 AND status='pending_review'",[id]).catch(()=>{});return i.editReply({content:'We could not finish processing your image. Your quest has been kept safe; please try again shortly or contact an administrator if the problem continues.'}).catch(()=>{});}
+  try{await postReview(submissionId);}catch(error){console.error('[Staff Quests] Submission saved; review post failed and will be recovered:',{submissionId,assignmentId:id,guildId,userId:i.user.id,code:error?.code,status:error?.status,message:error?.message,stack:error?.stack});const updated=await getMine(guildId,i.user.id,dayKey());const recovery=progress(updated,dayKey());recovery.addTextDisplayComponents(text('Your image was saved. The review message could not be posted immediately; the recovery worker will retry it.'));return i.editReply(v2(recovery,true));}
+  await audit(guildId,i.user.id,'submission_created',{submissionId,quest:a.quest_name,imageName:attachment.name}).catch(error=>console.error('[Staff Quests] Submission audit logging failed:',error.message));try{const updated=await getMine(guildId,i.user.id,dayKey());return i.editReply(v2(progress(updated,dayKey()),true));}catch(error){console.warn('[Staff Quests] Submission succeeded but progress refresh failed:',error.message);return i.editReply({content:'Your image was submitted successfully and sent for administrator review.'});}
+ }catch(error){console.error('[Staff Quests] Image evidence submission failed:',{submissionId,assignmentId:id,guildId:guildId||i.guildId,userId:i.user.id,claimed,code:error?.code,status:error?.status,message:error?.message,stack:error?.stack});if(claimed&&!submissionId)await db.query("UPDATE staff_quest_assignments SET status='assigned',updated_at=NOW() WHERE id=$1 AND status='pending_review'",[id]).catch(()=>{});return i.editReply({content:'We could not finish processing your image. Your quest has been kept safe; please try again shortly or contact an administrator if the problem continues.'}).catch(()=>{});}
 }
 async function approve(i,id,feedback=null){
  if(!admin(i))return i.reply({content:'Only Discord administrators can review submissions.',ephemeral:true});
