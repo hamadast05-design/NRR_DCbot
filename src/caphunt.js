@@ -367,5 +367,6 @@ async function onMessage(message) {
 
 module.exports = {
   startCommand, endCommand, onMessage, start, stop, skip, getGame,
-  countryCount: bank.length
+  countryCount: bank.length,
+  canManage
 };
