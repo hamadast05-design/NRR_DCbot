@@ -9,6 +9,7 @@ const politicalTrivia = require('./political-trivia');
 const geographyTrivia = require('./geography-trivia');
 const guessPolitician = require('./guess-the-politician');
 const flagRush = require('./flagrush');
+const capHunt = require('./caphunt');
 const mysteryGen = require('./mysterygen');
 const chessPuzzle = require('./chess-puzzle');
 const stealOrNoSteal = require('./steal-or-no-steal');
@@ -27,6 +28,7 @@ const GAMES = [
   { id:'political', name:'Political Trivia', category:'Trivia & Knowledge', icon:'🏛️', image:'1f3db', description:'Put your knowledge of politics, leaders, international relations and history to the test in a competitive question-by-question trivia session.', details:'30-second questions • First correct answer wins • Live scoring', launch: channel => politicalTrivia.start(channel) },
   { id:'geography', name:'Geography Trivia', category:'Trivia & Knowledge', icon:'🌍', image:'1f30d', description:'Explore countries, capitals, borders, landmarks and world geography through a large rotating question bank. Compete with everyone in the channel.', details:'400-question bank • 30-second timer • First correct answer wins', launch: channel => geographyTrivia.start(channel) },
   { id:'flag', name:'FlagRush', category:'Image & Guessing', icon:'🚩', image:'1f6a9', description:'Identify countries from their flags in a rapid-fire visual guessing game. Build your score by being the first to recognize each flag.', details:'Image-based rounds • First correct answer wins • Competitive scoring', launch: channel => flagRush.start(channel) },
+  { id:'caphunt', name:'CapHunt', category:'Image & Guessing', icon:'🌍', image:'1f30d', description:'Identify the capital city of a country from its national flag. A fast-paced geography guessing game featuring a curated pool of familiar countries.', details:'20-second questions • Automatic hint after 15 seconds • +1 point per correct answer • Curated country pool', launch: async (channel, owner) => { const member = await channel.guild.members.fetch(owner.id).catch(() => null); if (!capHunt.canManage(owner.id, member)) return { ok:false, message:'Only the Staff Team and authorized superusers can start CapHunt.' }; return capHunt.start(channel); } },
   { id:'politician', name:'Guess The Politician', category:'Image & Guessing', icon:'🧑‍💼', image:'1f9d1-200d-1f4bc', description:'Recognize famous political figures from their pictures. A visual guessing challenge featuring presidents, prime ministers and other notable leaders.', details:'Image-based rounds • First correct answer wins • Competitive scoring', launch: channel => guessPolitician.start(channel) },
   { id:'mystery', name:'MysteryGen', category:'Image & Guessing', icon:'🔎', image:'1f50e', description:'A mystery item is revealed through three progressive clues. Work out the answer as early as possible and see whether you can solve it before everyone else.', details:'Three clues per mystery • Progressive reveals • Play Again support', launch: channel => mysteryGen.start(channel) },
   { id:'math', name:'Math Game', category:'Learning Games', icon:'➗', image:'2797', description:'Solve quick mathematics questions and compete for points. The panel launches the mixed question set; the existing slash command still offers difficulty selection.', details:'40-second questions • Mixed difficulty • First correct answer wins', launch: (channel, owner) => launchLearning(channel, owner, 'math') },
@@ -174,6 +176,7 @@ async function handleStopMessage(message) {
       case 'political': stopped = await politicalTrivia.stop(channel); break;
       case 'geography': stopped = await geographyTrivia.stop(channel); break;
       case 'flag': stopped = await flagRush.stop(channel); break;
+      case 'caphunt': stopped = await capHunt.stop(channel); break;
       case 'politician': stopped = await guessPolitician.stop(channel); break;
       case 'mystery': stopped = await mysteryGen.stop(channel); break;
       case 'math': stopped = await learningGames.stopByPanel(channel, message.author.id, 'math', message.member); break;
