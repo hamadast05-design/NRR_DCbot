@@ -29,6 +29,7 @@ const voiceHub = require('./voicehub');
 const noamAI = require('./noam-ai');
 const crustStaffPoints = require('./crust');
 const staffQuests = require('./staff-quests');
+const nr3Broadcast = require('./nr3-broadcast');
 const { registerApplicationCommands } = require('./command-registration');
 
 validate();
@@ -133,6 +134,7 @@ client.once(Events.ClientReady, async readyClient => {
     await staffRanking.startScheduler(readyClient);
     await qotdSystem.migrate();
     await voiceHub.initialize(readyClient);
+    await nr3Broadcast.startScheduler(readyClient);
     console.log('Database migrations ready.');
     const boosterGuild = readyClient.guilds.cache.get(config.guildId);
     if (boosterGuild) {
@@ -228,6 +230,7 @@ client.on(Events.MessageCreate, async message => {
   try { await staffRanking.handlePrefixMessage(message); } catch (error) { console.error('Staff ranking prefix command failed:', error); }
   try { await staffRanking.handleDiagnosticsMessage(message); } catch (error) { console.error('Staff ranking diagnostics command failed:', error); }
   try { await albumCoverSystem.handlePrefixMessage(message); } catch (error) { console.error('Album Cover command failed:', error); }
+  try { if (await nr3Broadcast.handlePrefixMessage(message)) return; } catch (error) { console.error('[NR3 Broadcast] Prefix command failed:', error); }
   if (message.guild && !message.author.bot && !message.webhookId) {
     const raw = message.content.trim();
     if (/^!send_news$/i.test(raw)) { if (!hasPermission(message.author.id, message.member?.permissions, PermissionFlagsBits.ManageGuild, message.member)) return message.reply('❌ You need Manage Server permission to send manual news.'); try { await newsSystem.sendLatest(client, message); } catch (error) { console.error('Manual news command failed:', error); await message.reply('❌ I could not fetch or post a news story right now.'); } }
