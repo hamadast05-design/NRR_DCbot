@@ -3,6 +3,7 @@ const politicalTrivia = require('./political-trivia');
 const geographyTrivia = require('./geography-trivia');
 const guessPolitician = require('./guess-the-politician');
 const flagRush = require('./flagrush');
+const capHunt = require('./caphunt');
 const mysteryGen = require('./mysterygen');
 const chessPuzzle = require('./chess-puzzle');
 const learningGames = require('./learning-games');
@@ -14,6 +15,7 @@ const readers = [
   ['Geography Trivia', geographyTrivia.getGame],
   ['Guess The Politician', guessPolitician.getGame],
   ['FlagRush', flagRush.getGame],
+  ['CapHunt', capHunt.getGame],
   ['MysteryGen', mysteryGen.getGame],
   ['Chess Puzzle', chessPuzzle.getGame],
   ['Learning Game', learningGames.getGame],

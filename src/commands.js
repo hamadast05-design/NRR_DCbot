@@ -16,6 +16,7 @@ const politicalTriviaSystem = require('./political-trivia');
 const geographyTriviaSystem = require('./geography-trivia');
 const guessPoliticianSystem = require('./guess-the-politician');
 const flagRushSystem = require('./flagrush');
+const capHuntSystem = require('./caphunt');
 const mysteryGenSystem = require('./mysterygen');
 const chessPuzzleSystem = require('./chess-puzzle');
 const learningGames = require('./learning-games');
@@ -62,6 +63,8 @@ const commands = [
   new SlashCommandBuilder().setName('end_guess_politician').setDescription('End Guess The Politician in this channel.'),
   new SlashCommandBuilder().setName('start_flagrush').setDescription('Start FlagRush in this channel.'),
   new SlashCommandBuilder().setName('end_flagrush').setDescription('End FlagRush in this channel.'),
+  new SlashCommandBuilder().setName('start_caphunt').setDescription('Start CapHunt: guess country capitals from their flags.'),
+  new SlashCommandBuilder().setName('end_caphunt').setDescription('End the active CapHunt game in this channel.'),
   new SlashCommandBuilder().setName('start_mysterygen').setDescription('Start MysteryGen: guess everyday items from three clues.'),
   new SlashCommandBuilder().setName('end_mysterygen').setDescription('End MysteryGen in this channel.'),
   new SlashCommandBuilder().setName('stats_staff').setDescription('View activity and moderation statistics for a staff member.')
@@ -541,6 +544,8 @@ async function handleInteraction(interaction) {
     if (interaction.commandName === 'end_guess_politician') return guessPoliticianSystem.endCommand(interaction);
     if (interaction.commandName === 'start_flagrush') return runExclusive(interaction.channelId, 'FlagRush', () => flagRushSystem.startCommand(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     if (interaction.commandName === 'end_flagrush') return flagRushSystem.endCommand(interaction);
+    if (interaction.commandName === 'start_caphunt') return runExclusive(interaction.channelId, 'CapHunt', () => capHuntSystem.startCommand(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
+    if (interaction.commandName === 'end_caphunt') return capHuntSystem.endCommand(interaction);
     if (interaction.commandName === 'start_mysterygen') return runExclusive(interaction.channelId, 'MysteryGen', () => mysteryGenSystem.startCommand(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
     if (interaction.commandName === 'end_mysterygen') return mysteryGenSystem.endCommand(interaction);
     if (interaction.commandName === 'start_math') return runExclusive(interaction.channelId, 'Math Game', () => learningGames.startMath(interaction)).then(r => !r.ok ? interaction.reply({content:'⛔ ' + r.message,ephemeral:true}) : r.result);
