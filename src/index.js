@@ -12,6 +12,7 @@ const politicalTriviaSystem = require('./political-trivia');
 const geographyTriviaSystem = require('./geography-trivia');
 const guessPoliticianSystem = require('./guess-the-politician');
 const flagRushSystem = require('./flagrush');
+const capHuntSystem = require('./caphunt');
 const mysteryGenSystem = require('./mysterygen');
 const chessPuzzleSystem = require('./chess-puzzle');
 const learningGames = require('./learning-games');
@@ -268,6 +269,7 @@ client.on(Events.MessageCreate, async message => {
   try { await geographyTriviaSystem.onMessage(message); } catch (error) { console.error('Geography Trivia message error:', error); }
   try { await guessPoliticianSystem.onMessage(message); } catch (error) { console.error('Guess The Politician message error:', error); }
   try { await flagRushSystem.onMessage(message); } catch (error) { console.error('FlagRush message error:', error); }
+  try { await capHuntSystem.onMessage(message); } catch (error) { console.error('CapHunt message error:', error); }
   try { await mysteryGenSystem.onMessage(message); } catch (error) { console.error('MysteryGen message error:', error); }
   try { await chessPuzzleSystem.onMessage(message); } catch (error) { console.error('Chess Puzzle message error:', error); }
   try { await eventSystem.onMessage(message); } catch (error) { console.error('Event stick error:', error); }
