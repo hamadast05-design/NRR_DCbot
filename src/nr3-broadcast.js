@@ -3,7 +3,7 @@ const { config } = require('./config');
 const db = require('./db');
 const { hasPermission } = require('./access');
 
-const CHANNEL_ID = '1570764802651983962';
+const CHANNEL_ID = '1523792685478051892';
 const TIME_ZONE = 'Asia/Riyadh';
 const MINUTE = 60 * 1000;
 
