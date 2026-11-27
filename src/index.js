@@ -134,7 +134,6 @@ client.once(Events.ClientReady, async readyClient => {
     await staffRanking.startScheduler(readyClient);
     await qotdSystem.migrate();
     await voiceHub.initialize(readyClient);
-    await nr3Broadcast.startScheduler(readyClient);
     console.log('Database migrations ready.');
     const boosterGuild = readyClient.guilds.cache.get(config.guildId);
     if (boosterGuild) {
