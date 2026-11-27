@@ -24,7 +24,6 @@ const gameRotationSystem = require('./game-rotation');
 const staffAnalytics = require('./staff-analytics');
 const staffRanking = require('./staff-ranking');
 const boosterPerks = require('./booster-perks');
-const albumCoverSystem = require('./album-cover');
 const voiceHub = require('./voicehub');
 const noamAI = require('./noam-ai');
 const crustStaffPoints = require('./crust');
@@ -127,8 +126,7 @@ client.once(Events.ClientReady, async readyClient => {
     crustStaffPoints.startRetryWorker();
     await staffQuests.initialize(readyClient);
     await noamAI.migrate();
-    await albumCoverSystem.migrate();
-    albumCoverSystem.startScheduler(readyClient);
+    await db.query('DROP TABLE IF EXISTS nrr_album_cover_posts, nrr_album_cover_schedule, nrr_album_cover_images');
     await boosterPerks.migrate();
     await staffAnalytics.migrate();
     await staffRanking.startScheduler(readyClient);
@@ -228,7 +226,6 @@ client.on(Events.MessageCreate, async message => {
   try { await gamePanel.handleStopMessage(message); } catch (error) { console.error('Game Panel !stop command failed:', error); }
   try { await staffRanking.handlePrefixMessage(message); } catch (error) { console.error('Staff ranking prefix command failed:', error); }
   try { await staffRanking.handleDiagnosticsMessage(message); } catch (error) { console.error('Staff ranking diagnostics command failed:', error); }
-  try { await albumCoverSystem.handlePrefixMessage(message); } catch (error) { console.error('Album Cover command failed:', error); }
   try { if (await nr3Broadcast.handlePrefixMessage(message)) return; } catch (error) { console.error('[NR3 Broadcast] Prefix command failed:', error); }
   if (message.guild && !message.author.bot && !message.webhookId) {
     const raw = message.content.trim();
